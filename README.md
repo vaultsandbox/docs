@@ -45,3 +45,10 @@ astro.config.mjs      # Starlight config and sidebar navigation
 ## License
 
 [MIT](LICENSE)
+
+## Support
+
+- [Documentation](https://vaultsandbox.dev/)
+- [Issue Tracker](https://github.com/vaultsandbox/docs/issues)
+- [Discussions](https://github.com/vaultsandbox/gateway/discussions)
+- [Website](https://www.vaultsandbox.com)
