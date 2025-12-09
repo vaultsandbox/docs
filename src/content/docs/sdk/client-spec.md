@@ -209,10 +209,20 @@ valid = ml_dsa65.verify(signature, transcript, server_sig_pk)
 
 ### Deriving Public Key from Secret Key
 
-In ML-KEM-768, the public key is embedded in the last 1184 bytes of the secret key:
+In ML-KEM-768, the secret key structure is:
+```
+secretKey = cpaPrivateKey || cpaPublicKey || h || z
+```
+Where:
+- `cpaPrivateKey`: 1152 bytes (12 × k × n / 8, k=3, n=256)
+- `cpaPublicKey`: 1184 bytes (the public key)
+- `h`: 32 bytes (hash of public key)
+- `z`: 32 bytes (random seed)
+
+The public key starts at byte offset 1152:
 
 ```python
-public_key = secret_key[-1184:]  # Last 1184 bytes
+public_key = secret_key[1152:2336]  # Bytes 1152-2335 (1184 bytes)
 ```
 
 ---
