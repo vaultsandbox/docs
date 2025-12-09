@@ -1,0 +1,22 @@
+:root {
+	--sl-color-accent-low: #0c1c2f;
+	--sl-color-accent: #1cc2e3;
+	--sl-color-accent-high: #0c1c2f;
+	color-scheme: dark;
+}
+
+/* Force dark mode */
+:root {
+	color-scheme: dark only;
+}
+
+/* Hide theme toggle */
+starlight-theme-select {
+	display: none !important;
+}
+
+:root[data-theme='dark'] {
+	--sl-color-accent-low: #0c1c2f;
+	--sl-color-accent: #0c1c2f;
+	--sl-color-accent-high: #1cc2e3;
+}

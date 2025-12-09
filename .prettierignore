@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+
+# Generated files
+package-lock.json
+*.lock
+
+# Public assets (don't format JSON specs)
+public/gateway-api-docs.json

@@ -1,0 +1,13 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/Head.astro';
+---
+
+<Default {...Astro.props}><slot /></Default>
+<script defer src="https://analytics.vaultsandbox.com/script.js" data-website-id="849d705a-6030-46f5-b5aa-f8c741da620e"
+></script>
+<script is:inline>
+	// Force dark mode
+	document.documentElement.setAttribute('data-theme', 'dark');
+	localStorage.setItem('starlight-theme', 'dark');
+</script>

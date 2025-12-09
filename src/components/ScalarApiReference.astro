@@ -1,0 +1,324 @@
+---
+
+---
+
+<div class="server-config">
+	<div class="server-config-header">
+		<span class="server-config-title">API Server Configuration</span>
+		<button id="toggle-config" class="toggle-btn">Configure</button>
+	</div>
+	<div id="server-config-form" class="server-config-form">
+		<label for="custom-server-url">Your Gateway Server URL:</label>
+		<input type="text" id="custom-server-url" placeholder="https://your-gateway.example.com" value="" />
+		<div class="button-group">
+			<button id="save-server-url" class="btn-primary">Save & Apply</button>
+			<button id="clear-server-url" class="btn-secondary">Clear</button>
+		</div>
+		<p class="help-text">
+			Enter your VaultSandbox Gateway server URL. This will be saved in your browser and used for all API requests in
+			the interactive documentation below.
+		</p>
+	</div>
+</div>
+
+<div id="scalar-api-reference" class="scalar-app"></div>
+
+<script is:inline>
+	function loadScalar() {
+		// Get custom server URL from localStorage if it exists
+		const customServerUrl = localStorage.getItem('vaultsandbox-api-server-url');
+
+		const config = {
+			spec: {
+				url: '/gateway-api-docs.json',
+				content: null,
+			},
+			// Only add server if user has configured one
+			servers: customServerUrl
+				? [
+						{
+							url: customServerUrl,
+							description: 'Your Gateway Server',
+						},
+					]
+				: [
+						{
+							url: 'https://your-gateway-server.com',
+							description: 'Configure your server URL above',
+						},
+					],
+			darkMode: true,
+			layout: 'modern',
+			theme: 'dark',
+			showSidebar: true,
+			hideDarkModeToggle: true,
+			hideModels: false,
+			customCss: '',
+		};
+
+		const containerId = 'scalar-api-reference';
+		const container = document.getElementById(containerId);
+		if (!container) return;
+
+		// Helper to init
+		const init = () => {
+			if (window.Scalar && typeof window.Scalar.createApiReference === 'function') {
+				// Clear container just in case
+				container.innerHTML = '';
+				// Initialize
+				window.Scalar.createApiReference(container, config);
+			} else {
+				// Fallback to config script injection if createApiReference is missing
+				// This handles the case where the CDN script might be the auto-init version only
+				console.log('Scalar.createApiReference not found, falling back to config script injection');
+
+				const configScriptId = 'api-reference';
+				let configScript = document.getElementById(configScriptId);
+				if (configScript) configScript.remove();
+
+				configScript = document.createElement('script');
+				configScript.id = configScriptId;
+				configScript.type = 'application/json';
+				configScript.textContent = JSON.stringify(config);
+				// Append to body so the script can find it
+				document.body.appendChild(configScript);
+
+				// If script is already loaded but didn't run (unlikely if it's auto-init), we can't easily force it
+				// without reloading the script element, which is messy.
+				// But usually, this path is for when the script loads for the first time below.
+			}
+		};
+
+		// Check if script is already present
+		if (document.getElementById('scalar-script')) {
+			init();
+			return;
+		}
+
+		// Load script
+		const script = document.createElement('script');
+		script.id = 'scalar-script';
+		script.src = 'https://cdn.jsdelivr.net/npm/@scalar/api-reference';
+		script.onload = init;
+		document.body.appendChild(script);
+	}
+
+	// Handle both initial load and View Transitions
+	loadScalar();
+	document.addEventListener('astro:page-load', loadScalar);
+
+	// Server configuration UI handlers
+	function initServerConfig() {
+		const toggleBtn = document.getElementById('toggle-config');
+		const configForm = document.getElementById('server-config-form');
+		const customUrlInput = document.getElementById('custom-server-url');
+		const saveBtn = document.getElementById('save-server-url');
+		const clearBtn = document.getElementById('clear-server-url');
+
+		// Load current custom URL if it exists
+		const currentUrl = localStorage.getItem('vaultsandbox-api-server-url');
+		if (currentUrl) {
+			customUrlInput.value = currentUrl;
+		}
+
+		// Show form open by default if no URL is configured
+		const hasUrl = !!currentUrl;
+		configForm.style.display = hasUrl ? 'none' : 'block';
+		toggleBtn.textContent = hasUrl ? 'Edit' : 'Hide';
+
+		// Toggle form visibility
+		toggleBtn?.addEventListener('click', () => {
+			const isHidden = configForm.style.display === 'none';
+			configForm.style.display = isHidden ? 'block' : 'none';
+			toggleBtn.textContent = isHidden ? 'Hide' : 'Edit';
+		});
+
+		// Save custom URL
+		saveBtn?.addEventListener('click', () => {
+			const url = customUrlInput.value.trim();
+			if (url) {
+				// Basic URL validation
+				try {
+					new URL(url);
+					localStorage.setItem('vaultsandbox-api-server-url', url);
+					window.location.reload();
+				} catch (e) {
+					alert('Please enter a valid URL (e.g., https://gateway.example.com)');
+				}
+			} else {
+				alert('Please enter a server URL');
+			}
+		});
+
+		// Clear URL
+		clearBtn?.addEventListener('click', () => {
+			localStorage.removeItem('vaultsandbox-api-server-url');
+			customUrlInput.value = '';
+			window.location.reload();
+		});
+	}
+
+	// Initialize config UI
+	initServerConfig();
+	document.addEventListener('astro:page-load', initServerConfig);
+</script>
+
+<style>
+	/* Server Configuration UI */
+	.server-config {
+		background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+		border: 1px solid #2d3748;
+		border-radius: 8px;
+		padding: 1rem;
+		margin-bottom: 1.5rem;
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+
+	.server-config-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+
+	.server-config-title {
+		font-weight: 600;
+		font-size: 1rem;
+		color: #e2e8f0;
+	}
+
+	.toggle-btn {
+		background: #4299e1;
+		color: white;
+		border: none;
+		border-radius: 6px;
+		padding: 0.5rem 1rem;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+		font-weight: 500;
+	}
+
+	.toggle-btn:hover {
+		background: #3182ce;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(66, 153, 225, 0.3);
+	}
+
+	.server-config-form {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #2d3748;
+	}
+
+	.server-config-form label {
+		display: block;
+		margin-bottom: 0.5rem;
+		color: #cbd5e0;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.server-config-form input[type='text'] {
+		width: 100%;
+		padding: 0.75rem;
+		border: 1px solid #4a5568;
+		border-radius: 6px;
+		background: #2d3748;
+		color: #e2e8f0;
+		font-size: 0.9rem;
+		transition: all 0.2s;
+		box-sizing: border-box;
+	}
+
+	.server-config-form input[type='text']:focus {
+		outline: none;
+		border-color: #4299e1;
+		box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+	}
+
+	.button-group {
+		display: flex;
+		gap: 0.75rem;
+		margin-top: 1rem;
+		align-items: center;
+	}
+
+	.btn-primary,
+	.btn-secondary {
+		padding: 0.5rem 1rem;
+		border: none;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		line-height: 1;
+		height: 36px;
+		box-sizing: border-box;
+		margin: 0;
+		vertical-align: middle;
+		display: inline-block;
+	}
+
+	.btn-primary {
+		background: #48bb78;
+		color: white;
+	}
+
+	.btn-primary:hover {
+		background: #38a169;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);
+	}
+
+	.btn-secondary {
+		background: #718096;
+		color: white;
+	}
+
+	.btn-secondary:hover {
+		background: #4a5568;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(113, 128, 150, 0.3);
+	}
+
+	.help-text {
+		margin-top: 0.75rem;
+		font-size: 0.813rem;
+		color: #a0aec0;
+		font-style: italic;
+	}
+
+	/* Scalar App */
+	.scalar-app {
+		min-height: 100vh;
+		width: 100%;
+	}
+
+	/* Ensure full width in Starlight */
+	:global(.sl-container) {
+		max-width: 100% !important;
+	}
+
+	:global(.main-frame) {
+		padding-top: 0;
+	}
+
+	/* Fix Scalar client dialog overlapping with Starlight sidebar */
+	:global(.scalar-client[role='dialog']) {
+		/* On desktop, use margin to avoid sidebar overlap while keeping full width */
+		left: 0 !important;
+		right: 0 !important;
+		width: 100vw !important;
+		max-width: 100vw !important;
+		margin-left: var(--sl-sidebar-width, 18rem) !important;
+	}
+
+	/* On mobile, remove margin when sidebar is hidden */
+	@media (max-width: 1023px) {
+		:global(.scalar-client[role='dialog']) {
+			margin-left: 0 !important;
+		}
+	}
+</style>
