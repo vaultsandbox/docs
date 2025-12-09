@@ -104,6 +104,62 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Python Client',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', link: '/client-python/' },
+						{ label: 'Installation', link: '/client-python/installation/' },
+						{ label: 'Configuration', link: '/client-python/configuration/' },
+						{
+							label: 'Core Concepts',
+							collapsed: true,
+							items: [
+								{ label: 'Inboxes', link: '/client-python/concepts/inboxes/' },
+								{ label: 'Email Objects', link: '/client-python/concepts/emails/' },
+								{ label: 'Authentication Results', link: '/client-python/concepts/auth-results/' },
+							],
+						},
+						{
+							label: 'Usage Guides',
+							collapsed: true,
+							items: [
+								{ label: 'Managing Inboxes', link: '/client-python/guides/managing-inboxes/' },
+								{ label: 'Waiting for Emails', link: '/client-python/guides/waiting-for-emails/' },
+								{ label: 'Working with Attachments', link: '/client-python/guides/attachments/' },
+								{ label: 'Email Authentication', link: '/client-python/guides/authentication/' },
+								{ label: 'Real-time Monitoring', link: '/client-python/guides/real-time/' },
+							],
+						},
+						{
+							label: 'Testing Patterns',
+							collapsed: true,
+							items: [
+								{ label: 'Password Reset Flows', link: '/client-python/testing/password-reset/' },
+								{ label: 'Multi-email Scenarios', link: '/client-python/testing/multi-email/' },
+								{ label: 'CI/CD Integration', link: '/client-python/testing/cicd/' },
+							],
+						},
+						{
+							label: 'API Reference',
+							collapsed: true,
+							items: [
+								{ label: 'VaultSandboxClient', link: '/client-python/api/client/' },
+								{ label: 'Inbox', link: '/client-python/api/inbox/' },
+								{ label: 'Email', link: '/client-python/api/email/' },
+								{ label: 'Error Handling', link: '/client-python/api/errors/' },
+							],
+						},
+						{
+							label: 'Advanced Topics',
+							collapsed: true,
+							items: [
+								{ label: 'Import/Export', link: '/client-python/advanced/import-export/' },
+								{ label: 'Delivery Strategies', link: '/client-python/advanced/strategies/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'SDK Development',
 					collapsed: true,
 					items: [{ label: 'Client SDK Specification', link: '/sdk/client-spec/' }],
