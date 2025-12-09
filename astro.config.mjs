@@ -33,6 +33,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Deployment Setup', link: '/deployment/deployment-setup/' },
 						{ label: 'Docker Compose Setup', link: '/deployment/docker-compose/' },
+						{ label: 'Local Development', link: '/deployment/local-development/' },
 					],
 				},
 				{
