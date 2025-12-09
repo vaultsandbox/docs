@@ -447,9 +447,13 @@ After decrypting `encryptedParsed`:
 			"size": 15234,
 			"contentId": "part123@example.com",
 			"contentDisposition": "attachment",
-			"content": "<base64: file content>"
+			"content": "<base64: file content>",
+			"checksum": "<optional: SHA-256 hash>"
 		}
 	],
+	"metadata": {
+		/* Additional metadata associated with the email */
+	},
 	"links": ["https://example.com/verify?token=abc123"],
 	"authResults": {
 		"spf": {
@@ -481,6 +485,13 @@ After decrypting `encryptedParsed`:
 }
 ```
 
+| Field    | Type     | Description                      |
+| -------- | -------- | -------------------------------- |
+| `status` | `string` | SPF check result (see values)    |
+| `domain` | `string` | Domain checked (optional)        |
+| `ip`     | `string` | Sender IP address (optional)     |
+| `info`   | `string` | Human-readable details (optional)|
+
 | Status      | Meaning                 |
 | ----------- | ----------------------- |
 | `pass`      | Authorized sender       |
@@ -498,9 +509,16 @@ After decrypting `encryptedParsed`:
 	"status": "pass",
 	"domain": "example.com",
 	"selector": "selector1",
-	"info": "DKIM signature valid"
+	"info": "DKIM signature verified"
 }
 ```
+
+| Field      | Type     | Description                       |
+| ---------- | -------- | --------------------------------- |
+| `status`   | `string` | DKIM check result (see values)    |
+| `domain`   | `string` | Signing domain (optional)         |
+| `selector` | `string` | DKIM selector (optional)          |
+| `info`     | `string` | Human-readable details (optional) |
 
 | Status | Meaning           |
 | ------ | ----------------- |
@@ -519,6 +537,14 @@ After decrypting `encryptedParsed`:
 	"info": "DMARC check passed"
 }
 ```
+
+| Field     | Type      | Description                       |
+| --------- | --------- | --------------------------------- |
+| `status`  | `string`  | DMARC check result (see values)   |
+| `policy`  | `string`  | Domain's DMARC policy (optional)  |
+| `aligned` | `boolean` | Whether SPF/DKIM aligned (optional)|
+| `domain`  | `string`  | Domain checked (optional)         |
+| `info`    | `string`  | Human-readable details (optional) |
 
 | Status | Meaning         |
 | ------ | --------------- |
@@ -543,11 +569,18 @@ After decrypting `encryptedParsed`:
 }
 ```
 
-| Status | Meaning       |
-| ------ | ------------- |
-| `pass` | PTR matches   |
-| `fail` | PTR mismatch  |
-| `none` | No PTR record |
+| Field      | Type     | Description                        |
+| ---------- | -------- | ---------------------------------- |
+| `status`   | `string` | Reverse DNS result (see values)    |
+| `ip`       | `string` | Server IP address (optional)       |
+| `hostname` | `string` | Resolved hostname (optional)       |
+| `info`     | `string` | Human-readable details (optional)  |
+
+| Status | Meaning              |
+| ------ | -------------------- |
+| `pass` | Reverse DNS verified |
+| `fail` | Reverse DNS failed   |
+| `none` | No PTR record        |
 
 ### Exported Inbox Data
 
@@ -575,11 +608,11 @@ For persistence/sharing:
 
 The `/api/events` SSE endpoint is always available on the server.
 
-| Strategy  | Use Case                                              |
-| --------- | ----------------------------------------------------- |
-| `sse`     | Real-time updates, low latency (default)              |
-| `polling` | Firewall restrictions, simpler implementation         |
-| `auto`    | Use SSE (same as `sse` since SSE is always available) |
+| Strategy  | Use Case                                                          |
+| --------- | ----------------------------------------------------------------- |
+| `sse`     | Real-time updates, low latency                                    |
+| `polling` | Firewall restrictions, simpler implementation                     |
+| `auto`    | Recommended default; tries SSE first, falls back to polling if unavailable |
 
 ### SSE Strategy
 
@@ -731,7 +764,7 @@ for attempt in range(max_retries + 1):
 | `subject`      | string \| regex | Match email subject    |
 | `from`         | string \| regex | Match sender address   |
 | `predicate`    | function        | Custom filter function |
-| `timeout`      | number          | Max wait time (ms)     |
+| `timeout`      | number          | Max wait time (ms), default 30000     |
 | `pollInterval` | number          | Polling interval (ms)  |
 
 ### Inbox Lifecycle
