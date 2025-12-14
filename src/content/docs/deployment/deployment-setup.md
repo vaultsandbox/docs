@@ -5,6 +5,12 @@ description: Complete guide to setting up VaultSandbox infrastructure, DNS, and 
 
 This guide covers everything you need to deploy VaultSandbox: infrastructure requirements, DNS configuration, and automatic TLS certificate provisioning.
 
+:::tip[Want Zero-Config Setup?]
+**VSX DNS** automatically handles domain assignment, DNS, and certificates with just one environment variable. See the [Quick Start](/getting-started/quickstart/) to get running in under 5 minutes.
+
+This guide covers requirements for both VSX DNS and Custom Domain deployments.
+:::
+
 ## Infrastructure Requirements
 
 ### Public IP Address
@@ -55,9 +61,13 @@ nc -zv YOUR_SERVER_IP 25
 
 :::
 
-### Domain or Subdomain
+### Domain or Subdomain (Custom Domain Mode Only)
 
-**Required for**: DNS-based email delivery
+:::note[Not needed for VSX DNS]
+If using VSX DNS, skip this section. Your domain is automatically assigned (e.g., `1mzhr2y.vsx.email`).
+:::
+
+**Required for**: Custom domain deployments
 
 **What you need**:
 
@@ -77,9 +87,9 @@ qa.example.com → VaultSandbox
 Inboxes: user@qa.example.com
 ```
 
-### DNS Control
+### DNS Control (Custom Domain Mode Only)
 
-You need the ability to create:
+For custom domain deployments, you need the ability to create:
 
 1. **A Record**: Points your domain to the server's IP address
 
@@ -121,12 +131,19 @@ VaultSandbox automatically provisions and renews TLS certificates using Let's En
 
 **How it works**:
 
-1. Enable ACME in your `.env` file:
+1. Configure your mode:
+
+   **VSX DNS:**
+   ```bash
+   VSB_VSX_DNS_ENABLED=true
+   ```
+
+   **Custom Domain:**
    ```bash
    VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS=qa.example.com
    VSB_CERT_ENABLED=true
-   VSB_CERT_EMAIL=admin@example.com
    ```
+
 2. VaultSandbox requests certificates via HTTP-01 challenge
 3. Let's Encrypt validates domain ownership (requires port 80 accessible)
 4. Certificate issued and automatically renewed 30 days before expiry
@@ -135,9 +152,9 @@ VaultSandbox automatically provisions and renews TLS certificates using Let's En
 
 - Port 80 accessible from internet (for ACME validation)
 - Port 443 accessible for HTTPS
-- DNS A record pointing to your server
+- DNS A record pointing to your server (custom domain only)
 
-**That's it!** HTTPS will be enabled automatically at `https://qa.example.com`
+**That's it!** HTTPS will be enabled automatically.
 
 ## System Requirements
 
@@ -281,7 +298,13 @@ dig -x 192.0.2.1
 
 ## Pre-Deployment Checklist
 
-Before deploying VaultSandbox, verify:
+### VSX DNS Mode
+
+- [ ] Public IP address acquired
+- [ ] Ports 25, 80, and 443 accessible (no NAT/firewall blocking)
+- [ ] Docker and Docker Compose installed
+
+### Custom Domain Mode
 
 - [ ] Public IP address acquired
 - [ ] Port 25 confirmed open (test with telnet/nc)

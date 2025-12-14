@@ -1,24 +1,58 @@
 ---
-title: Quick Start
-description: Get VaultSandbox up and running in under 5 minutes with zero configuration
+title: Quick Start - Custom Domain
+description: Deploy VaultSandbox with your own domain for branding and compliance
 ---
 
-This guide will help you deploy VaultSandbox and send your first test email in under 5 minutes using **VSX DNS** - automatic domain assignment with no DNS configuration required.
+This guide will help you deploy VaultSandbox using your own domain. This is ideal for production environments, compliance requirements, or when you need custom branding.
+
+:::tip[Want a Faster Setup?]
+If you don't need a custom domain, the [Quick Start with VSX DNS](/getting-started/quickstart/) gets you running in under 5 minutes with zero DNS configuration.
+:::
 
 ## Prerequisites Checklist
 
 Before you begin, ensure you have:
 
 - [ ] **Docker and Docker Compose** installed
-- [ ] **Public IP address** with ports 25, 80, and 443 accessible (no NAT/firewall blocking)
+- [ ] **A domain or subdomain** you control (e.g., `qa.example.com`)
+- [ ] **Public IP address** with ports 25, 80, and 443 accessible
+- [ ] **DNS access** to create A and MX records
 
-That's it! No domain registration or DNS configuration needed.
-
-:::tip[Need a Custom Domain?]
-If you need to use your own domain for branding or compliance, see the [Custom Domain Quick Start](/getting-started/quickstart-custom-domain/).
+:::tip[Testing Locally?]
+You can run VaultSandbox locally without a public IP for development, but you'll miss production-parity features like real TLS certificates. For full features, see [Deployment Setup](/deployment/deployment-setup/).
 :::
 
-## Step 1: Create Docker Compose Configuration
+## Step 1: Configure DNS
+
+Point your subdomain to the server running VaultSandbox. You'll need two DNS records:
+
+### A Record
+
+Points your subdomain to your server:
+
+```
+qa.example.com.  A  YOUR.SERVER.IP
+```
+
+### MX Record
+
+Tells email servers to deliver mail for your subdomain to VaultSandbox:
+
+```
+qa.example.com.  MX  10  qa.example.com.
+```
+
+:::tip[Need Help with DNS Setup?]
+Use the **[VaultSandbox DNS Setup Tool](https://www.vaultsandbox.com/setup)** - just enter your server IP and domain, and it will:
+
+- Generate the exact DNS records you need
+- Validate your DNS configuration
+- Verify your setup is working correctly
+
+This makes DNS setup foolproof!
+:::
+
+## Step 2: Create Docker Compose Configuration
 
 Create a new directory for VaultSandbox:
 
@@ -26,7 +60,7 @@ Create a new directory for VaultSandbox:
 mkdir vaultsandbox && cd vaultsandbox
 ```
 
-Create a `docker-compose.yml` file with just **1 environment variable**:
+Create a `docker-compose.yml` file with just **3 environment variables**:
 
 ```yaml
 services:
@@ -37,14 +71,16 @@ services:
 
     ports:
       - '25:25' # SMTP
-      - '80:80' # HTTP (ACME + VSX verification)
+      - '80:80' # HTTP (ACME challenges)
       - '443:443' # HTTPS (Web UI + API)
 
     environment:
-      VSB_VSX_DNS_ENABLED: 'true'
+      # Just 2 variables - that's it!
+      VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'qa.example.com'
+      VSB_CERT_ENABLED: 'true'
 
     volumes:
-      - gateway-data:/app/data
+      - gateway-data:/app/data # Persist certificates and API keys
 
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:80/health']
@@ -57,17 +93,16 @@ volumes:
   gateway-data:
 ```
 
-:::tip[Everything is Automatic]
-With VSX DNS enabled, VaultSandbox automatically handles:
+:::tip[Everything Else is Automatic]
+VaultSandbox automatically handles:
 
-- Domain assignment (e.g., `1mzhr2y.vsx.email`)
-- DNS configuration with proper MX records
+- API key generation (saved in Docker volume)
 - TLS certificate provisioning via Let's Encrypt
-- API key generation
 - Email retention (1 hour default, configurable up to 7 days)
+- Security and rate limiting
 :::
 
-## Step 2: Start VaultSandbox
+## Step 3: Start VaultSandbox
 
 ```bash
 docker compose up -d
@@ -81,21 +116,7 @@ docker compose ps
 
 You should see the `vaultsandbox-gateway` container running.
 
-## Step 3: Discover Your Domain
-
-Your domain is automatically assigned based on your public IP. Find it by:
-
-**Option A:** Enter your IP at [vsx.email](https://vsx.email)
-
-**Option B:** Check the certificate metadata:
-
-```bash
-docker compose exec gateway cat /app/data/certificates/metadata.json; echo
-```
-
-Your domain will look like `1mzhr2y.vsx.email`.
-
-Retrieve your auto-generated API key:
+Retrieve your auto-generated API key (you'll need this for the Web UI):
 
 ```bash
 docker compose exec gateway cat /app/data/.api-key; echo
@@ -106,7 +127,7 @@ docker compose exec gateway cat /app/data/.api-key; echo
 Open your browser and navigate to:
 
 ```
-https://YOUR-DOMAIN.vsx.email/app
+https://qa.example.com/app
 ```
 
 :::note[Automatic HTTPS]
@@ -122,7 +143,7 @@ You'll be prompted to enter your API key:
 In the web UI:
 
 1. Click **"Create Inbox"** button
-2. Copy the generated email address (e.g., `a1b2c3d4@1mzhr2y.vsx.email`)
+2. Copy the generated email address (e.g., `a1b2c3d4@qa.example.com`)
 3. Your inbox is ready to receive emails
 
 That's it! Your inbox will automatically capture any emails sent to that address.
@@ -135,9 +156,9 @@ Send a test email to your inbox address using any email client or SMTP tool:
 
 ```bash
 # Using swaks (SMTP testing tool)
-swaks --to a1b2c3d4@1mzhr2y.vsx.email \
+swaks --to a1b2c3d4@qa.example.com \
       --from test@yourdomain.com \
-      --server 1mzhr2y.vsx.email \
+      --server qa.example.com \
       --port 25 \
       --h-Subject "Test Email" \
       --body "Hello from VaultSandbox!"
@@ -179,39 +200,30 @@ If authentication checks are failing, it means your sending domain doesn't have 
 Now that VaultSandbox is running, explore more features:
 
 - **[Architecture Overview](/getting-started/architecture/)** - Understand how the zero-knowledge encryption works
-- **[Custom Domain Setup](/getting-started/quickstart-custom-domain/)** - Use your own domain instead of VSX DNS
+- **[Docker Compose Guide](/deployment/docker-compose/)** - Production-ready deployment configurations
 - **[Node.js Client Documentation](/client-node/installation/)** - Integrate email testing into your automated tests
 - **[Testing Patterns](/client-node/testing/password-reset/)** - Learn best practices for testing transactional emails
 
 ## Troubleshooting
 
-### Domain Not Assigned
-
-1. **Check ports are accessible**: Ports 25, 80, and 443 must be publicly reachable
-
-   ```bash
-   # From another machine, test connectivity
-   nc -zv YOUR_SERVER_IP 25
-   nc -zv YOUR_SERVER_IP 80
-   nc -zv YOUR_SERVER_IP 443
-   ```
-
-2. **Check logs**:
-   ```bash
-   docker compose logs gateway
-   ```
-
-3. **Verify VSX DNS is enabled**: Ensure `VSB_VSX_DNS_ENABLED: 'true'` is set
-
 ### Emails Not Arriving
 
-1. **Check SMTP Port**: Ensure port 25 is not blocked by your hosting provider
+1. **Use the DNS Setup Tool**: Visit [vaultsandbox.com/setup](https://www.vaultsandbox.com/setup) to verify your DNS configuration
+
+2. **Check DNS manually**: Ensure MX and A records are properly configured
 
    ```bash
-   telnet YOUR-DOMAIN.vsx.email 25
+   dig MX qa.example.com
+   dig A qa.example.com
    ```
 
-2. **Check Logs**:
+3. **Check SMTP Port**: Ensure port 25 is not blocked by your hosting provider
+
+   ```bash
+   telnet qa.example.com 25
+   ```
+
+4. **Check Logs**:
    ```bash
    docker compose logs gateway
    ```
@@ -232,18 +244,16 @@ Now that VaultSandbox is running, explore more features:
 
 3. **Verify HTTPS is ready**: Check logs for "Certificate obtained successfully"
 
-4. **Try HTTP first**: If HTTPS isn't working yet, try `http://YOUR-DOMAIN.vsx.email/app`
+4. **Try HTTP first**: If HTTPS isn't working yet, try `http://qa.example.com/app`
 
 ### Need Help?
 
-- Learn more about VSX DNS at [vsx.email](https://vsx.email)
 - [Open an issue on GitHub](https://github.com/vaultsandbox/gateway/issues)
 - Review the [deployment documentation](/deployment/docker-compose/) for more configuration options
 
 ## Resources
 
 - **Website**: [www.vaultsandbox.com](https://www.vaultsandbox.com)
-- **VSX DNS**: [vsx.email](https://vsx.email)
 - **Documentation**: [vaultsandbox.dev](https://vaultsandbox.dev/)
 - **GitHub Gateway**: [github.com/vaultsandbox/gateway](https://github.com/vaultsandbox/gateway)
 - **Docker Hub**: [hub.docker.com/r/vaultsandbox/gateway](https://hub.docker.com/r/vaultsandbox/gateway)

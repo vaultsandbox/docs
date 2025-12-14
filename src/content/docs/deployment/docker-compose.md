@@ -7,45 +7,86 @@ This guide covers deploying VaultSandbox using Docker Compose, from basic develo
 
 ## Quick Start
 
-The fastest way to get VaultSandbox running with just **3 environment variables**:
+Choose your setup method:
+
+| Method | Variables | DNS Setup | Best For |
+|--------|-----------|-----------|----------|
+| **VSX DNS** | 1 | Automatic | Quick testing, CI/CD, getting started |
+| **Custom Domain** | 2 | Manual | Production, compliance, branding |
+
+### Option 1: VSX DNS (Simplest)
+
+Zero-config setup with automatic domain assignment. Just **1 environment variable**:
+
+```yaml
+services:
+  gateway:
+    image: vaultsandbox/gateway:latest
+    ports:
+      - '25:25'
+      - '80:80'
+      - '443:443'
+    environment:
+      VSB_VSX_DNS_ENABLED: 'true'
+    volumes:
+      - gateway-data:/app/data
+
+volumes:
+  gateway-data:
+```
 
 ```bash
-# Create a directory
-mkdir vaultsandbox && cd vaultsandbox
-
-# Create docker-compose.yml (see below)
-
-# Start the gateway
-docker-compose up -d
+docker compose up -d
 ```
+
+Your domain is automatically assigned (e.g., `1mzhr2y.vsx.email`). Find it at [vsx.email](https://vsx.email) or run:
+
+```bash
+docker compose exec gateway cat /app/data/certificates/metadata.json; echo
+```
+
+### Option 2: Custom Domain
+
+Use your own domain with just **2 environment variables**:
+
+```yaml
+services:
+  gateway:
+    image: vaultsandbox/gateway:latest
+    ports:
+      - '25:25'
+      - '80:80'
+      - '443:443'
+    environment:
+      VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'qa.example.com'
+      VSB_CERT_ENABLED: 'true'
+    volumes:
+      - gateway-data:/app/data
+
+volumes:
+  gateway-data:
+```
+
+**Requires DNS setup**: Create A and MX records pointing to your server. See [Custom Domain Quick Start](/getting-started/quickstart-custom-domain/) for details.
+
+---
 
 VaultSandbox runs as a single unified gateway service that includes the SMTP server, API, and web UI all in one container.
 
-## Minimal Configuration (Just 3 Variables!)
+## Configuration Reference
 
-VaultSandbox is designed for simplicity. You only need **3 environment variables** to get started:
+### VSX DNS Mode
 
-```yaml
-VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'qa.example.com'
-VSB_CERT_ENABLED: 'true'
-VSB_CERT_EMAIL: 'admin@example.com'
-```
+| Variable | Description |
+|----------|-------------|
+| `VSB_VSX_DNS_ENABLED` | Set to `true` to enable automatic DNS via [vsx.email](https://vsx.email) |
 
-Everything else is automatic:
-
-- ✅ **API key auto-generated** and persisted to disk
-- ✅ **TLS certificates** automatically provisioned via Let's Encrypt
-- ✅ **Email retention** defaults to 7 days (configurable)
-- ✅ **Security and rate limiting** enabled by default
-- ✅ **CORS** auto-configured from your domain (or use `*` for testing)
-
-### Required Variables
+### Custom Domain Mode
 
 | Variable                             | Description                                     | Example                           |
 | ------------------------------------ | ----------------------------------------------- | --------------------------------- |
 | `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | Domains to accept emails for (comma-separated)  | `qa.example.com,test.example.com` |
 | `VSB_CERT_ENABLED`                   | Enable automatic Let's Encrypt TLS certificates | `true`                            |
-| `VSB_CERT_EMAIL`                     | Email for Let's Encrypt notifications           | `admin@example.com`               |
 
 ### Optional Configuration
 
@@ -92,7 +133,40 @@ docker compose logs gateway | grep "API key"
 mkdir vaultsandbox && cd vaultsandbox
 ```
 
-Create `docker-compose.yml`:
+Create `docker-compose.yml`. Choose your mode:
+
+**VSX DNS (recommended for getting started):**
+
+```yaml
+services:
+  gateway:
+    image: vaultsandbox/gateway:latest
+    container_name: vaultsandbox-gateway
+    restart: unless-stopped
+
+    ports:
+      - '25:25' # SMTP
+      - '80:80' # HTTP (ACME + VSX verification)
+      - '443:443' # HTTPS (Web UI + API)
+
+    environment:
+      VSB_VSX_DNS_ENABLED: 'true'
+
+    volumes:
+      - gateway-data:/app/data
+
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  gateway-data:
+```
+
+**Custom Domain:**
 
 ```yaml
 services:
@@ -107,13 +181,11 @@ services:
       - '443:443' # HTTPS (Web UI + API)
 
     environment:
-      # Just 3 variables - that's it!
       VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'qa.example.com'
       VSB_CERT_ENABLED: 'true'
-      VSB_CERT_EMAIL: 'admin@example.com'
 
     volumes:
-      - gateway-data:/app/data # Persist certificates and API keys
+      - gateway-data:/app/data
 
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost/health']
@@ -158,6 +230,8 @@ VaultSandbox automatically provisions Let's Encrypt certificates on first startu
 
 ## Production Deployment
 
+Production deployments typically use **Custom Domain** mode for branding and compliance.
+
 ### Step 1: Create Production Configuration
 
 ```bash
@@ -179,10 +253,9 @@ services:
       - '443:443' # HTTPS (Web UI + API)
 
     environment:
-      # Required (3 variables)
+      # Core configuration
       VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'qa.example.com,staging.example.com'
       VSB_CERT_ENABLED: 'true'
-      VSB_CERT_EMAIL: 'admin@example.com'
 
       # Optional production settings
       VSB_LOCAL_INBOX_MAX_TTL: '604800' # 7 days

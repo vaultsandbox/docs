@@ -15,7 +15,7 @@ Designed for CI/CD pipelines, VaultSandbox stores everything in-memory for fast 
 
 ## Next Steps
 
-1. **[Quick Start](/getting-started/quickstart/)** - Deploy VaultSandbox in under 15 minutes
+1. **[Quick Start](/getting-started/quickstart/)** - Deploy VaultSandbox in under 5 minutes
 2. **[Architecture Overview](/getting-started/architecture/)** - Understand the zero-knowledge security model
 3. **[Deployment Setup](/deployment/deployment-setup/)** - Infrastructure, DNS, and TLS setup
 4. **[Docker Compose Setup](/deployment/docker-compose/)** - Production-ready deployment guide

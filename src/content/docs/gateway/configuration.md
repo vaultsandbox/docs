@@ -11,7 +11,9 @@ All environment variables at a glance. See sections below for details.
 
 | Variable                             | Default           | Description                               |
 | :----------------------------------- | :---------------- | :---------------------------------------- |
-| **Required**                         |                   |                                           |
+| **VSX DNS**                          |                   |                                           |
+| `VSB_VSX_DNS_ENABLED`                | `false`           | Enable automatic DNS via vsx.email        |
+| **Custom Domain**                    |                   |                                           |
 | `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | —                 | Domains to accept emails for              |
 | **SMTP**                             |                   |                                           |
 | `VSB_SMTP_HOST`                      | `0.0.0.0`         | SMTP bind address                         |
@@ -24,7 +26,7 @@ All environment variables at a glance. See sections below for details.
 | `VSB_SMTP_BANNER`                    | `VaultSandbox...` | SMTP greeting                             |
 | **TLS/Certificates**                 |                   |                                           |
 | `VSB_CERT_ENABLED`                   | `false`           | Enable Let's Encrypt                      |
-| `VSB_CERT_EMAIL`                     | —                 | Let's Encrypt email (required if enabled) |
+| `VSB_CERT_EMAIL`                     | —                 | Let's Encrypt email (optional)            |
 | `VSB_CERT_DOMAIN`                    | (auto)            | Primary certificate domain                |
 | `VSB_CERT_STAGING`                   | `false`           | Use staging environment                   |
 | `VSB_SMTP_TLS_CERT_PATH`             | —                 | Manual cert path                          |
@@ -66,13 +68,51 @@ You can set environment variables in:
 2.  **System environment** variables
 3.  **Docker run** command with `-e` flags
 
-## Required Variables
+## VSX DNS Mode
 
-These variables **must** be set for the gateway to function correctly.
+The simplest way to run VaultSandbox. With VSX DNS enabled, the gateway automatically discovers your public IP, assigns a domain (e.g., `1mzhr2y.vsx.email`), and configures DNS and certificates—no manual setup required.
+
+### VSB_VSX_DNS_ENABLED
+
+**Description**: Enable automatic DNS configuration via [vsx.email](https://vsx.email). When enabled, the gateway auto-discovers your public IP and assigns a subdomain with proper MX records.
+
+**Default**: `false`
+
+**Example**:
+
+```bash
+VSB_VSX_DNS_ENABLED=true
+```
+
+**Requirements**:
+
+- Ports 25, 80, and 443 must be publicly reachable
+- No NAT or firewall blocking inbound connections
+
+**What it configures automatically**:
+
+- Domain assignment based on your IP (e.g., `1mzhr2y.vsx.email`)
+- DNS records (A and MX)
+- Let's Encrypt TLS certificates
+- CORS origin
+
+:::tip[Finding Your Domain]
+After starting the gateway, find your assigned domain by entering your IP at [vsx.email](https://vsx.email) or running:
+
+```bash
+docker compose exec gateway cat /app/data/certificates/metadata.json; echo
+```
+:::
+
+---
+
+## Custom Domain Mode
+
+Use your own domain instead of VSX DNS. Requires manual DNS configuration.
 
 ### VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS
 
-**Description**: Comma-separated list of domains to accept emails for. The gateway will reject emails addressed to other domains.
+**Description**: Comma-separated list of domains to accept emails for. The gateway will reject emails addressed to other domains. **Required when not using VSX DNS.**
 
 **Example**:
 
@@ -85,6 +125,10 @@ VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS=mail.example.com,sandbox.example.com
 - SMTP RCPT TO validation
 - Default domain for ACME certificates (first domain in list)
 - Auto-derived CORS origin (if `VSB_SERVER_ORIGIN` not set)
+
+:::note[Not needed with VSX DNS]
+When `VSB_VSX_DNS_ENABLED=true`, the allowed recipient domain is automatically configured based on your assigned vsx.email subdomain.
+:::
 
 ## SMTP Configuration
 
@@ -321,7 +365,7 @@ Variables to configure automatic SSL certificate provisioning.
 
 ### VSB_CERT_EMAIL
 
-**Description**: Email address for Let's Encrypt registration. **Required** if `VSB_CERT_ENABLED` is true.
+**Description**: Email address for Let's Encrypt registration and certificate expiry notifications. Optional - certificates work without it.
 
 ### VSB_CERT_DOMAIN
 
