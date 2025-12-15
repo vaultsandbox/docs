@@ -71,7 +71,7 @@ print(f"Time remaining: {int(time_until_expiry.total_seconds())}s")
 server_sig_pk: str
 ```
 
-Base64URL-encoded server signing public key for ML-DSA-65 signature verification.
+Base64-encoded server signing public key for ML-DSA-65 signature verification.
 
 ## Methods
 
@@ -227,29 +227,41 @@ Waits until the inbox has at least the specified number of emails. More efficien
 async def wait_for_email_count(
     self,
     count: int,
-    timeout: int = 30000,
-) -> list[Email]
+    options: WaitForCountOptions | None = None,
+) -> None
 ```
 
 #### Parameters
 
 - `count`: Minimum number of emails to wait for
-- `timeout`: Maximum time to wait in milliseconds (default: 30000)
+- `options`: Optional configuration for waiting
+
+```python
+@dataclass
+class WaitForCountOptions:
+    timeout: int = 30000  # Maximum wait time in milliseconds
+```
 
 #### Returns
 
-`list[Email]` - List of all emails in the inbox
+`None` - Returns when the count is reached
 
 #### Example
 
 ```python
+from vaultsandbox import WaitForCountOptions
+
 # Trigger multiple emails
 await send_multiple_notifications(inbox.email_address, 3)
 
-# Wait for all 3 to arrive
-emails = await inbox.wait_for_email_count(3, timeout=30000)
+# Wait for all 3 to arrive (with default timeout)
+await inbox.wait_for_email_count(3)
 
-# Now process all emails
+# Wait with custom timeout
+await inbox.wait_for_email_count(3, WaitForCountOptions(timeout=60000))
+
+# Now list and process all emails
+emails = await inbox.list_emails()
 assert len(emails) >= 3
 ```
 
@@ -372,7 +384,7 @@ print(f"Emails hash: {status.emails_hash}")
 Gets the raw, decrypted source of a specific email (original MIME format).
 
 ```python
-async def get_raw_email(self, email_id: str) -> str
+async def get_raw_email(self, email_id: str) -> RawEmail
 ```
 
 #### Parameters
@@ -381,20 +393,28 @@ async def get_raw_email(self, email_id: str) -> str
 
 #### Returns
 
-`str` - Raw MIME email content
+`RawEmail` - Object containing the email ID and raw MIME content
+
+```python
+@dataclass
+class RawEmail:
+    id: str   # The email ID
+    raw: str  # The raw MIME email content
+```
 
 #### Example
 
 ```python
 emails = await inbox.list_emails()
-raw = await inbox.get_raw_email(emails[0].id)
+raw_email = await inbox.get_raw_email(emails[0].id)
 
+print(f"Email ID: {raw_email.id}")
 print("Raw MIME source:")
-print(raw)
+print(raw_email.raw)
 
 # Save to file for debugging
 with open("email.eml", "w") as f:
-    f.write(raw)
+    f.write(raw_email.raw)
 ```
 
 ---

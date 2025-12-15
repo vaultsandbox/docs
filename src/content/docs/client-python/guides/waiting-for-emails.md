@@ -111,19 +111,16 @@ email = await inbox.wait_for_email(
 ### Wait for Specific Count
 
 ```python
-from vaultsandbox import WaitForEmailOptions
+from vaultsandbox import WaitForCountOptions
 
 # Trigger multiple emails
 await send_notifications(inbox.email_address, 3)
 
-# Wait for all 3 to arrive
-await inbox.wait_for_email_count(
-    3,
-    WaitForEmailOptions(
-        timeout=30000,
-        poll_interval=1000,  # Check every second
-    )
-)
+# Wait for all 3 to arrive (with default 30 second timeout)
+await inbox.wait_for_email_count(3)
+
+# Or with custom timeout
+await inbox.wait_for_email_count(3, WaitForCountOptions(timeout=60000))
 
 # Now list all emails
 emails = await inbox.list_emails()

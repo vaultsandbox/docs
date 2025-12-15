@@ -213,13 +213,17 @@ if email.auth_results.reverse_dns:
 
 ## Validation Helper
 
-The `validate()` method provides a summary of all authentication checks:
+The `validate()` method provides a summary of all authentication checks. It requires explicit `pass` status for each check - `none` or other statuses are considered failures.
 
 ```python
 validation = email.auth_results.validate()
 
-print(validation.passed)    # Overall pass/fail
-print(validation.failures)  # List of failure reasons
+print(validation.passed)           # True if SPF, DKIM, and DMARC all passed
+print(validation.spf_passed)       # Whether SPF explicitly passed
+print(validation.dkim_passed)      # Whether at least one DKIM signature passed
+print(validation.dmarc_passed)     # Whether DMARC explicitly passed
+print(validation.reverse_dns_passed)  # Whether reverse DNS passed
+print(validation.failures)         # List of failure reasons
 ```
 
 ### AuthResultsValidation Structure
@@ -227,9 +231,15 @@ print(validation.failures)  # List of failure reasons
 ```python
 @dataclass
 class AuthResultsValidation:
-    passed: bool           # True if all checks passed
-    failures: list[str]    # Array of failure descriptions
+    passed: bool              # True if SPF, DKIM, and DMARC all passed
+    spf_passed: bool          # Whether SPF check passed
+    dkim_passed: bool         # Whether at least one DKIM signature passed
+    dmarc_passed: bool        # Whether DMARC check passed
+    reverse_dns_passed: bool  # Whether reverse DNS check passed
+    failures: list[str]       # Array of failure descriptions
 ```
+
+> **Note:** The `passed` field reflects whether SPF, DKIM, and DMARC all passed. Reverse DNS is tracked separately in `reverse_dns_passed` but does not affect the overall `passed` status.
 
 ### Validation Examples
 
@@ -238,9 +248,19 @@ class AuthResultsValidation:
 ```python
 validation = email.auth_results.validate()
 
-# AuthResultsValidation(passed=True, failures=[])
+# AuthResultsValidation(
+#     passed=True,
+#     spf_passed=True,
+#     dkim_passed=True,
+#     dmarc_passed=True,
+#     reverse_dns_passed=True,
+#     failures=[]
+# )
 
 assert validation.passed is True
+assert validation.spf_passed is True
+assert validation.dkim_passed is True
+assert validation.dmarc_passed is True
 assert validation.failures == []
 ```
 
@@ -251,9 +271,13 @@ validation = email.auth_results.validate()
 
 # AuthResultsValidation(
 #     passed=False,
+#     spf_passed=False,
+#     dkim_passed=True,
+#     dmarc_passed=False,
+#     reverse_dns_passed=True,
 #     failures=[
-#         "SPF: fail",
-#         "DMARC: fail"
+#         "SPF check failed: softfail (domain: example.com)",
+#         "DMARC policy: fail (policy: reject)"
 #     ]
 # )
 
@@ -261,6 +285,12 @@ if not validation.passed:
     print("Authentication failures:")
     for failure in validation.failures:
         print(f"  - {failure}")
+
+    # Check individual results
+    print(f"SPF: {'PASS' if validation.spf_passed else 'FAIL'}")
+    print(f"DKIM: {'PASS' if validation.dkim_passed else 'FAIL'}")
+    print(f"DMARC: {'PASS' if validation.dmarc_passed else 'FAIL'}")
+    print(f"Reverse DNS: {'PASS' if validation.reverse_dns_passed else 'FAIL'}")
 ```
 
 ## Testing Patterns
@@ -312,13 +342,16 @@ async def test_handles_emails_without_authentication(inbox):
     email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 
     # Some senders don't have SPF/DKIM configured
+    # Note: validate() requires explicit 'pass' status - 'none' is considered a failure
     validation = email.auth_results.validate()
 
-    # Check if validation was performed
-    assert isinstance(validation.passed, bool)
-    assert isinstance(validation.failures, list)
+    # Check individual results
+    print(f"SPF: {'PASS' if validation.spf_passed else 'FAIL'}")
+    print(f"DKIM: {'PASS' if validation.dkim_passed else 'FAIL'}")
+    print(f"DMARC: {'PASS' if validation.dmarc_passed else 'FAIL'}")
+    print(f"Reverse DNS: {'PASS' if validation.reverse_dns_passed else 'FAIL'}")
 
-    # Log results for debugging
+    # Log failures for debugging
     if not validation.passed:
         print(f"Auth failures (expected for test emails): {validation.failures}")
 ```
@@ -343,23 +376,22 @@ async def email(inbox):
 
 @pytest.mark.asyncio
 async def test_spf_check(email):
+    # For production emails, require explicit pass
     if email.auth_results.spf:
-        assert email.auth_results.spf.status in (
-            SPFStatus.PASS,
-            SPFStatus.NEUTRAL,
-            SPFStatus.SOFTFAIL,
-        )
+        assert email.auth_results.spf.status == SPFStatus.PASS
 
 @pytest.mark.asyncio
 async def test_dkim_check(email):
+    # At least one DKIM signature must pass
     if email.auth_results.dkim:
         any_passed = any(d.status == DKIMStatus.PASS for d in email.auth_results.dkim)
         assert any_passed is True
 
 @pytest.mark.asyncio
 async def test_dmarc_check(email):
+    # For production emails, require explicit pass
     if email.auth_results.dmarc:
-        assert email.auth_results.dmarc.status in (DMARCStatus.PASS, DMARCStatus.NONE)
+        assert email.auth_results.dmarc.status == DMARCStatus.PASS
 ```
 
 ## Why Authentication Matters

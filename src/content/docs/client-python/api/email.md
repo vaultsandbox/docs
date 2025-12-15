@@ -484,25 +484,33 @@ assert not any(e.id == email.id for e in emails)
 Gets the raw MIME source of this email (decrypted).
 
 ```python
-async def get_raw(self) -> str
+async def get_raw(self) -> RawEmail
 ```
 
 #### Returns
 
-`str` - Raw MIME email content
+`RawEmail` - Object containing the email ID and raw MIME content
+
+```python
+@dataclass
+class RawEmail:
+    id: str   # The email ID
+    raw: str  # The raw MIME email content
+```
 
 #### Example
 
 ```python
 email = await inbox.wait_for_email()
-raw = await email.get_raw()
+raw_email = await email.get_raw()
 
+print(f"Email ID: {raw_email.id}")
 print("Raw MIME source:")
-print(raw)
+print(raw_email.raw)
 
 # Save to .eml file
-with open(f"email-{email.id}.eml", "w") as f:
-    f.write(raw)
+with open(f"email-{raw_email.id}.eml", "w") as f:
+    f.write(raw_email.raw)
 ```
 
 ## AuthResults
@@ -624,9 +632,15 @@ def validate(self) -> AuthResultsValidation
 ```python
 @dataclass
 class AuthResultsValidation:
-    passed: bool
+    passed: bool              # True if SPF, DKIM, and DMARC all passed
+    spf_passed: bool          # Whether SPF check passed
+    dkim_passed: bool         # Whether at least one DKIM signature passed
+    dmarc_passed: bool        # Whether DMARC check passed
+    reverse_dns_passed: bool  # Whether reverse DNS check passed
     failures: list[str] = field(default_factory=list)
 ```
+
+> **Note:** The `passed` field reflects whether SPF, DKIM, and DMARC all passed. Reverse DNS is tracked separately but does not affect `passed`.
 
 ##### Example
 
@@ -722,10 +736,10 @@ async def complete_email_example():
         print("\nMarked as read")
 
         # Get raw source
-        raw = await email.get_raw()
-        with open(f"email-{email.id}.eml", "w") as f:
-            f.write(raw)
-        print(f"Saved raw source to email-{email.id}.eml")
+        raw_email = await email.get_raw()
+        with open(f"email-{raw_email.id}.eml", "w") as f:
+            f.write(raw_email.raw)
+        print(f"Saved raw source to email-{raw_email.id}.eml")
 
         # Clean up
         await inbox.delete()

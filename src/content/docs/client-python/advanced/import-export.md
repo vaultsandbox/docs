@@ -365,8 +365,8 @@ class ExportedInbox:
     expires_at: str         # ISO 8601 timestamp when the inbox expires
     inbox_hash: str         # SHA-256 hash of the client KEM public key
     server_sig_pk: str      # Server signing public key for verification
-    public_key_b64: str     # Base64URL-encoded client public key
-    secret_key_b64: str     # Base64URL-encoded client secret key (SENSITIVE!)
+    public_key_b64: str     # Base64-encoded client public key
+    secret_key_b64: str     # Base64-encoded client secret key (SENSITIVE!)
     exported_at: str        # ISO 8601 timestamp when the inbox was exported
 ```
 

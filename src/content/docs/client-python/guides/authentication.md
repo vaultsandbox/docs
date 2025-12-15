@@ -301,23 +301,28 @@ class TestEmailAuthPreProduction:
     @pytest.mark.asyncio
     async def test_validates_staging_environment_email_auth(self, inbox):
         email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
-        auth = email.auth_results
+        validation = email.auth_results.validate()
 
-        # SPF should be configured
-        if auth.spf:
-            if auth.spf.status != "pass":
-                print("SPF not configured correctly")
-                print(f"   Status: {auth.spf.status}")
-                print(f"   Info: {auth.spf.info}")
-            assert auth.spf.status in ["pass", "neutral"]
+        # Check individual results using the validation helper
+        print(f"SPF: {'PASS' if validation.spf_passed else 'FAIL'}")
+        print(f"DKIM: {'PASS' if validation.dkim_passed else 'FAIL'}")
+        print(f"DMARC: {'PASS' if validation.dmarc_passed else 'FAIL'}")
+        print(f"Reverse DNS: {'PASS' if validation.reverse_dns_passed else 'FAIL'}")
 
-        # DKIM should be present
-        if auth.dkim and len(auth.dkim) > 0:
-            any_valid = any(d.status == "pass" for d in auth.dkim)
-            if not any_valid:
-                print("No valid DKIM signatures")
-                print("   Fix: Configure DKIM signing in mail server")
-            assert any_valid
+        # SPF should be configured (requires explicit 'pass')
+        if not validation.spf_passed:
+            print("SPF not configured correctly")
+            if email.auth_results.spf:
+                print(f"   Status: {email.auth_results.spf.status}")
+                print(f"   Info: {email.auth_results.spf.info}")
+            print("   Fix: Add SPF record to DNS")
+        assert validation.spf_passed
+
+        # DKIM should be present (at least one signature must pass)
+        if not validation.dkim_passed:
+            print("No valid DKIM signatures")
+            print("   Fix: Configure DKIM signing in mail server")
+        assert validation.dkim_passed
 ```
 
 ### Production Readiness Check
