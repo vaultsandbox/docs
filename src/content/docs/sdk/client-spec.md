@@ -343,7 +343,9 @@ Returns inbox sync status for efficient polling.
 
 #### GET /api/inboxes/{emailAddress}/emails
 
-Lists all emails in an inbox.
+Lists all emails in an inbox (metadata only).
+
+**Note:** The server returns only metadata (sender, subject, date) for this endpoint. To retrieve the full email content (body, attachments), the client library **must** fetch each email individually using `GET /api/inboxes/{emailAddress}/emails/{emailId}`.
 
 **Response:**
 
@@ -355,9 +357,6 @@ Lists all emails in an inbox.
 		"receivedAt": "2024-01-15T12:00:00.000Z",
 		"isRead": false,
 		"encryptedMetadata": {
-			/* EncryptedPayload */
-		},
-		"encryptedParsed": {
 			/* EncryptedPayload */
 		}
 	}
@@ -483,6 +482,15 @@ After decrypting `encryptedParsed`:
 ```
 
 ### Authentication Results
+
+#### Validation Logic
+
+Client libraries should provide a validation helper that verifies:
+
+1. **SPF**: `status` must be `"pass"`
+2. **DKIM**: At least one result in the array must have `status: "pass"`
+3. **DMARC**: `status` must be `"pass"`
+4. **Reverse DNS**: `status` must be `"pass"` (if checked)
 
 #### SPF Result
 
