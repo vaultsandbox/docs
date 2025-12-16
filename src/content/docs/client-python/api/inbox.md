@@ -244,7 +244,7 @@ class WaitForCountOptions:
 
 #### Returns
 
-`None` - Returns when the count is reached
+`list[Email]` - List of all emails in the inbox once the count is reached
 
 #### Example
 
@@ -255,14 +255,15 @@ from vaultsandbox import WaitForCountOptions
 await send_multiple_notifications(inbox.email_address, 3)
 
 # Wait for all 3 to arrive (with default timeout)
-await inbox.wait_for_email_count(3)
+emails = await inbox.wait_for_email_count(3)
+assert len(emails) >= 3
 
 # Wait with custom timeout
-await inbox.wait_for_email_count(3, WaitForCountOptions(timeout=60000))
+emails = await inbox.wait_for_email_count(3, WaitForCountOptions(timeout=60000))
 
-# Now list and process all emails
-emails = await inbox.list_emails()
-assert len(emails) >= 3
+# Process the returned emails directly
+for email in emails:
+    print(f"Subject: {email.subject}")
 ```
 
 #### Errors
