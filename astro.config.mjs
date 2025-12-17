@@ -107,7 +107,10 @@ export default defineConfig({
 				{
 					label: 'SDK Development',
 					collapsed: true,
-					items: [{ label: 'Client SDK Specification', link: '/sdk/client-spec/' }],
+					items: [
+						{ label: 'Client SDK Specification', link: '/sdk/client-spec/' },
+						{ label: 'Test Specification', link: '/sdk/tests-spec/' },
+					],
 				},
 			],
 		}),
