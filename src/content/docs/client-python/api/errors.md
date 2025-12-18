@@ -699,4 +699,3 @@ finally:
 
 - [CI/CD Integration](/client-python/testing/cicd/) - Error handling in CI
 - [VaultSandboxClient API](/client-python/api/client/) - Client configuration
-- [Troubleshooting Guide](/guides/troubleshooting/) - Common issues and solutions

@@ -705,4 +705,3 @@ try {
 
 - [CI/CD Integration](/client-node/testing/cicd) - Error handling in CI
 - [VaultSandboxClient API](/client-node/api/client) - Client configuration
-- [Troubleshooting Guide](/guides/troubleshooting) - Common issues and solutions
