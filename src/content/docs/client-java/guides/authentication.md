@@ -461,7 +461,11 @@ class EmailAuthenticationTest {
 
     @BeforeEach
     void setUp() {
-        client = VaultSandboxClient.create(System.getenv("VAULTSANDBOX_API_KEY"));
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
         inbox = client.createInbox();
     }
 

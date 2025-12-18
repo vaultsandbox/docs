@@ -31,12 +31,18 @@ See [Gateway Overview](/gateway/) or jump to [Quick Start](/getting-started/quic
 
 ```java
 import com.vaultsandbox.client.VaultSandboxClient;
+import com.vaultsandbox.client.ClientConfig;
 import com.vaultsandbox.client.Inbox;
 import com.vaultsandbox.client.Email;
 
 public class EmailTest {
     public static void main(String[] args) {
-        VaultSandboxClient client = VaultSandboxClient.create("your-api-key");
+        ClientConfig config = ClientConfig.builder()
+            .apiKey("your-api-key")
+            .baseUrl("https://gateway.example.com")
+            .build();
+
+        VaultSandboxClient client = VaultSandboxClient.create(config);
         try {
             // Create inbox (keypair generated automatically)
             Inbox inbox = client.createInbox();

@@ -320,6 +320,7 @@ Configure SSE behavior through `ClientConfig`:
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
+    .baseUrl(baseUrl)
     .strategy(StrategyType.SSE)
     .sseReconnectInterval(Duration.ofSeconds(5))
     .sseMaxReconnectAttempts(10)
@@ -342,6 +343,7 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
+    .baseUrl(baseUrl)
     .strategy(StrategyType.SSE)
     .build();
 ```
@@ -351,6 +353,7 @@ ClientConfig config = ClientConfig.builder()
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
+    .baseUrl(baseUrl)
     .strategy(StrategyType.POLLING)
     .pollInterval(Duration.ofSeconds(1))
     .build();
@@ -506,6 +509,7 @@ abstract class RealTimeTestBase {
         client = VaultSandboxClient.create(
             ClientConfig.builder()
                 .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+                .baseUrl(System.getenv("VAULTSANDBOX_URL"))
                 .strategy(StrategyType.SSE)
                 .build()
         );

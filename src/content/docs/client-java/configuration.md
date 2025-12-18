@@ -3,17 +3,22 @@ title: Configuration
 description: Configuration options for the VaultSandbox Java client
 ---
 
-The Java client uses a builder pattern for configuration. Only the API key is required - all other options have sensible defaults.
+The Java client uses a builder pattern for configuration. Both the API key and base URL are required since VaultSandbox is self-hosted.
 
 ## Basic Configuration
 
-Two ways to create a client:
+```java
+ClientConfig config = ClientConfig.builder()
+    .apiKey("your-api-key")
+    .baseUrl("https://gateway.example.com")
+    .build();
+
+VaultSandboxClient client = VaultSandboxClient.create(config);
+```
+
+### With Additional Options
 
 ```java
-// Simple - API key only (uses all defaults)
-VaultSandboxClient client = VaultSandboxClient.create("your-api-key");
-
-// Advanced - Full configuration
 ClientConfig config = ClientConfig.builder()
     .apiKey("your-api-key")
     .baseUrl("https://gateway.example.com")
@@ -29,7 +34,7 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `apiKey` | `String` | required | API key for authentication |
-| `baseUrl` | `String` | `https://smtp.vaultsandbox.com` | Gateway API endpoint URL |
+| `baseUrl` | `String` | required | Gateway API endpoint URL |
 | `strategy` | `StrategyType` | `AUTO` | Email delivery strategy |
 | `httpTimeout` | `Duration` | 30s | HTTP request timeout |
 | `waitTimeout` | `Duration` | 30s | Default email wait timeout |
@@ -127,8 +132,8 @@ if (apiKey == null || apiKey.isBlank()) {
 }
 
 String baseUrl = System.getenv("VAULTSANDBOX_URL");
-if (baseUrl == null) {
-    baseUrl = "https://smtp.vaultsandbox.com";
+if (baseUrl == null || baseUrl.isBlank()) {
+    throw new IllegalStateException("VAULTSANDBOX_URL not set");
 }
 
 ClientConfig config = ClientConfig.builder()
@@ -175,7 +180,11 @@ class EmailTests {
 
     @BeforeAll
     static void setup() {
-        client = VaultSandboxClient.create(System.getenv("VAULTSANDBOX_API_KEY"));
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
     }
 
     @AfterAll

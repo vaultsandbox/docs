@@ -21,9 +21,15 @@ An inbox is a temporary, encrypted email destination that:
 
 ```java
 import com.vaultsandbox.client.VaultSandboxClient;
+import com.vaultsandbox.client.ClientConfig;
 import com.vaultsandbox.client.Inbox;
 
-VaultSandboxClient client = VaultSandboxClient.create("your-api-key");
+ClientConfig config = ClientConfig.builder()
+    .apiKey("your-api-key")
+    .baseUrl("https://gateway.example.com")
+    .build();
+
+VaultSandboxClient client = VaultSandboxClient.create(config);
 
 Inbox inbox = client.createInbox();
 
@@ -390,7 +396,11 @@ class EmailTest {
 
     @BeforeAll
     static void initClient() {
-        client = VaultSandboxClient.create("test-api-key");
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
     }
 
     @BeforeEach

@@ -128,10 +128,16 @@ Create a simple test to verify the SDK is correctly installed:
 
 ```java
 import com.vaultsandbox.client.VaultSandboxClient;
+import com.vaultsandbox.client.ClientConfig;
 
 public class VerifyInstallation {
     public static void main(String[] args) {
-        try (VaultSandboxClient client = VaultSandboxClient.create("test-key")) {
+        ClientConfig config = ClientConfig.builder()
+            .apiKey("your-api-key")
+            .baseUrl("https://gateway.example.com")
+            .build();
+
+        try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
             System.out.println("VaultSandbox client initialized successfully!");
             System.out.println("Bouncy Castle provider registered.");
         }

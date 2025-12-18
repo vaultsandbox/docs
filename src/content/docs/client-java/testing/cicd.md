@@ -45,9 +45,17 @@ public abstract class BaseEmailTest {
             );
         }
 
+        String baseUrl = System.getenv("VAULTSANDBOX_URL");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalStateException(
+                "VAULTSANDBOX_URL environment variable not set"
+            );
+        }
+
         client = VaultSandboxClient.create(
             ClientConfig.builder()
                 .apiKey(apiKey)
+                .baseUrl(baseUrl)
                 .strategy(StrategyType.POLLING) // More reliable in CI
                 .waitTimeout(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(2))
@@ -134,6 +142,7 @@ public class EmailTestBase {
         client = VaultSandboxClient.create(
             ClientConfig.builder()
                 .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+                .baseUrl(System.getenv("VAULTSANDBOX_URL"))
                 .strategy(StrategyType.POLLING)
                 .build()
         );
@@ -368,12 +377,12 @@ steps:
 | Variable | Description |
 |----------|-------------|
 | `VAULTSANDBOX_API_KEY` | API key for authentication |
+| `VAULTSANDBOX_URL` | Gateway API endpoint URL |
 
 ### Optional Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VAULTSANDBOX_URL` | `https://smtp.vaultsandbox.com` | API endpoint |
 | `VAULTSANDBOX_TIMEOUT` | `60` | Default timeout in seconds |
 
 ### Configuration Helper
@@ -390,8 +399,7 @@ public class CIConfig {
 
     public static ClientConfig fromEnvironment() {
         String apiKey = requireEnv("VAULTSANDBOX_API_KEY");
-        String baseUrl = getEnv("VAULTSANDBOX_URL",
-            "https://smtp.vaultsandbox.com");
+        String baseUrl = requireEnv("VAULTSANDBOX_URL");
         int timeout = Integer.parseInt(
             getEnv("VAULTSANDBOX_TIMEOUT", "60"));
 

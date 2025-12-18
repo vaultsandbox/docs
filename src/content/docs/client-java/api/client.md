@@ -15,27 +15,6 @@ The client is thread-safe and can be shared across multiple threads. It uses `Co
 
 ## Factory Methods
 
-### create(String apiKey)
-
-Creates a client with default configuration.
-
-```java
-public static VaultSandboxClient create(String apiKey)
-```
-
-**Parameters:**
-- `apiKey` - VaultSandbox API key (required)
-
-**Returns:** Configured `VaultSandboxClient` instance
-
-**Throws:**
-- `NullPointerException` - if apiKey is null
-
-**Example:**
-```java
-VaultSandboxClient client = VaultSandboxClient.create("your-api-key");
-```
-
 ### create(ClientConfig config)
 
 Creates a client with custom configuration.
@@ -91,7 +70,7 @@ ClientConfig config = ClientConfig.builder()
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `apiKey` | `String` | required | API authentication key |
-| `baseUrl` | `String` | `https://smtp.vaultsandbox.com` | API base URL |
+| `baseUrl` | `String` | required | API base URL |
 | `strategy` | `StrategyType` | `AUTO` | Delivery strategy (AUTO, SSE, POLLING) |
 | `httpTimeout` | `Duration` | 30s | HTTP request timeout |
 | `waitTimeout` | `Duration` | 30s | Default wait timeout for emails |
@@ -444,7 +423,11 @@ Closes SSE connections, stops polling threads, and clears the inbox registry. In
 
 **Usage with try-with-resources (preferred):**
 ```java
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     Inbox inbox = client.createInbox();
     Email email = inbox.waitForEmail();
     // Process email
@@ -454,7 +437,11 @@ try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
 
 **Manual close:**
 ```java
-VaultSandboxClient client = VaultSandboxClient.create(apiKey);
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+VaultSandboxClient client = VaultSandboxClient.create(config);
 try {
     Inbox inbox = client.createInbox();
     Email email = inbox.waitForEmail();
@@ -504,7 +491,12 @@ try {
 ### Basic Usage
 
 ```java
-VaultSandboxClient client = VaultSandboxClient.create("api-key");
+ClientConfig config = ClientConfig.builder()
+    .apiKey("your-api-key")
+    .baseUrl("https://gateway.example.com")
+    .build();
+
+VaultSandboxClient client = VaultSandboxClient.create(config);
 try {
     Inbox inbox = client.createInbox();
     System.out.println("Inbox: " + inbox.getEmailAddress());
@@ -524,6 +516,7 @@ try {
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+    .baseUrl(System.getenv("VAULTSANDBOX_URL"))
     .strategy(StrategyType.AUTO)
     .waitTimeout(Duration.ofSeconds(60))
     .maxRetries(5)
@@ -546,7 +539,11 @@ try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
 ### Multi-Inbox Monitoring
 
 ```java
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     Inbox inbox1 = client.createInbox();
     Inbox inbox2 = client.createInbox();
     Inbox inbox3 = client.createInbox();
@@ -573,8 +570,13 @@ try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
 ### Export and Import
 
 ```java
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+
 // Session 1: Create and export
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     Inbox inbox = client.createInbox();
     System.out.println("Created: " + inbox.getEmailAddress());
 
@@ -583,7 +585,7 @@ try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
 }
 
 // Session 2: Import and use
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     Inbox inbox = client.importInboxFromFile(Path.of("inbox.json"));
     System.out.println("Imported: " + inbox.getEmailAddress());
 

@@ -10,7 +10,11 @@ This guide covers common inbox operations including creation, email management, 
 ### Basic Creation
 
 ```java
-VaultSandboxClient client = VaultSandboxClient.create(apiKey);
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+VaultSandboxClient client = VaultSandboxClient.create(config);
 Inbox inbox = client.createInbox();
 
 System.out.println("Send emails to: " + inbox.getEmailAddress());
@@ -320,7 +324,11 @@ class EmailTest {
 
     @BeforeEach
     void setUp() {
-        client = VaultSandboxClient.create(System.getenv("VAULTSANDBOX_API_KEY"));
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
         inbox = client.createInbox();
     }
 
@@ -357,7 +365,11 @@ class EmailTest {
 ```java
 @Test
 void shouldProcessEmails() {
-    try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+    ClientConfig config = ClientConfig.builder()
+        .apiKey(apiKey)
+        .baseUrl(baseUrl)
+        .build();
+    try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
         Inbox inbox = client.createInbox();
 
         try {
@@ -384,7 +396,11 @@ class SharedInboxTest {
 
     @BeforeAll
     void setUpClass() {
-        client = VaultSandboxClient.create(System.getenv("VAULTSANDBOX_API_KEY"));
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
         inbox = client.createInbox(
             CreateInboxOptions.builder()
                 .ttl(Duration.ofHours(1))
@@ -469,7 +485,11 @@ class PooledInboxTest {
 
     @BeforeAll
     static void setUpPool() {
-        VaultSandboxClient client = VaultSandboxClient.create(apiKey);
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(apiKey)
+            .baseUrl(baseUrl)
+            .build();
+        VaultSandboxClient client = VaultSandboxClient.create(config);
         pool = new InboxPool(client);
     }
 
@@ -504,7 +524,11 @@ abstract class EmailTestBase {
 
     @BeforeEach
     void setUpInbox() {
-        client = VaultSandboxClient.create(System.getenv("VAULTSANDBOX_API_KEY"));
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        client = VaultSandboxClient.create(config);
         inbox = client.createInbox();
     }
 
@@ -626,7 +650,11 @@ Inbox inbox = client.createInbox(
 );
 
 // Good: Use try-with-resources for client
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     // Use client...
 }
 ```

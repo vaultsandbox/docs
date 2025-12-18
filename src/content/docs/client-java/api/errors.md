@@ -452,7 +452,11 @@ try {
 Always clean up resources in finally blocks:
 
 ```java
-VaultSandboxClient client = VaultSandboxClient.create(apiKey);
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+VaultSandboxClient client = VaultSandboxClient.create(config);
 Inbox inbox = null;
 try {
     inbox = client.createInbox();
@@ -475,7 +479,11 @@ try {
 Or use try-with-resources:
 
 ```java
-try (VaultSandboxClient client = VaultSandboxClient.create(apiKey)) {
+ClientConfig config = ClientConfig.builder()
+    .apiKey(apiKey)
+    .baseUrl(baseUrl)
+    .build();
+try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
     Inbox inbox = client.createInbox();
     try {
         Email email = inbox.waitForEmail(Duration.ofSeconds(30));

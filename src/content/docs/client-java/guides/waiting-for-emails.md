@@ -574,6 +574,7 @@ For fastest email detection:
 // Use SSE strategy
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
+    .baseUrl(baseUrl)
     .strategy(StrategyType.SSE)
     .build();
 

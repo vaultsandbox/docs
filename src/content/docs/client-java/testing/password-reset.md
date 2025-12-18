@@ -65,6 +65,7 @@ class PasswordResetTest {
         client = VaultSandboxClient.create(
             ClientConfig.builder()
                 .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+                .baseUrl(System.getenv("VAULTSANDBOX_URL"))
                 .waitTimeout(Duration.ofSeconds(30))
                 .build()
         );
@@ -351,9 +352,11 @@ class PasswordResetIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        vaultClient = VaultSandboxClient.create(
-            System.getenv("VAULTSANDBOX_API_KEY")
-        );
+        ClientConfig config = ClientConfig.builder()
+            .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
+            .baseUrl(System.getenv("VAULTSANDBOX_URL"))
+            .build();
+        vaultClient = VaultSandboxClient.create(config);
         inbox = vaultClient.createInbox();
     }
 
