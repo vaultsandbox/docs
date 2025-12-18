@@ -161,6 +161,62 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Java Client',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', link: '/client-java/' },
+						{ label: 'Installation', link: '/client-java/installation/' },
+						{ label: 'Configuration', link: '/client-java/configuration/' },
+						{
+							label: 'Core Concepts',
+							collapsed: true,
+							items: [
+								{ label: 'Inboxes', link: '/client-java/concepts/inboxes/' },
+								{ label: 'Email Objects', link: '/client-java/concepts/emails/' },
+								{ label: 'Authentication Results', link: '/client-java/concepts/auth-results/' },
+							],
+						},
+						{
+							label: 'Usage Guides',
+							collapsed: true,
+							items: [
+								{ label: 'Managing Inboxes', link: '/client-java/guides/managing-inboxes/' },
+								{ label: 'Waiting for Emails', link: '/client-java/guides/waiting-for-emails/' },
+								{ label: 'Working with Attachments', link: '/client-java/guides/attachments/' },
+								{ label: 'Email Authentication', link: '/client-java/guides/authentication/' },
+								{ label: 'Real-time Monitoring', link: '/client-java/guides/real-time/' },
+							],
+						},
+						{
+							label: 'Testing Patterns',
+							collapsed: true,
+							items: [
+								{ label: 'Password Reset Flows', link: '/client-java/testing/password-reset/' },
+								{ label: 'Multi-email Scenarios', link: '/client-java/testing/multi-email/' },
+								{ label: 'CI/CD Integration', link: '/client-java/testing/cicd/' },
+							],
+						},
+						{
+							label: 'API Reference',
+							collapsed: true,
+							items: [
+								{ label: 'VaultSandboxClient', link: '/client-java/api/client/' },
+								{ label: 'Inbox', link: '/client-java/api/inbox/' },
+								{ label: 'Email', link: '/client-java/api/email/' },
+								{ label: 'Error Handling', link: '/client-java/api/errors/' },
+							],
+						},
+						{
+							label: 'Advanced Topics',
+							collapsed: true,
+							items: [
+								{ label: 'Import/Export', link: '/client-java/advanced/import-export/' },
+								{ label: 'Delivery Strategies', link: '/client-java/advanced/strategies/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'SDK Development',
 					collapsed: true,
 					items: [
