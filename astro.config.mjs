@@ -5,6 +5,7 @@ import starlight from '@astrojs/starlight';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://vaultsandbox.dev',
+	trailingSlash: 'always',
 	integrations: [
 		starlight({
 			title: 'VaultSandbox',
