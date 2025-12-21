@@ -1,0 +1,137 @@
+---
+title: Java Client
+description: Overview of the VaultSandbox Java SDK for email testing
+---
+
+The official Java SDK for VaultSandbox Gateway. It handles quantum-safe encryption automatically with ML-KEM-768, letting you focus on testing email workflows in your Java applications.
+
+## Key Capabilities
+
+- **Automatic Encryption**: ML-KEM-768 key encapsulation + AES-256-GCM encryption handled transparently
+- **Real-Time Delivery**: SSE-based email delivery with smart polling fallback
+- **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
+- **Full Email Access**: Decrypted content, headers, links, and attachments
+- **Thread-Safe Design**: Safe for concurrent test execution
+- **Fluent APIs**: Builder patterns for configuration and filtering
+
+## Requirements
+
+- Java 21 or later
+- Bouncy Castle (for ML-KEM-768 cryptography)
+- VaultSandbox Gateway server
+- Valid API key
+
+## Gateway Server
+
+The SDK connects to a VaultSandbox Gateway - a receive-only SMTP server you self-host. It handles email reception, authentication validation, and encryption. You can run one with Docker in minutes.
+
+See [Gateway Overview](/gateway/) or jump to [Quick Start](/getting-started/quickstart/) to deploy one.
+
+## Quick Example
+
+```java
+import com.vaultsandbox.client.VaultSandboxClient;
+import com.vaultsandbox.client.ClientConfig;
+import com.vaultsandbox.client.Inbox;
+import com.vaultsandbox.client.Email;
+
+public class EmailTest {
+    public static void main(String[] args) {
+        ClientConfig config = ClientConfig.builder()
+            .apiKey("your-api-key")
+            .baseUrl("https://gateway.example.com")
+            .build();
+
+        VaultSandboxClient client = VaultSandboxClient.create(config);
+        try {
+            // Create inbox (keypair generated automatically)
+            Inbox inbox = client.createInbox();
+            System.out.println("Send email to: " + inbox.getEmailAddress());
+
+            // Wait for email (blocks until received or timeout)
+            Email email = inbox.waitForEmail();
+
+            System.out.println("Subject: " + email.getSubject());
+            System.out.println("Text: " + email.getText());
+
+            // Cleanup
+            inbox.delete();
+        } finally {
+            client.close();
+        }
+    }
+}
+```
+
+### With Custom Configuration
+
+```java
+import com.vaultsandbox.client.ClientConfig;
+import com.vaultsandbox.client.StrategyType;
+import java.time.Duration;
+
+ClientConfig config = ClientConfig.builder()
+    .apiKey("your-api-key")
+    .baseUrl("https://gateway.example.com")
+    .strategy(StrategyType.SSE)
+    .waitTimeout(Duration.ofSeconds(60))
+    .build();
+
+VaultSandboxClient client = VaultSandboxClient.create(config);
+```
+
+### Filtering Emails
+
+```java
+import com.vaultsandbox.client.strategy.EmailFilter;
+
+// Wait for specific email by subject
+Email email = inbox.waitForEmail(
+    EmailFilter.subjectContains("Verification Code")
+);
+
+// Combine filters
+EmailFilter filter = EmailFilter.builder()
+    .from("noreply@example.com")
+    .subject("Password Reset")
+    .build();
+
+Email email = inbox.waitForEmail(filter);
+```
+
+## Installation
+
+Add the dependency to your build file:
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+<Tabs>
+  <TabItem label="Gradle">
+```groovy
+implementation 'com.vaultsandbox:client:0.5.0'
+```
+  </TabItem>
+  <TabItem label="Maven">
+```xml
+<dependency>
+    <groupId>com.vaultsandbox</groupId>
+    <artifactId>client</artifactId>
+    <version>0.5.0</version>
+</dependency>
+```
+  </TabItem>
+</Tabs>
+
+See [Installation](/client-java/installation/) for complete setup instructions including Bouncy Castle configuration.
+
+## Links
+
+- [GitHub Repository](https://github.com/vaultsandbox/client-java)
+- [Maven Central](https://central.sonatype.com/artifact/com.vaultsandbox/client)
+
+## Next Steps
+
+- [Installation](/client-java/installation/) - Install the SDK and dependencies
+- [Configuration](/client-java/configuration/) - Client options and setup
+- [Core Concepts](/client-java/concepts/inboxes/) - Inboxes, emails, and authentication
+- [API Reference](/client-java/api/client/) - Full API documentation
