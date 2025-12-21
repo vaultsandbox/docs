@@ -96,6 +96,18 @@ List<Email> emails = restored.listEmails();
 
 ### Validation
 
+The `validate()` method performs comprehensive integrity checks:
+
+| Check | Description |
+|-------|-------------|
+| Required fields | All fields must be present and non-empty |
+| Timestamp format | `expiresAt` and `exportedAt` must be valid ISO 8601 |
+| Base64url encoding | Keys must be valid base64url-encoded strings |
+| Public key size | Must be exactly 1184 bytes (raw ML-KEM-768) |
+| Secret key size | Must be exactly 2400 bytes (raw ML-KEM-768) |
+| Key derivation | Public key must match bytes 1152-2336 of secret key |
+| Expiration | Inbox must not have expired |
+
 ```java
 ExportedInbox exported = client.exportInbox(inbox);
 
@@ -103,10 +115,13 @@ ExportedInbox exported = client.exportInbox(inbox);
 try {
     exported.validate();
 } catch (InvalidImportDataException e) {
-    System.err.println("Export data is invalid: " + e.getMessage());
+    System.err.println("Export data is invalid:");
+    for (String error : e.getErrors()) {
+        System.err.println("  - " + error);
+    }
 }
 
-// Check expiration manually
+// Check expiration manually (also done by validate())
 Instant expires = Instant.parse(exported.getExpiresAt());
 if (expires.isBefore(Instant.now())) {
     throw new IllegalStateException("Inbox has expired");

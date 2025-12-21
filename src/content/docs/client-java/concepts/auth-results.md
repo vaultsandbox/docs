@@ -187,6 +187,13 @@ if (reverseDns != null) {
 }
 ```
 
+### ReverseDnsResult Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `valid` | `boolean` | Whether reverse DNS lookup succeeded (getter: `isValid()`) |
+| `hostname` | `String` | Resolved hostname for the sending IP |
+
 ### Reverse DNS Example
 
 ```java

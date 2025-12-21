@@ -356,6 +356,29 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 | `domain` | `String` | Server domain |
 | `limits` | `Limits` | Rate limits and constraints |
 
+### Algorithms Properties
+
+The `Algorithms` object contains the cryptographic algorithms used by the server:
+
+| Property | Type | Description | Example |
+|----------|------|-------------|---------|
+| `kem` | `String` | Key encapsulation mechanism | `"ML-KEM-768"` |
+| `sig` | `String` | Digital signature algorithm | `"ML-DSA-65"` |
+| `aead` | `String` | Authenticated encryption | `"AES-256-GCM"` |
+| `kdf` | `String` | Key derivation function | `"HKDF-SHA-512"` |
+
+**Example:**
+```java
+ServerInfo info = client.getServerInfo();
+Algorithms algs = info.getAlgorithms();
+if (algs != null) {
+    System.out.println("KEM: " + algs.getKem());     // ML-KEM-768
+    System.out.println("Sig: " + algs.getSig());     // ML-DSA-65
+    System.out.println("AEAD: " + algs.getAead());   // AES-256-GCM
+    System.out.println("KDF: " + algs.getKdf());     // HKDF-SHA-512
+}
+```
+
 ### Limits Properties
 
 The `Limits` object contains rate limit information:
