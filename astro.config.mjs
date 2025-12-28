@@ -219,6 +219,62 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Go Client',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', link: '/client-go/' },
+						{ label: 'Installation', link: '/client-go/installation/' },
+						{ label: 'Configuration', link: '/client-go/configuration/' },
+						{
+							label: 'Core Concepts',
+							collapsed: true,
+							items: [
+								{ label: 'Inboxes', link: '/client-go/concepts/inboxes/' },
+								{ label: 'Email Objects', link: '/client-go/concepts/emails/' },
+								{ label: 'Authentication Results', link: '/client-go/concepts/auth-results/' },
+							],
+						},
+						{
+							label: 'Usage Guides',
+							collapsed: true,
+							items: [
+								{ label: 'Managing Inboxes', link: '/client-go/guides/managing-inboxes/' },
+								{ label: 'Waiting for Emails', link: '/client-go/guides/waiting-for-emails/' },
+								{ label: 'Working with Attachments', link: '/client-go/guides/attachments/' },
+								{ label: 'Email Authentication', link: '/client-go/guides/authentication/' },
+								{ label: 'Real-time Monitoring', link: '/client-go/guides/real-time/' },
+							],
+						},
+						{
+							label: 'Testing Patterns',
+							collapsed: true,
+							items: [
+								{ label: 'Password Reset Flows', link: '/client-go/testing/password-reset/' },
+								{ label: 'Multi-email Scenarios', link: '/client-go/testing/multi-email/' },
+								{ label: 'CI/CD Integration', link: '/client-go/testing/cicd/' },
+							],
+						},
+						{
+							label: 'API Reference',
+							collapsed: true,
+							items: [
+								{ label: 'VaultSandboxClient', link: '/client-go/api/client/' },
+								{ label: 'Inbox', link: '/client-go/api/inbox/' },
+								{ label: 'Email', link: '/client-go/api/email/' },
+								{ label: 'Error Handling', link: '/client-go/api/errors/' },
+							],
+						},
+						{
+							label: 'Advanced Topics',
+							collapsed: true,
+							items: [
+								{ label: 'Import/Export', link: '/client-go/advanced/import-export/' },
+								{ label: 'Delivery Strategies', link: '/client-go/advanced/strategies/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'SDK Development',
 					collapsed: true,
 					items: [
