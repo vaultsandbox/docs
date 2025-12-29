@@ -19,14 +19,14 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
   <TabItem label="Gradle (Groovy)">
 ```groovy
 dependencies {
-    implementation 'com.vaultsandbox:client:0.5.0'
+    implementation 'com.vaultsandbox:client:0.5.1'
 }
 ```
   </TabItem>
   <TabItem label="Gradle (Kotlin)">
 ```kotlin
 dependencies {
-    implementation("com.vaultsandbox:client:0.5.0")
+    implementation("com.vaultsandbox:client:0.5.1")
 }
 ```
   </TabItem>
@@ -35,7 +35,7 @@ dependencies {
 <dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
 </dependency>
 ```
   </TabItem>
@@ -49,14 +49,14 @@ If you only need the SDK for testing, add it as a test dependency:
   <TabItem label="Gradle (Groovy)">
 ```groovy
 dependencies {
-    testImplementation 'com.vaultsandbox:client:0.5.0'
+    testImplementation 'com.vaultsandbox:client:0.5.1'
 }
 ```
   </TabItem>
   <TabItem label="Gradle (Kotlin)">
 ```kotlin
 dependencies {
-    testImplementation("com.vaultsandbox:client:0.5.0")
+    testImplementation("com.vaultsandbox:client:0.5.1")
 }
 ```
   </TabItem>
@@ -65,7 +65,7 @@ dependencies {
 <dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
     <scope>test</scope>
 </dependency>
 ```

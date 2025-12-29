@@ -108,7 +108,7 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 <Tabs>
   <TabItem label="Gradle">
 ```groovy
-implementation 'com.vaultsandbox:client:0.5.0'
+implementation 'com.vaultsandbox:client:0.5.1'
 ```
   </TabItem>
   <TabItem label="Maven">
@@ -116,7 +116,7 @@ implementation 'com.vaultsandbox:client:0.5.0'
 <dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
 </dependency>
 ```
   </TabItem>
