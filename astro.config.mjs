@@ -51,6 +51,26 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'CLI',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', link: '/cli/' },
+						{ label: 'Installation', link: '/cli/installation/' },
+						{ label: 'Configuration', link: '/cli/configuration/' },
+						{ label: 'TUI Dashboard', link: '/cli/tui/' },
+						{
+							label: 'Commands',
+							collapsed: true,
+							items: [
+								{ label: 'Inbox', link: '/cli/commands/inbox/' },
+								{ label: 'Email', link: '/cli/commands/email/' },
+								{ label: 'Wait', link: '/cli/commands/wait/' },
+								{ label: 'Export & Import', link: '/cli/commands/data/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'Node.js Client',
 					collapsed: true,
 					items: [
