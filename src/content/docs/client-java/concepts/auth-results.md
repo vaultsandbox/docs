@@ -42,6 +42,8 @@ if (spf != null) {
     System.out.println(spf.getResult()); // "pass", "fail", "softfail", etc.
     System.out.println(spf.getStatus()); // Alias for getResult()
     System.out.println(spf.getDomain()); // Domain checked
+    System.out.println(spf.getIp());     // IP address being validated
+    System.out.println(spf.getInfo());   // Additional explanation
 }
 ```
 
@@ -56,6 +58,25 @@ if (spf != null) {
 | `temperror` | Temporary error during check               |
 | `permerror` | Permanent error in SPF record              |
 | `none`      | No SPF record found                        |
+
+### SpfResult Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `result` | `String` | SPF check status (serialized as "status" in JSON) |
+| `domain` | `String` | Domain being checked |
+| `ip` | `String` | IP address of the sending server |
+| `info` | `String` | Additional explanation about the result |
+
+### SpfResult Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `getResult()` | `String` | Returns the SPF status |
+| `getStatus()` | `String` | Alias for `getResult()` |
+| `getDomain()` | `String` | Returns the checked domain |
+| `getIp()` | `String` | Returns the sending server IP |
+| `getInfo()` | `String` | Returns additional info |
 
 ### SPF Example
 
@@ -83,8 +104,10 @@ List<DkimResult> dkim = email.getAuthResults().getDkim(); // List of results
 if (dkim != null && !dkim.isEmpty()) {
     for (DkimResult result : dkim) {
         System.out.println(result.getResult());   // "pass", "fail", "none"
+        System.out.println(result.getStatus());   // Alias for getResult()
         System.out.println(result.getDomain());   // Signing domain
         System.out.println(result.getSelector()); // DKIM selector
+        System.out.println(result.getInfo());     // Additional verification info
     }
 }
 ```
@@ -98,6 +121,25 @@ if (dkim != null && !dkim.isEmpty()) {
 | `pass` | Signature is valid      |
 | `fail` | Signature is invalid    |
 | `none` | No DKIM signature found |
+
+### DkimResult Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `result` | `String` | DKIM verification status (serialized as "status" in JSON) |
+| `domain` | `String` | Signing domain |
+| `selector` | `String` | DKIM selector (identifies the public key in DNS) |
+| `info` | `String` | Additional verification information |
+
+### DkimResult Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `getResult()` | `String` | Returns the DKIM status |
+| `getStatus()` | `String` | Alias for `getResult()` |
+| `getDomain()` | `String` | Returns the signing domain |
+| `getSelector()` | `String` | Returns the DKIM selector |
+| `getInfo()` | `String` | Returns additional info |
 
 ### DKIM Example
 
@@ -134,10 +176,13 @@ Checks that SPF or DKIM align with the From address and enforces the domain's po
 DmarcResult dmarc = email.getAuthResults().getDmarc();
 
 if (dmarc != null) {
-    System.out.println(dmarc.getResult()); // "pass", "fail", "none"
-    System.out.println(dmarc.getStatus()); // Alias for getResult()
-    System.out.println(dmarc.getDomain()); // Domain checked
-    System.out.println(dmarc.getPolicy()); // Domain's policy
+    System.out.println(dmarc.getResult());   // "pass", "fail", "none"
+    System.out.println(dmarc.getStatus());   // Alias for getResult()
+    System.out.println(dmarc.getDomain());   // Domain checked
+    System.out.println(dmarc.getPolicy());   // Domain's policy
+    System.out.println(dmarc.getAligned());  // Whether SPF/DKIM align with From header
+    System.out.println(dmarc.isAligned());   // Convenience: true if aligned
+    System.out.println(dmarc.getInfo());     // Additional information
 }
 ```
 
@@ -156,6 +201,28 @@ if (dmarc != null) {
 | `none`       | No action (monitoring only)     |
 | `quarantine` | Treat suspicious emails as spam |
 | `reject`     | Reject emails that fail DMARC   |
+
+### DmarcResult Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `result` | `String` | DMARC check status (serialized as "status" in JSON) |
+| `domain` | `String` | From domain being checked |
+| `policy` | `String` | Domain's DMARC policy: `none`, `quarantine`, or `reject` |
+| `aligned` | `Boolean` | Whether SPF/DKIM results align with the From header domain |
+| `info` | `String` | Additional information about the check |
+
+### DmarcResult Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `getResult()` | `String` | Returns the DMARC status |
+| `getStatus()` | `String` | Alias for `getResult()` |
+| `getDomain()` | `String` | Returns the From domain |
+| `getPolicy()` | `String` | Returns the domain's DMARC policy |
+| `getAligned()` | `Boolean` | Returns alignment status (may be null) |
+| `isAligned()` | `boolean` | Convenience: true if aligned, false otherwise |
+| `getInfo()` | `String` | Returns additional info |
 
 ### DMARC Example
 
@@ -182,8 +249,11 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ReverseDnsResult reverseDns = email.getAuthResults().getReverseDns();
 
 if (reverseDns != null) {
-    System.out.println(reverseDns.isValid());    // true or false
+    System.out.println(reverseDns.getStatus());   // "pass", "fail", "none"
+    System.out.println(reverseDns.getIp());       // IP address being validated
     System.out.println(reverseDns.getHostname()); // Resolved hostname
+    System.out.println(reverseDns.getInfo());     // Additional information
+    System.out.println(reverseDns.isValid());     // Convenience: true if status is "pass"
 }
 ```
 
@@ -191,8 +261,20 @@ if (reverseDns != null) {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `valid` | `boolean` | Whether reverse DNS lookup succeeded (getter: `isValid()`) |
-| `hostname` | `String` | Resolved hostname for the sending IP |
+| `status` | `String` | Verification result: `pass`, `fail`, or `none` |
+| `ip` | `String` | IP address of the sending server |
+| `hostname` | `String` | Resolved hostname from PTR record |
+| `info` | `String` | Additional information about the check |
+
+### ReverseDnsResult Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `getStatus()` | `String` | Returns the verification status |
+| `getIp()` | `String` | Returns the IP address being validated |
+| `getHostname()` | `String` | Returns the resolved hostname |
+| `getInfo()` | `String` | Returns additional info |
+| `isValid()` | `boolean` | Convenience method: true if status is "pass" |
 
 ### Reverse DNS Example
 
@@ -201,8 +283,12 @@ Email email = inbox.waitForEmail(Duration.ofSeconds(10));
 
 ReverseDnsResult rdns = email.getAuthResults().getReverseDns();
 if (rdns != null) {
-    System.out.printf("Reverse DNS: %s (valid: %s)%n",
-        rdns.getHostname(), rdns.isValid());
+    System.out.printf("Reverse DNS: %s for %s -> %s%n",
+        rdns.getStatus(), rdns.getIp(), rdns.getHostname());
+
+    if (rdns.isValid()) {
+        System.out.println("Reverse DNS verification passed");
+    }
 }
 ```
 

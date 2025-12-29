@@ -30,10 +30,10 @@ VaultSandbox validates four authentication mechanisms:
 
 | Mechanism | Purpose | Result Values |
 |-----------|---------|---------------|
-| **SPF** | Validates sender IP is authorized | pass, fail, softfail, neutral, none |
+| **SPF** | Validates sender IP is authorized | pass, fail, softfail, neutral, none, temperror, permerror |
 | **DKIM** | Validates email signature | pass, fail, none |
 | **DMARC** | Policy enforcement for SPF/DKIM | pass, fail, none |
-| **Reverse DNS** | Validates PTR record | valid/invalid |
+| **Reverse DNS** | Validates PTR record | pass, fail, none |
 
 ## Testing Individual Mechanisms
 
@@ -116,8 +116,10 @@ void shouldHaveValidReverseDns() {
     Email email = inbox.waitForEmail(Duration.ofSeconds(30));
     ReverseDnsResult rdns = email.getAuthResults().getReverseDns();
 
-    assertThat(rdns.isValid()).isTrue();
+    assertThat(rdns.getStatus()).isEqualToIgnoringCase("pass");
+    assertThat(rdns.isValid()).isTrue();  // Convenience method
     assertThat(rdns.getHostname()).isNotBlank();
+    assertThat(rdns.getIp()).isNotBlank();
 }
 ```
 
@@ -142,8 +144,8 @@ void shouldPassAllAuthentication() {
     assertThat(auth.getDmarc().getResult())
         .isEqualToIgnoringCase("pass");
 
-    assertThat(auth.getReverseDns().isValid())
-        .isTrue();
+    assertThat(auth.getReverseDns().getStatus())
+        .isEqualToIgnoringCase("pass");
 
     // Or use the validation helper
     AuthValidation validation = auth.validate();
@@ -389,8 +391,8 @@ void debugAuthResults(Email email) {
     // Reverse DNS
     ReverseDnsResult rdns = auth.getReverseDns();
     if (rdns != null) {
-        System.out.printf("Reverse DNS: %s (hostname: %s)%n",
-            rdns.isValid() ? "valid" : "invalid", rdns.getHostname());
+        System.out.printf("Reverse DNS: %s (ip: %s, hostname: %s)%n",
+            rdns.getStatus(), rdns.getIp(), rdns.getHostname());
     }
 
     // Summary

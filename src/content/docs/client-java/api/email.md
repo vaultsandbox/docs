@@ -258,6 +258,8 @@ SPF (Sender Policy Framework) validation result.
 |----------|------|-------------|
 | `result` | `String` | pass, fail, softfail, neutral, none, temperror, permerror |
 | `domain` | `String` | Checked domain |
+| `ip` | `String` | IP address of the sending server |
+| `info` | `String` | Additional explanation about the result |
 
 ### Getters
 
@@ -265,6 +267,8 @@ SPF (Sender Policy Framework) validation result.
 public String getResult()
 public String getStatus()    // Alias for getResult()
 public String getDomain()
+public String getIp()
+public String getInfo()
 ```
 
 ## DkimResult Class
@@ -273,16 +277,19 @@ DKIM (DomainKeys Identified Mail) signature result.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `result` | `String` | pass, fail, none, etc. |
+| `result` | `String` | pass, fail, none |
 | `domain` | `String` | Signing domain |
 | `selector` | `String` | DKIM selector used |
+| `info` | `String` | Additional verification information |
 
 ### Getters
 
 ```java
 public String getResult()
+public String getStatus()    // Alias for getResult()
 public String getDomain()
 public String getSelector()
+public String getInfo()
 ```
 
 **Note:** `AuthResults.getDkim()` returns a `List<DkimResult>` since emails can have multiple DKIM signatures.
@@ -296,6 +303,8 @@ DMARC (Domain-based Message Authentication) result.
 | `result` | `String` | pass, fail, none |
 | `domain` | `String` | From domain |
 | `policy` | `String` | none, quarantine, reject |
+| `aligned` | `Boolean` | Whether SPF/DKIM align with the From header domain |
+| `info` | `String` | Additional information about the check |
 
 ### Getters
 
@@ -304,6 +313,9 @@ public String getResult()
 public String getStatus()    // Alias for getResult()
 public String getDomain()
 public String getPolicy()
+public Boolean getAligned()  // May return null
+public boolean isAligned()   // Returns true if aligned, false otherwise
+public String getInfo()
 ```
 
 ## ReverseDnsResult Class
@@ -312,14 +324,19 @@ Reverse DNS verification result.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `hostname` | `String` | Resolved hostname |
-| `valid` | `boolean` | Whether verification passed |
+| `status` | `String` | Verification result: pass, fail, none |
+| `ip` | `String` | IP address of the sending server |
+| `hostname` | `String` | Resolved hostname from PTR record |
+| `info` | `String` | Additional information about the check |
 
 ### Getters
 
 ```java
+public String getStatus()
+public String getIp()
 public String getHostname()
-public boolean isValid()
+public String getInfo()
+public boolean isValid()    // Convenience: true if status is "pass"
 ```
 
 ## Examples
@@ -420,9 +437,9 @@ if (auth.getDmarc() != null) {
 }
 
 if (auth.getReverseDns() != null) {
-    System.out.println("Reverse DNS: " +
-        (auth.getReverseDns().isValid() ? "valid" : "invalid") +
-        " (hostname: " + auth.getReverseDns().getHostname() + ")");
+    System.out.println("Reverse DNS: " + auth.getReverseDns().getStatus() +
+        " (ip: " + auth.getReverseDns().getIp() +
+        ", hostname: " + auth.getReverseDns().getHostname() + ")");
 }
 
 // Use validation summary
