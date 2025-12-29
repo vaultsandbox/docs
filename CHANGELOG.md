@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- .Net Documentation 
+
+## [0.5.2] - 2025-12-19
+
+### Added
+
 - Hardened Images documentation - security-hardened Docker images with no shell access
 - Guide for API key configuration via environment variables for hardened deployments
 - Docker logging and health monitoring documentation for shell-less containers

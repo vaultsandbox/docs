@@ -295,6 +295,62 @@ export default defineConfig({
 					],
 				},
 				{
+					label: '.NET Client',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', link: '/client-dotnet/' },
+						{ label: 'Installation', link: '/client-dotnet/installation/' },
+						{ label: 'Configuration', link: '/client-dotnet/configuration/' },
+						{
+							label: 'Core Concepts',
+							collapsed: true,
+							items: [
+								{ label: 'Inboxes', link: '/client-dotnet/concepts/inboxes/' },
+								{ label: 'Email Objects', link: '/client-dotnet/concepts/emails/' },
+								{ label: 'Authentication Results', link: '/client-dotnet/concepts/auth-results/' },
+							],
+						},
+						{
+							label: 'Usage Guides',
+							collapsed: true,
+							items: [
+								{ label: 'Managing Inboxes', link: '/client-dotnet/guides/managing-inboxes/' },
+								{ label: 'Waiting for Emails', link: '/client-dotnet/guides/waiting-for-emails/' },
+								{ label: 'Working with Attachments', link: '/client-dotnet/guides/attachments/' },
+								{ label: 'Email Authentication', link: '/client-dotnet/guides/authentication/' },
+								{ label: 'Real-time Monitoring', link: '/client-dotnet/guides/real-time/' },
+							],
+						},
+						{
+							label: 'Testing Patterns',
+							collapsed: true,
+							items: [
+								{ label: 'Password Reset Flows', link: '/client-dotnet/testing/password-reset/' },
+								{ label: 'Multi-email Scenarios', link: '/client-dotnet/testing/multi-email/' },
+								{ label: 'CI/CD Integration', link: '/client-dotnet/testing/cicd/' },
+							],
+						},
+						{
+							label: 'API Reference',
+							collapsed: true,
+							items: [
+								{ label: 'VaultSandboxClient', link: '/client-dotnet/api/client/' },
+								{ label: 'Inbox', link: '/client-dotnet/api/inbox/' },
+								{ label: 'Email', link: '/client-dotnet/api/email/' },
+								{ label: 'Error Handling', link: '/client-dotnet/api/errors/' },
+							],
+						},
+						{
+							label: 'Advanced Topics',
+							collapsed: true,
+							items: [
+								{ label: 'Import/Export', link: '/client-dotnet/advanced/import-export/' },
+								{ label: 'Delivery Strategies', link: '/client-dotnet/advanced/strategies/' },
+							],
+						},
+					],
+				},
+				{
 					label: 'SDK Development',
 					collapsed: true,
 					items: [
