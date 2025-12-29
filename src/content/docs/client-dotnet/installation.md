@@ -1,0 +1,180 @@
+---
+title: Client Installation
+description: Install and set up the VaultSandbox .NET client SDK
+---
+
+The `VaultSandbox.Client` SDK provides a developer-friendly interface for integrating email testing into your .NET applications and test suites.
+
+## Requirements
+
+- **.NET**: 9.0 or higher
+- **Platform**: Server-side .NET only (not supported in Blazor WebAssembly)
+- **VaultSandbox Gateway**: Running instance with API access
+
+:::caution[Not for Browsers]
+The VaultSandbox client uses .NET-specific cryptography libraries and is **not compatible** with Blazor WebAssembly or browser-based runtimes.
+
+For browser-based testing, use the VaultSandbox Web UI.
+:::
+
+## Installation
+
+### .NET CLI
+
+```bash
+dotnet add package VaultSandbox.Client
+```
+
+### Package Manager Console
+
+```powershell
+Install-Package VaultSandbox.Client
+```
+
+### PackageReference
+
+```xml
+<PackageReference Include="VaultSandbox.Client" Version="1.*" />
+```
+
+## Quick Start
+
+### Basic Usage
+
+```csharp
+using VaultSandbox.Client;
+
+var client = VaultSandboxClientBuilder.Create()
+    .WithBaseUrl("https://mail.example.com")
+    .WithApiKey("your-api-key")
+    .Build();
+
+var inbox = await client.CreateInboxAsync();
+Console.WriteLine($"Send email to: {inbox.EmailAddress}");
+
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(30)
+});
+Console.WriteLine($"Received: {email.Subject}");
+
+await client.DeleteInboxAsync(inbox.EmailAddress);
+await client.DisposeAsync();
+```
+
+## Verifying Installation
+
+Create a test file `TestVaultSandbox.cs`:
+
+```csharp
+using VaultSandbox.Client;
+
+var client = VaultSandboxClientBuilder.Create()
+    .WithBaseUrl(Environment.GetEnvironmentVariable("VAULTSANDBOX_URL")!)
+    .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!)
+    .Build();
+
+try
+{
+    var serverInfo = await client.GetServerInfoAsync();
+    Console.WriteLine("Connected to VaultSandbox");
+    Console.WriteLine($"Allowed domains: {string.Join(", ", serverInfo.AllowedDomains)}");
+
+    var inbox = await client.CreateInboxAsync();
+    Console.WriteLine($"Created inbox: {inbox.EmailAddress}");
+
+    await client.DeleteInboxAsync(inbox.EmailAddress);
+    Console.WriteLine("Cleanup successful");
+
+    Console.WriteLine("\nInstallation verified!");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+}
+finally
+{
+    await client.DisposeAsync();
+}
+```
+
+Run it:
+
+```bash
+export VAULTSANDBOX_URL=https://mail.example.com
+export VAULTSANDBOX_API_KEY=your-api-key
+dotnet run
+```
+
+## Dependency Injection Setup
+
+### ASP.NET Core Integration
+
+The SDK provides `IServiceCollection` extension methods for seamless dependency injection.
+
+#### Via Configuration Section
+
+```csharp
+// Program.cs
+builder.Services.AddVaultSandboxClient(builder.Configuration);
+```
+
+```json
+// appsettings.json
+{
+  "VaultSandbox": {
+    "BaseUrl": "https://gateway.example.com",
+    "ApiKey": "your-api-key"
+  }
+}
+```
+
+#### Via Configuration Action
+
+```csharp
+builder.Services.AddVaultSandboxClient(options =>
+{
+    options.BaseUrl = "https://gateway.example.com";
+    options.ApiKey = Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!;
+});
+```
+
+#### Via Builder Delegate
+
+```csharp
+builder.Services.AddVaultSandboxClient((clientBuilder, sp) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    clientBuilder
+        .WithBaseUrl(config["VaultSandbox:BaseUrl"]!)
+        .WithApiKey(config["VaultSandbox:ApiKey"]!)
+        .WithLogging(sp.GetRequiredService<ILoggerFactory>());
+});
+```
+
+### Using the Injected Client
+
+```csharp
+public class EmailTestService
+{
+    private readonly IVaultSandboxClient _client;
+
+    public EmailTestService(IVaultSandboxClient client)
+    {
+        _client = client;
+    }
+
+    public async Task<string> CreateTestInboxAsync()
+    {
+        var inbox = await _client.CreateInboxAsync();
+        return inbox.EmailAddress;
+    }
+}
+```
+
+## Next Steps
+
+- **[Configuration](/client-dotnet/configuration/)** - Configure the client for your environment
+- **[Core Concepts](/client-dotnet/concepts/inboxes/)** - Understand inboxes, emails, and authentication
+- **[Guides](/client-dotnet/guides/managing-inboxes/)** - Learn common usage patterns
+- **[Testing Patterns](/client-dotnet/testing/password-reset/)** - Integrate with your test suite
