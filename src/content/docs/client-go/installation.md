@@ -26,7 +26,7 @@ This adds the dependency to your `go.mod` file automatically.
 Add to your `go.mod`:
 
 ```
-require github.com/vaultsandbox/client-go v1.0.0
+require github.com/vaultsandbox/client-go v0.5.0
 ```
 
 Then run:

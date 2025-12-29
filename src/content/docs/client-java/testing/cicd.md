@@ -446,7 +446,7 @@ java {
 }
 
 dependencies {
-    implementation 'com.vaultsandbox:client-java:1.0.0'
+    implementation 'com.vaultsandbox:client-java:0.5.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
     testImplementation 'org.assertj:assertj-core:3.26.0'
@@ -514,7 +514,7 @@ task integrationTest(type: Test) {
         <dependency>
             <groupId>com.vaultsandbox</groupId>
             <artifactId>client-java</artifactId>
-            <version>1.0.0</version>
+            <version>0.5.1</version>
         </dependency>
 
         <dependency>
