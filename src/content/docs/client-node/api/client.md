@@ -274,7 +274,7 @@ monitor.on('email', (inbox, email) => {
 monitor.unsubscribe();
 ```
 
-See [InboxMonitor API](/client-node/api/inbox#inboxmonitor/) for more details.
+See [InboxMonitor API](/client-node/api/inbox/#inboxmonitor) for more details.
 
 - [Inbox API Reference](/client-node/api/inbox/) - Learn about inbox methods
 - [Email API Reference](/client-node/api/email/) - Work with email objects
