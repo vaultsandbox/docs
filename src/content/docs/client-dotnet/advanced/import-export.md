@@ -837,6 +837,6 @@ public static async Task<IInbox> ImportWithMetadataAsync(
 
 ## Next Steps
 
-- [Delivery Strategies](/client-dotnet/advanced/strategies) - SSE vs Polling
-- [Error Handling](/client-dotnet/api/errors) - Handle import errors
-- [VaultSandboxClient API](/client-dotnet/api/client) - Client import/export methods
+- [Delivery Strategies](/client-dotnet/advanced/strategies/) - SSE vs Polling
+- [Error Handling](/client-dotnet/api/errors/) - Handle import errors
+- [VaultSandboxClient API](/client-dotnet/api/client/) - Client import/export methods

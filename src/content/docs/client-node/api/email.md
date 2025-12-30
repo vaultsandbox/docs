@@ -302,7 +302,7 @@ if (jsonFile && jsonFile.content) {
 }
 ```
 
-See the [Attachments Guide](/client-node/guides/attachments) for more examples.
+See the [Attachments Guide](/client-node/guides/attachments/) for more examples.
 
 ---
 
@@ -352,7 +352,7 @@ if (email.authResults.dmarc) {
 }
 ```
 
-See the [Authentication Guide](/client-node/guides/authentication) for more details.
+See the [Authentication Guide](/client-node/guides/authentication/) for more details.
 
 ---
 
@@ -669,7 +669,7 @@ completeEmailExample().catch(console.error);
 
 ## Next Steps
 
-- [Inbox API Reference](/client-node/api/inbox) - Learn about inbox methods
-- [Attachments Guide](/client-node/guides/attachments) - Working with attachments
-- [Authentication Guide](/client-node/guides/authentication) - Email authentication testing
-- [Waiting for Emails](/client-node/guides/waiting-for-emails) - Best practices for email waiting
+- [Inbox API Reference](/client-node/api/inbox/) - Learn about inbox methods
+- [Attachments Guide](/client-node/guides/attachments/) - Working with attachments
+- [Authentication Guide](/client-node/guides/authentication/) - Email authentication testing
+- [Waiting for Emails](/client-node/guides/waiting-for-emails/) - Best practices for email waiting

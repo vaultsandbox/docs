@@ -648,7 +648,7 @@ completeInboxExample().catch(console.error);
 
 ## Next Steps
 
-- [Email API Reference](/client-node/api/email) - Work with email objects
-- [VaultSandboxClient API](/client-node/api/client) - Learn about client methods
-- [Waiting for Emails Guide](/client-node/guides/waiting-for-emails) - Best practices
-- [Real-time Monitoring Guide](/client-node/guides/real-time) - Advanced monitoring patterns
+- [Email API Reference](/client-node/api/email/) - Work with email objects
+- [VaultSandboxClient API](/client-node/api/client/) - Learn about client methods
+- [Waiting for Emails Guide](/client-node/guides/waiting-for-emails/) - Best practices
+- [Real-time Monitoring Guide](/client-node/guides/real-time/) - Advanced monitoring patterns

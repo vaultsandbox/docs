@@ -426,6 +426,6 @@ const email3 = await inbox.getEmail(id3);
 
 ## Next Steps
 
-- [CI/CD Integration](/client-node/testing/cicd) - Run multi-email tests in CI
-- [Real-time Monitoring](/client-node/guides/real-time) - Process emails as they arrive
-- [Managing Inboxes](/client-node/guides/managing-inboxes) - Learn more about inbox operations
+- [CI/CD Integration](/client-node/testing/cicd/) - Run multi-email tests in CI
+- [Real-time Monitoring](/client-node/guides/real-time/) - Process emails as they arrive
+- [Managing Inboxes](/client-node/guides/managing-inboxes/) - Learn more about inbox operations

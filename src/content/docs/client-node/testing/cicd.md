@@ -642,6 +642,6 @@ const client = new VaultSandboxClient({
 
 ## Next Steps
 
-- [Password Reset Testing](/client-node/testing/password-reset) - Specific test patterns
-- [Multi-Email Scenarios](/client-node/testing/multi-email) - Testing multiple emails
-- [Error Handling](/client-node/api/errors) - Handle failures gracefully
+- [Password Reset Testing](/client-node/testing/password-reset/) - Specific test patterns
+- [Multi-Email Scenarios](/client-node/testing/multi-email/) - Testing multiple emails
+- [Error Handling](/client-node/api/errors/) - Handle failures gracefully

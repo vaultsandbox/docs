@@ -572,6 +572,6 @@ function importWithMetadata(data) {
 
 ## Next Steps
 
-- [Delivery Strategies](/client-node/advanced/strategies) - SSE vs Polling
-- [Error Handling](/client-node/api/errors) - Handle import errors
-- [VaultSandboxClient API](/client-node/api/client) - Client import/export methods
+- [Delivery Strategies](/client-node/advanced/strategies/) - SSE vs Polling
+- [Error Handling](/client-node/api/errors/) - Handle import errors
+- [VaultSandboxClient API](/client-node/api/client/) - Client import/export methods

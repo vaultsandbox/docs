@@ -667,7 +667,7 @@ async Task Main(CancellationToken cancellationToken)
 
 ## Next Steps
 
-- [IInbox API Reference](/client-dotnet/api/inbox) - Learn about inbox methods
-- [Email API Reference](/client-dotnet/api/email) - Work with email records
-- [Error Handling](/client-dotnet/api/errors) - Handle exceptions gracefully
-- [Import/Export Guide](/client-dotnet/advanced/import-export) - Advanced import/export usage
+- [IInbox API Reference](/client-dotnet/api/inbox/) - Learn about inbox methods
+- [Email API Reference](/client-dotnet/api/email/) - Work with email records
+- [Error Handling](/client-dotnet/api/errors/) - Handle exceptions gracefully
+- [Import/Export Guide](/client-dotnet/advanced/import-export/) - Advanced import/export usage

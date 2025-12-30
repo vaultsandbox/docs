@@ -274,12 +274,12 @@ monitor.on('email', (inbox, email) => {
 monitor.unsubscribe();
 ```
 
-See [InboxMonitor API](/client-node/api/inbox#inboxmonitor) for more details.
+See [InboxMonitor API](/client-node/api/inbox#inboxmonitor/) for more details.
 
-- [Inbox API Reference](/client-node/api/inbox) - Learn about inbox methods
-- [Email API Reference](/client-node/api/email) - Work with email objects
-- [Error Handling](/client-node/api/errors) - Handle errors gracefully
-- [Import/Export Guide](/client-node/advanced/import-export) - Advanced import/export usage
+- [Inbox API Reference](/client-node/api/inbox/) - Learn about inbox methods
+- [Email API Reference](/client-node/api/email/) - Work with email objects
+- [Error Handling](/client-node/api/errors/) - Handle errors gracefully
+- [Import/Export Guide](/client-node/advanced/import-export/) - Advanced import/export usage
 
 ---
 
@@ -526,7 +526,7 @@ main().catch(console.error);
 
 ## Next Steps
 
-- [Inbox API Reference](/client-node/api/inbox) - Learn about inbox methods
-- [Email API Reference](/client-node/api/email) - Work with email objects
-- [Error Handling](/client-node/api/errors) - Handle errors gracefully
-- [Import/Export Guide](/client-node/advanced/import-export) - Advanced import/export usage
+- [Inbox API Reference](/client-node/api/inbox/) - Learn about inbox methods
+- [Email API Reference](/client-node/api/email/) - Work with email objects
+- [Error Handling](/client-node/api/errors/) - Handle errors gracefully
+- [Import/Export Guide](/client-node/advanced/import-export/) - Advanced import/export usage

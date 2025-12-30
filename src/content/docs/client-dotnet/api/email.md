@@ -349,7 +349,7 @@ if (email.Attachments is not null)
 }
 ```
 
-See the [Attachments Guide](/client-dotnet/guides/attachments) for more examples.
+See the [Attachments Guide](/client-dotnet/guides/attachments/) for more examples.
 
 ---
 
@@ -402,7 +402,7 @@ if (email.AuthResults is not null)
 }
 ```
 
-See the [Authentication Guide](/client-dotnet/guides/authentication) for more details.
+See the [Authentication Guide](/client-dotnet/guides/authentication/) for more details.
 
 ---
 
@@ -845,7 +845,7 @@ async Task CompleteEmailExample(CancellationToken cancellationToken)
 
 ## Next Steps
 
-- [IInbox API Reference](/client-dotnet/api/inbox) - Learn about inbox methods
-- [Attachments Guide](/client-dotnet/guides/attachments) - Working with attachments
-- [Authentication Guide](/client-dotnet/guides/authentication) - Email authentication testing
-- [Waiting for Emails](/client-dotnet/guides/waiting-for-emails) - Best practices for email waiting
+- [IInbox API Reference](/client-dotnet/api/inbox/) - Learn about inbox methods
+- [Attachments Guide](/client-dotnet/guides/attachments/) - Working with attachments
+- [Authentication Guide](/client-dotnet/guides/authentication/) - Email authentication testing
+- [Waiting for Emails](/client-dotnet/guides/waiting-for-emails/) - Best practices for email waiting

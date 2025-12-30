@@ -776,6 +776,6 @@ for (var i = 0; i < 5; i++)
 
 ## Next Steps
 
-- [CI/CD Integration](/client-dotnet/testing/cicd) - Run multi-email tests in CI
-- [Real-time Monitoring](/client-dotnet/guides/real-time) - Process emails as they arrive
-- [Managing Inboxes](/client-dotnet/guides/managing-inboxes) - Learn more about inbox operations
+- [CI/CD Integration](/client-dotnet/testing/cicd/) - Run multi-email tests in CI
+- [Real-time Monitoring](/client-dotnet/guides/real-time/) - Process emails as they arrive
+- [Managing Inboxes](/client-dotnet/guides/managing-inboxes/) - Learn more about inbox operations

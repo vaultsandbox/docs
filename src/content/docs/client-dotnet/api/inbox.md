@@ -644,7 +644,7 @@ async Task CompleteInboxExample(CancellationToken cancellationToken)
 
 ## Next Steps
 
-- [Email API Reference](/client-dotnet/api/email) - Work with email records
-- [IVaultSandboxClient API](/client-dotnet/api/client) - Learn about client methods
-- [Waiting for Emails Guide](/client-dotnet/guides/waiting-for-emails) - Best practices
-- [Real-time Monitoring Guide](/client-dotnet/guides/real-time) - IAsyncEnumerable patterns
+- [Email API Reference](/client-dotnet/api/email/) - Work with email records
+- [IVaultSandboxClient API](/client-dotnet/api/client/) - Learn about client methods
+- [Waiting for Emails Guide](/client-dotnet/guides/waiting-for-emails/) - Best practices
+- [Real-time Monitoring Guide](/client-dotnet/guides/real-time/) - IAsyncEnumerable patterns

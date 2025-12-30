@@ -517,6 +517,6 @@ var meterProvider = Sdk.CreateMeterProviderBuilder()
 
 ## Next Steps
 
-- [Delivery Strategies](/client-dotnet/advanced/strategies) - SSE vs Polling configuration
-- [Error Handling](/client-dotnet/api/errors) - Handle and trace errors
-- [Configuration Reference](/client-dotnet/configuration) - All configuration options
+- [Delivery Strategies](/client-dotnet/advanced/strategies/) - SSE vs Polling configuration
+- [Error Handling](/client-dotnet/api/errors/) - Handle and trace errors
+- [Configuration Reference](/client-dotnet/configuration/) - All configuration options

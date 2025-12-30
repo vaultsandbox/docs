@@ -496,5 +496,4 @@ VaultSandbox undergoes regular security reviews:
 
 - **[API Keys & Authentication](/gateway/api-keys/)** - Secure API key management
 - **[Configuration](/gateway/configuration/)** - Security-related configuration options
-- **[Troubleshooting](/gateway/troubleshooting/)** - Diagnose security-related issues
 - **[Node.js Client](/client-node/installation/)** - Start using the secure client SDK

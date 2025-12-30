@@ -667,6 +667,6 @@ public async Task Should_Complete_Full_Password_Reset_Flow()
 
 ## Next Steps
 
-- [Testing Multi-Email Scenarios](/client-dotnet/testing/multi-email) - Handle multiple emails
-- [CI/CD Integration](/client-dotnet/testing/cicd) - Run tests in your pipeline
-- [Working with Attachments](/client-dotnet/guides/attachments) - Test emails with attachments
+- [Testing Multi-Email Scenarios](/client-dotnet/testing/multi-email/) - Handle multiple emails
+- [CI/CD Integration](/client-dotnet/testing/cicd/) - Run tests in your pipeline
+- [Working with Attachments](/client-dotnet/guides/attachments/) - Test emails with attachments

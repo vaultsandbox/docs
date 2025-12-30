@@ -888,6 +888,6 @@ var client = VaultSandboxClientBuilder.Create()
 
 ## Next Steps
 
-- [Password Reset Testing](/client-dotnet/testing/password-reset) - Specific test patterns
-- [Multi-Email Scenarios](/client-dotnet/testing/multi-email) - Testing multiple emails
-- [Error Handling](/client-dotnet/api/errors) - Handle failures gracefully
+- [Password Reset Testing](/client-dotnet/testing/password-reset/) - Specific test patterns
+- [Multi-Email Scenarios](/client-dotnet/testing/multi-email/) - Testing multiple emails
+- [Error Handling](/client-dotnet/api/errors/) - Handle failures gracefully

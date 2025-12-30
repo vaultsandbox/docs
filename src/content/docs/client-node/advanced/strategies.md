@@ -608,7 +608,7 @@ const client = new VaultSandboxClient({
 
 ## Next Steps
 
-- [Real-time Monitoring Guide](/client-node/guides/real-time) - Using subscriptions
-- [Configuration Reference](/client-node/configuration) - All config options
-- [Error Handling](/client-node/api/errors) - Handle SSE errors
-- [CI/CD Integration](/client-node/testing/cicd) - Strategy for CI environments
+- [Real-time Monitoring Guide](/client-node/guides/real-time/) - Using subscriptions
+- [Configuration Reference](/client-node/configuration/) - All config options
+- [Error Handling](/client-node/api/errors/) - Handle SSE errors
+- [CI/CD Integration](/client-node/testing/cicd/) - Strategy for CI environments

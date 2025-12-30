@@ -347,6 +347,6 @@ test('should complete full password reset flow', async () => {
 
 ## Next Steps
 
-- [Testing Multi-Email Scenarios](/client-node/testing/multi-email) - Handle multiple emails
-- [CI/CD Integration](/client-node/testing/cicd) - Run tests in your pipeline
-- [Working with Attachments](/client-node/guides/attachments) - Test emails with attachments
+- [Testing Multi-Email Scenarios](/client-node/testing/multi-email/) - Handle multiple emails
+- [CI/CD Integration](/client-node/testing/cicd/) - Run tests in your pipeline
+- [Working with Attachments](/client-node/guides/attachments/) - Test emails with attachments

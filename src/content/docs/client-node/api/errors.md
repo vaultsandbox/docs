@@ -703,5 +703,5 @@ try {
 
 ## Next Steps
 
-- [CI/CD Integration](/client-node/testing/cicd) - Error handling in CI
-- [VaultSandboxClient API](/client-node/api/client) - Client configuration
+- [CI/CD Integration](/client-node/testing/cicd/) - Error handling in CI
+- [VaultSandboxClient API](/client-node/api/client/) - Client configuration

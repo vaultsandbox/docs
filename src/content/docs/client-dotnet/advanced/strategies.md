@@ -700,7 +700,7 @@ catch (OperationCanceledException)
 
 ## Next Steps
 
-- [Real-time Monitoring Guide](/client-dotnet/guides/real-time) - Using `WatchAsync` and `IAsyncEnumerable`
-- [Configuration Reference](/client-dotnet/configuration) - All configuration options
-- [Error Handling](/client-dotnet/api/errors) - Handle SSE and strategy errors
-- [CI/CD Integration](/client-dotnet/testing/cicd) - Strategy for CI environments
+- [Real-time Monitoring Guide](/client-dotnet/guides/real-time/) - Using `WatchAsync` and `IAsyncEnumerable`
+- [Configuration Reference](/client-dotnet/configuration/) - All configuration options
+- [Error Handling](/client-dotnet/api/errors/) - Handle SSE and strategy errors
+- [CI/CD Integration](/client-dotnet/testing/cicd/) - Strategy for CI environments

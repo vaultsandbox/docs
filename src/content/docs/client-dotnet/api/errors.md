@@ -944,6 +944,5 @@ var inbox = await client.CreateInboxAsync();
 
 ## Next Steps
 
-- [CI/CD Integration](/client-dotnet/testing/cicd) - Exception handling in CI
-- [IVaultSandboxClient API](/client-dotnet/api/client) - Client configuration
-- [Troubleshooting Guide](/guides/troubleshooting) - Common issues and solutions
+- [CI/CD Integration](/client-dotnet/testing/cicd/) - Exception handling in CI
+- [IVaultSandboxClient API](/client-dotnet/api/client/) - Client configuration
