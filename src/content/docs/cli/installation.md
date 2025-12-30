@@ -66,5 +66,5 @@ vsb --version
 
 ## Next Steps
 
-- [Configuration](configuration.md) - Set up your API key and gateway URL
-- [TUI Dashboard](tui.md) - Start monitoring emails
+- [Configuration](/cli/configuration/) - Set up your API key and gateway URL
+- [TUI Dashboard](/cli/tui/) - Start monitoring emails
