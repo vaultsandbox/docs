@@ -13,14 +13,15 @@ A language-agnostic specification for implementing VaultSandbox client libraries
 
 1. [Overview](#overview)
 2. [Architecture](#architecture)
-3. [Authentication](#authentication)
-4. [Cryptographic Requirements](#cryptographic-requirements)
-5. [API Reference](#api-reference)
-6. [Data Structures](#data-structures)
-7. [Delivery Strategies](#delivery-strategies)
-8. [Error Handling](#error-handling)
-9. [Behavioral Specifications](#behavioral-specifications)
-10. [Implementation Checklist](#implementation-checklist)
+3. [Naming Conventions](#naming-conventions)
+4. [Authentication](#authentication)
+5. [Cryptographic Requirements](#cryptographic-requirements)
+6. [API Reference](#api-reference)
+7. [Data Structures](#data-structures)
+8. [Delivery Strategies](#delivery-strategies)
+9. [Error Handling](#error-handling)
+10. [Behavioral Specifications](#behavioral-specifications)
+11. [Implementation Checklist](#implementation-checklist)
 
 ---
 
@@ -105,6 +106,27 @@ SDKs should support these configuration options when creating a client:
 
 ---
 
+## Naming Conventions
+
+This specification uses **camelCase** for all identifiers in the wire format (JSON payloads, API responses). SDK implementations should adapt to their language's idiomatic conventions:
+
+| Language   | Public API Style | Example Method       | Example Field       |
+|------------|------------------|----------------------|---------------------|
+| JavaScript | camelCase        | `createInbox()`      | `email.authResults` |
+| Go         | PascalCase       | `CreateInbox()`      | `Email.AuthResults` |
+| Python     | snake_case       | `create_inbox()`     | `email.auth_results`|
+| Rust       | snake_case       | `create_inbox()`     | `email.auth_results`|
+| Java       | camelCase        | `createInbox()`      | `email.authResults` |
+
+**Wire format remains camelCase regardless of SDK language.** For example, the JSON field `emailAddress` becomes:
+- Go: `EmailAddress` (struct field)
+- Python: `email_address` (attribute)
+- JavaScript: `emailAddress` (property)
+
+SDKs should handle this translation transparently during serialization/deserialization.
+
+---
+
 ## Authentication
 
 All API requests require the `X-API-Key` header.
@@ -163,7 +185,7 @@ X-API-Key: your-api-key
 ```
 HKDF_CONTEXT = "vaultsandbox:email:v1"
 ALGS_CIPHERSUITE = "ML-KEM-768:ML-DSA-65:AES-256-GCM:HKDF-SHA-512"
-PUBLIC_KEY_OFFSET = 1152  # Byte offset of public key within ML-KEM-768 secret key
+PUBLIC_KEY_START_OFFSET = 1152  # Byte offset where public key starts within ML-KEM-768 secret key
 ```
 
 ### Keypair Generation
@@ -626,6 +648,34 @@ Client libraries should provide a validation helper that verifies:
 2. **DKIM**: At least one entry in the array must have `result: "pass"`
 3. **DMARC**: `result` must be `"pass"`
 4. **Reverse DNS**: `verified` must be `true`
+
+**Note:** The overall `passed` status only considers SPF, DKIM, and DMARC. Reverse DNS is checked separately and does not affect the overall pass/fail status.
+
+#### Validation Result
+
+The `validate()` method returns a validation summary:
+
+```json
+{
+	"passed": false,
+	"spfPassed": true,
+	"dkimPassed": true,
+	"dmarcPassed": false,
+	"reverseDnsPassed": true,
+	"failures": ["DMARC policy: fail (policy: reject)"]
+}
+```
+
+| Field              | Type       | Description                                              |
+| ------------------ | ---------- | -------------------------------------------------------- |
+| `passed`           | `boolean`  | True if SPF, DKIM, and DMARC all passed                  |
+| `spfPassed`        | `boolean`  | True if SPF result is `"pass"`                           |
+| `dkimPassed`       | `boolean`  | True if at least one DKIM signature passed               |
+| `dmarcPassed`      | `boolean`  | True if DMARC result is `"pass"`                         |
+| `reverseDnsPassed` | `boolean`  | True if reverse DNS `verified` is `true`                 |
+| `failures`         | `string[]` | Human-readable descriptions of failed checks             |
+
+SDKs may also provide a convenience method like `isPassing()` that returns the `passed` value directly.
 
 #### SPF Result
 

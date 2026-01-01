@@ -67,10 +67,10 @@ Tests that require no external dependencies. Use mocks where necessary.
 | Test | Description | Expected |
 |------|-------------|----------|
 | All pass | SPF=pass, DKIM=pass, DMARC=pass | `passed=true`, no failures |
-| SPF fail | SPF=fail, others pass | `passed=false`, `spf_passed=false`, failure message |
-| DKIM fail | DKIM=fail, others pass | `passed=false`, `dkim_passed=false`, failure message |
-| DMARC fail | DMARC=fail, others pass | `passed=false`, `dmarc_passed=false`, failure message |
-| DKIM partial pass | Multiple DKIM results, at least one passes | `dkim_passed=true` |
+| SPF fail | SPF=fail, others pass | `passed=false`, `spfPassed=false`, failure message |
+| DKIM fail | DKIM=fail, others pass | `passed=false`, `dkimPassed=false`, failure message |
+| DMARC fail | DMARC=fail, others pass | `passed=false`, `dmarcPassed=false`, failure message |
+| DKIM partial pass | Multiple DKIM results, at least one passes | `dkimPassed=true` |
 | None status | All statuses are "none" | `passed=false` (requires explicit "pass") |
 | Empty results | No auth data present | `passed=false`, all checks false |
 | Reverse DNS fail | Reverse DNS fails, others pass | `passed=true` (reverse DNS doesn't affect overall) |
@@ -109,8 +109,8 @@ Tests that require a running VaultSandbox server but no SMTP.
 
 | Test | Description | Expected |
 |------|-------------|----------|
-| Valid key | Call check_key with valid API key | Returns true |
-| Invalid key | Call check_key with invalid API key | Returns false or throws ApiError(401) |
+| Valid key | Call checkKey with valid API key | Returns true |
+| Invalid key | Call checkKey with invalid API key | Returns false or throws ApiError(401) |
 
 #### Server Info [REQUIRED]
 
@@ -153,8 +153,8 @@ Tests that require a running VaultSandbox server but no SMTP.
 
 | Test | Description | Expected |
 |------|-------------|----------|
-| Empty inbox | Get sync status of new inbox | email_count=0, emails_hash defined |
-| Consistent hash | Multiple calls without changes | Same emails_hash returned |
+| Empty inbox | Get sync status of new inbox | emailCount=0, emailsHash defined |
+| Consistent hash | Multiple calls without changes | Same emailsHash returned |
 
 ### 2.3 Inbox Operations (No Email)
 
@@ -289,8 +289,8 @@ Tests that require both a VaultSandbox server and SMTP access.
 
 | Test | Description | Expected |
 |------|-------------|----------|
-| Results present | Receive email, check auth_results | auth_results object exists |
-| Validate method | Call auth_results.validate() | Returns validation object with passed, failures |
+| Results present | Receive email, check authResults | authResults object exists |
+| Validate method | Call authResults.validate() | Returns validation object with passed, failures |
 | Direct send fails SPF | Send directly without authorization | SPF status is NOT "pass" |
 | Direct send fails DKIM | Send without signing | DKIM status is NOT "pass" |
 
@@ -359,14 +359,14 @@ Tests that require both a VaultSandbox server and SMTP access.
 
 ### 4.3 Real-time Monitoring
 
-#### on_new_email [REQUIRED]
+#### onNewEmail [REQUIRED]
 
 | Test | Description | Expected |
 |------|-------------|----------|
 | Receive via callback | Subscribe, send email | Callback invoked with email |
 | Unsubscribe stops callback | Unsubscribe, send email | Callback not invoked |
 
-#### monitor_inboxes [REQUIRED]
+#### watchInboxes [REQUIRED]
 
 | Test | Description | Expected |
 |------|-------------|----------|
@@ -546,31 +546,33 @@ This endpoint is useful for:
 
 ### 9.5 Example: Testing Auth Validation
 
-```javascript
-// Create an email with failing SPF
-const response = await fetch(`${baseUrl}/api/test/emails`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'X-API-Key': apiKey,
-  },
-  body: JSON.stringify({
-    to: inbox.emailAddress,
-    subject: 'Auth Test',
-    auth: {
-      spf: 'fail',
-      dkim: 'pass',
-      dmarc: 'fail',
-    },
-  }),
-});
+```python
+# Pseudocode
 
-// Now fetch the email and verify auth_results
-const email = await inbox.waitForEmail({ timeout: 5000 });
-const validation = email.authResults.validate();
-assert(validation.passed === false);
-assert(validation.spfPassed === false);
-assert(validation.dmarcPassed === false);
+# Create an email with failing SPF
+response = http_post(
+    url=f"{base_url}/api/test/emails",
+    headers={
+        "Content-Type": "application/json",
+        "X-API-Key": api_key,
+    },
+    body={
+        "to": inbox.email_address,
+        "subject": "Auth Test",
+        "auth": {
+            "spf": "fail",
+            "dkim": "pass",
+            "dmarc": "fail",
+        },
+    },
+)
+
+# Now fetch the email and verify authResults
+email = inbox.waitForEmail(timeout=5000)
+validation = email.authResults.validate()
+assert validation.passed == False
+assert validation.spfPassed == False
+assert validation.dmarcPassed == False
 ```
 
 ---
