@@ -204,12 +204,12 @@ test('should pass email authentication checks', async () => {
 	}
 
 	// Check individual authentication methods (if configured)
-	if (email.authResults.spf?.status) {
-		expect(email.authResults.spf.status).toMatch(/pass|neutral|softfail/);
+	if (email.authResults.spf?.result) {
+		expect(email.authResults.spf.result).toMatch(/pass|neutral|softfail/);
 	}
 
 	if (email.authResults.dkim && email.authResults.dkim.length > 0) {
-		expect(email.authResults.dkim[0].status).toBeDefined();
+		expect(email.authResults.dkim[0].result).toBeDefined();
 	}
 });
 ```

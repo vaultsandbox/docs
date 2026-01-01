@@ -43,10 +43,10 @@ from vaultsandbox.types import SPFStatus
 spf = email.auth_results.spf
 
 if spf:
-    print(spf.status)  # SPFStatus.PASS, SPFStatus.FAIL, etc.
-    print(spf.domain)  # Domain checked
-    print(spf.ip)      # IP address checked
-    print(spf.info)    # Human-readable details
+    print(spf.result)   # SPFStatus.PASS, SPFStatus.FAIL, etc.
+    print(spf.domain)   # Domain checked
+    print(spf.ip)       # IP address checked
+    print(spf.details)  # Human-readable details
 ```
 
 ### SPF Status Values
@@ -71,10 +71,10 @@ email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 if email.auth_results.spf:
     spf = email.auth_results.spf
 
-    assert spf.status == SPFStatus.PASS
+    assert spf.result == SPFStatus.PASS
     assert spf.domain == "example.com"
 
-    print(f"SPF {spf.status.value} for {spf.domain}")
+    print(f"SPF {spf.result.value} for {spf.domain}")
 ```
 
 ## DKIM (DomainKeys Identified Mail)
@@ -90,10 +90,10 @@ dkim = email.auth_results.dkim  # List of results
 
 if dkim:
     for result in dkim:
-        print(result.status)    # DKIMStatus.PASS, DKIMStatus.FAIL, etc.
-        print(result.domain)    # Signing domain
-        print(result.selector)  # DKIM selector
-        print(result.info)      # Human-readable details
+        print(result.result)     # DKIMStatus.PASS, DKIMStatus.FAIL, etc.
+        print(result.domain)     # Signing domain
+        print(result.selector)   # DKIM selector
+        print(result.signature)  # DKIM signature information
 ```
 
 **Note**: An email can have multiple DKIM signatures (one per signing domain).
@@ -116,10 +116,10 @@ email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 if email.auth_results.dkim:
     dkim = email.auth_results.dkim[0]
 
-    assert dkim.status == DKIMStatus.PASS
+    assert dkim.result == DKIMStatus.PASS
     assert dkim.domain == "example.com"
 
-    print(f"DKIM {dkim.status.value} ({dkim.selector}._domainkey.{dkim.domain})")
+    print(f"DKIM {dkim.result.value} ({dkim.selector}._domainkey.{dkim.domain})")
 ```
 
 ## DMARC (Domain-based Message Authentication)
@@ -134,11 +134,10 @@ from vaultsandbox.types import DMARCStatus, DMARCPolicy
 dmarc = email.auth_results.dmarc
 
 if dmarc:
-    print(dmarc.status)   # DMARCStatus.PASS, DMARCStatus.FAIL, etc.
+    print(dmarc.result)   # DMARCStatus.PASS, DMARCStatus.FAIL, etc.
     print(dmarc.domain)   # Domain checked
     print(dmarc.policy)   # DMARCPolicy.NONE, QUARANTINE, REJECT
     print(dmarc.aligned)  # Whether SPF/DKIM aligns with From domain
-    print(dmarc.info)     # Human-readable details
 ```
 
 ### DMARC Status Values
@@ -167,10 +166,10 @@ email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 if email.auth_results.dmarc:
     dmarc = email.auth_results.dmarc
 
-    assert dmarc.status == DMARCStatus.PASS
+    assert dmarc.result == DMARCStatus.PASS
     assert dmarc.domain == "example.com"
 
-    print(f"DMARC {dmarc.status.value} (policy: {dmarc.policy.value if dmarc.policy else 'none'})")
+    print(f"DMARC {dmarc.result.value} (policy: {dmarc.policy.value if dmarc.policy else 'none'})")
 ```
 
 ## Reverse DNS
@@ -180,24 +179,13 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ### Reverse DNS Result Structure
 
 ```python
-from vaultsandbox.types import ReverseDNSStatus
-
 reverse_dns = email.auth_results.reverse_dns
 
 if reverse_dns:
-    print(reverse_dns.status)    # ReverseDNSStatus.PASS, FAIL, NONE
-    print(reverse_dns.ip)        # Server IP
-    print(reverse_dns.hostname)  # Resolved hostname (may be None)
-    print(reverse_dns.info)      # Human-readable details
+    print(reverse_dns.verified)   # True if verified, False otherwise
+    print(reverse_dns.ip)         # Server IP
+    print(reverse_dns.hostname)   # Resolved hostname (may be None)
 ```
-
-### Reverse DNS Status Values
-
-| Status | Meaning              |
-| ------ | -------------------- |
-| `PASS` | Reverse DNS verified |
-| `FAIL` | Reverse DNS failed   |
-| `NONE` | No PTR record        |
 
 ### Reverse DNS Example
 
@@ -208,7 +196,7 @@ if email.auth_results.reverse_dns:
     rdns = email.auth_results.reverse_dns
 
     print(f"Reverse DNS: {rdns.ip} → {rdns.hostname}")
-    print(f"Status: {rdns.status.value}")
+    print(f"Verified: {rdns.verified}")
 ```
 
 ## Validation Helper
@@ -328,7 +316,7 @@ async def test_email_has_valid_dkim_signature(inbox):
     # Only check DKIM (most reliable)
     assert email.auth_results.dkim is not None
     assert len(email.auth_results.dkim) > 0
-    assert email.auth_results.dkim[0].status == DKIMStatus.PASS
+    assert email.auth_results.dkim[0].result == DKIMStatus.PASS
 ```
 
 ### Handling Missing Authentication
@@ -378,20 +366,20 @@ async def email(inbox):
 async def test_spf_check(email):
     # For production emails, require explicit pass
     if email.auth_results.spf:
-        assert email.auth_results.spf.status == SPFStatus.PASS
+        assert email.auth_results.spf.result == SPFStatus.PASS
 
 @pytest.mark.asyncio
 async def test_dkim_check(email):
     # At least one DKIM signature must pass
     if email.auth_results.dkim:
-        any_passed = any(d.status == DKIMStatus.PASS for d in email.auth_results.dkim)
+        any_passed = any(d.result == DKIMStatus.PASS for d in email.auth_results.dkim)
         assert any_passed is True
 
 @pytest.mark.asyncio
 async def test_dmarc_check(email):
     # For production emails, require explicit pass
     if email.auth_results.dmarc:
-        assert email.auth_results.dmarc.status == DMARCStatus.PASS
+        assert email.auth_results.dmarc.result == DMARCStatus.PASS
 ```
 
 ## Why Authentication Matters

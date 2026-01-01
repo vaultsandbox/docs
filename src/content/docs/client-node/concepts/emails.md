@@ -192,9 +192,9 @@ Email authentication results (SPF, DKIM, DMARC, reverse DNS).
 ```javascript
 const auth = email.authResults;
 
-console.log(auth.spf?.status); // "pass"
+console.log(auth.spf?.result); // "pass"
 console.log(auth.dkim?.length); // 1
-console.log(auth.dmarc?.status); // "pass"
+console.log(auth.dmarc?.result); // "pass"
 
 // Validate all checks
 const validation = auth.validate();

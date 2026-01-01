@@ -394,15 +394,15 @@ public async Task Should_Pass_Email_Authentication_Checks()
         if (email.AuthResults?.Spf is not null)
         {
             Assert.True(
-                email.AuthResults.Spf.Status is SpfStatus.Pass or SpfStatus.Neutral or SpfStatus.SoftFail,
-                $"SPF status should be acceptable, was: {email.AuthResults.Spf.Status}");
+                email.AuthResults.Spf.Result is SpfStatus.Pass or SpfStatus.Neutral or SpfStatus.SoftFail,
+                $"SPF result should be acceptable, was: {email.AuthResults.Spf.Result}");
         }
 
         if (email.AuthResults?.Dkim?.Any() == true)
         {
             Assert.True(
-                email.AuthResults.Dkim[0].Status is DkimStatus.Pass or DkimStatus.None,
-                $"DKIM status should be acceptable, was: {email.AuthResults.Dkim[0].Status}");
+                email.AuthResults.Dkim[0].Result is DkimStatus.Pass or DkimStatus.None,
+                $"DKIM result should be acceptable, was: {email.AuthResults.Dkim[0].Result}");
         }
     }
     finally

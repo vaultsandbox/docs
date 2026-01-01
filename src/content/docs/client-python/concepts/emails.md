@@ -197,10 +197,10 @@ Email authentication results (SPF, DKIM, DMARC, reverse DNS).
 auth = email.auth_results
 
 if auth.spf:
-    print(auth.spf.status)      # SPFStatus.PASS
+    print(auth.spf.result)      # SPFStatus.PASS
 print(len(auth.dkim))           # 1
 if auth.dmarc:
-    print(auth.dmarc.status)    # DMARCStatus.PASS
+    print(auth.dmarc.result)    # DMARCStatus.PASS
 
 # Validate all checks
 validation = auth.validate()

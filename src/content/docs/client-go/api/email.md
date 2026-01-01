@@ -429,15 +429,15 @@ if !validation.Passed {
 
 // Check individual results
 if email.AuthResults.SPF != nil {
-    fmt.Printf("SPF Status: %s\n", email.AuthResults.SPF.Status)
+    fmt.Printf("SPF Result: %s\n", email.AuthResults.SPF.Result)
 }
 
 if len(email.AuthResults.DKIM) > 0 {
-    fmt.Printf("DKIM Status: %s\n", email.AuthResults.DKIM[0].Status)
+    fmt.Printf("DKIM Result: %s\n", email.AuthResults.DKIM[0].Result)
 }
 
 if email.AuthResults.DMARC != nil {
-    fmt.Printf("DMARC Status: %s\n", email.AuthResults.DMARC.Status)
+    fmt.Printf("DMARC Result: %s\n", email.AuthResults.DMARC.Result)
 }
 ```
 

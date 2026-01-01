@@ -3,6 +3,9 @@ title: Java Client
 description: Overview of the VaultSandbox Java SDK for email testing
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { versions } from '../../../data/versions';
+
 The official Java SDK for VaultSandbox Gateway. It handles quantum-safe encryption automatically with ML-KEM-768, letting you focus on testing email workflows in your Java applications.
 
 ## Key Capabilities
@@ -103,22 +106,16 @@ Email email = inbox.waitForEmail(filter);
 
 Add the dependency to your build file:
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
 <Tabs>
   <TabItem label="Gradle">
-```groovy
-implementation 'com.vaultsandbox:client:0.5.1'
-```
+<pre><code class="language-groovy">{`implementation 'com.vaultsandbox:client:${versions.java}'`}</code></pre>
   </TabItem>
   <TabItem label="Maven">
-```xml
-<dependency>
+<pre><code class="language-xml">{`<dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.1</version>
-</dependency>
-```
+    <version>${versions.java}</version>
+</dependency>`}</code></pre>
   </TabItem>
 </Tabs>
 

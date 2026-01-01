@@ -246,16 +246,16 @@ async def test_passes_email_authentication_checks(inbox):
         print(f"Email authentication failures: {validation.failures}")
 
     # Check individual authentication methods (if configured)
-    if email.auth_results.spf and email.auth_results.spf.status:
+    if email.auth_results.spf and email.auth_results.spf.result:
         from vaultsandbox.types import SPFStatus
-        assert email.auth_results.spf.status in (
+        assert email.auth_results.spf.result in (
             SPFStatus.PASS,
             SPFStatus.NEUTRAL,
             SPFStatus.SOFTFAIL,
         )
 
     if email.auth_results.dkim and len(email.auth_results.dkim) > 0:
-        assert email.auth_results.dkim[0].status is not None
+        assert email.auth_results.dkim[0].result is not None
 ```
 
 ## Testing Reset Token Expiration

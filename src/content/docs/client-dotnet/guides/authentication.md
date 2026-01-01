@@ -49,10 +49,10 @@ var auth = email.AuthResults;
 
 if (auth != null)
 {
-    Console.WriteLine($"SPF: {auth.Spf?.Status}");
-    Console.WriteLine($"DKIM: {auth.Dkim?.FirstOrDefault()?.Status}");
-    Console.WriteLine($"DMARC: {auth.Dmarc?.Status}");
-    Console.WriteLine($"Reverse DNS: {auth.ReverseDns?.Status}");
+    Console.WriteLine($"SPF: {auth.Spf?.Result}");
+    Console.WriteLine($"DKIM: {auth.Dkim?.FirstOrDefault()?.Result}");
+    Console.WriteLine($"DMARC: {auth.Dmarc?.Result}");
+    Console.WriteLine($"Reverse DNS: {auth.ReverseDns?.Verified}");
 }
 ```
 
@@ -72,7 +72,7 @@ public async Task Email_Passes_Spf_Check()
     });
 
     Assert.NotNull(email.AuthResults?.Spf);
-    Assert.Equal(SpfStatus.Pass, email.AuthResults.Spf.Status);
+    Assert.Equal(SpfStatus.Pass, email.AuthResults.Spf.Result);
 }
 ```
 
@@ -91,11 +91,11 @@ public async Task Spf_Validation_Details()
 
     if (spf != null)
     {
-        Assert.Equal(SpfStatus.Pass, spf.Status);
+        Assert.Equal(SpfStatus.Pass, spf.Result);
         Assert.Equal("example.com", spf.Domain);
 
-        Console.WriteLine($"SPF {spf.Status} for {spf.Domain}");
-        Console.WriteLine($"Info: {spf.Info}");
+        Console.WriteLine($"SPF {spf.Result} for {spf.Domain}");
+        Console.WriteLine($"Details: {spf.Details}");
     }
 }
 ```
@@ -113,12 +113,12 @@ public async Task Handles_Spf_Failure()
 
     var spf = email.AuthResults?.Spf;
 
-    if (spf != null && spf.Status != SpfStatus.Pass)
+    if (spf != null && spf.Result != SpfStatus.Pass)
     {
-        Console.WriteLine($"SPF {spf.Status}: {spf.Info}");
+        Console.WriteLine($"SPF {spf.Result}: {spf.Details}");
 
         // Common failures
-        switch (spf.Status)
+        switch (spf.Result)
         {
             case SpfStatus.Fail:
                 Console.WriteLine("Server IP not authorized in SPF record");
@@ -153,7 +153,7 @@ public async Task Email_Has_Valid_Dkim_Signature()
 
     Assert.NotNull(email.AuthResults?.Dkim);
     Assert.NotEmpty(email.AuthResults.Dkim);
-    Assert.Equal(DkimStatus.Pass, email.AuthResults.Dkim[0].Status);
+    Assert.Equal(DkimStatus.Pass, email.AuthResults.Dkim[0].Result);
 }
 ```
 
@@ -178,15 +178,15 @@ public async Task Validates_All_Dkim_Signatures()
         {
             var sig = dkim[i];
             Console.WriteLine($"Signature {i + 1}:");
-            Console.WriteLine($"  Status: {sig.Status}");
+            Console.WriteLine($"  Result: {sig.Result}");
             Console.WriteLine($"  Domain: {sig.Domain}");
             Console.WriteLine($"  Selector: {sig.Selector}");
 
-            Assert.Equal(DkimStatus.Pass, sig.Status);
+            Assert.Equal(DkimStatus.Pass, sig.Result);
         }
 
         // At least one signature should pass
-        var anyPassed = dkim.Any(sig => sig.Status == DkimStatus.Pass);
+        var anyPassed = dkim.Any(sig => sig.Result == DkimStatus.Pass);
         Assert.True(anyPassed);
     }
 }
@@ -233,7 +233,7 @@ public async Task Email_Passes_Dmarc()
     });
 
     Assert.NotNull(email.AuthResults?.Dmarc);
-    Assert.Equal(DmarcStatus.Pass, email.AuthResults.Dmarc.Status);
+    Assert.Equal(DmarcStatus.Pass, email.AuthResults.Dmarc.Result);
 }
 ```
 
@@ -252,7 +252,7 @@ public async Task Dmarc_Policy_Is_Enforced()
 
     if (dmarc != null)
     {
-        Console.WriteLine($"DMARC status: {dmarc.Status}");
+        Console.WriteLine($"DMARC result: {dmarc.Result}");
         Console.WriteLine($"DMARC policy: {dmarc.Policy}");
 
         // Policy should be restrictive in production
@@ -304,11 +304,11 @@ public async Task Server_Has_Valid_Reverse_Dns()
 
     if (rdns != null)
     {
-        Assert.Equal(ReverseDnsStatus.Pass, rdns.Status);
+        Assert.True(rdns.Verified);
         Assert.NotEmpty(rdns.Hostname);
 
         Console.WriteLine($"Reverse DNS: {rdns.Ip} -> {rdns.Hostname}");
-        Console.WriteLine($"Status: {rdns.Status}");
+        Console.WriteLine($"Verified: {rdns.Verified}");
     }
 }
 ```
@@ -432,19 +432,19 @@ public class PreProductionAuthTests : IAsyncLifetime
         // SPF should be configured
         if (auth?.Spf != null)
         {
-            if (auth.Spf.Status != SpfStatus.Pass)
+            if (auth.Spf.Result != SpfStatus.Pass)
             {
                 Console.WriteLine("SPF not configured correctly");
-                Console.WriteLine($"  Status: {auth.Spf.Status}");
-                Console.WriteLine($"  Info: {auth.Spf.Info}");
+                Console.WriteLine($"  Result: {auth.Spf.Result}");
+                Console.WriteLine($"  Details: {auth.Spf.Details}");
             }
-            Assert.True(auth.Spf.Status is SpfStatus.Pass or SpfStatus.Neutral);
+            Assert.True(auth.Spf.Result is SpfStatus.Pass or SpfStatus.Neutral);
         }
 
         // DKIM should be present
         if (auth?.Dkim?.Count > 0)
         {
-            var anyValid = auth.Dkim.Any(d => d.Status == DkimStatus.Pass);
+            var anyValid = auth.Dkim.Any(d => d.Result == DkimStatus.Pass);
             if (!anyValid)
             {
                 Console.WriteLine("No valid DKIM signatures");
@@ -512,9 +512,9 @@ void LogAuthenticationDetails(Email email)
     if (auth?.Spf != null)
     {
         Console.WriteLine("SPF:");
-        Console.WriteLine($"  Status: {auth.Spf.Status}");
+        Console.WriteLine($"  Result: {auth.Spf.Result}");
         Console.WriteLine($"  Domain: {auth.Spf.Domain}");
-        Console.WriteLine($"  Info: {auth.Spf.Info}");
+        Console.WriteLine($"  Details: {auth.Spf.Details}");
     }
     else
     {
@@ -529,10 +529,9 @@ void LogAuthenticationDetails(Email email)
         {
             var sig = auth.Dkim[i];
             Console.WriteLine($"  Signature {i + 1}:");
-            Console.WriteLine($"    Status: {sig.Status}");
+            Console.WriteLine($"    Result: {sig.Result}");
             Console.WriteLine($"    Domain: {sig.Domain}");
             Console.WriteLine($"    Selector: {sig.Selector}");
-            Console.WriteLine($"    Info: {sig.Info}");
         }
     }
     else
@@ -544,7 +543,7 @@ void LogAuthenticationDetails(Email email)
     if (auth?.Dmarc != null)
     {
         Console.WriteLine("\nDMARC:");
-        Console.WriteLine($"  Status: {auth.Dmarc.Status}");
+        Console.WriteLine($"  Result: {auth.Dmarc.Result}");
         Console.WriteLine($"  Domain: {auth.Dmarc.Domain}");
         Console.WriteLine($"  Policy: {auth.Dmarc.Policy}");
     }
@@ -557,7 +556,7 @@ void LogAuthenticationDetails(Email email)
     if (auth?.ReverseDns != null)
     {
         Console.WriteLine("\nReverse DNS:");
-        Console.WriteLine($"  Status: {auth.ReverseDns.Status}");
+        Console.WriteLine($"  Verified: {auth.ReverseDns.Verified}");
         Console.WriteLine($"  IP: {auth.ReverseDns.Ip}");
         Console.WriteLine($"  Hostname: {auth.ReverseDns.Hostname}");
     }
@@ -602,35 +601,33 @@ public sealed record AuthenticationResults
 
 public sealed record SpfResult
 {
-    public required SpfStatus Status { get; init; }  // Pass, Fail, SoftFail, Neutral, None, TempError, PermError
+    public SpfStatus Result { get; init; }  // Pass, Fail, SoftFail, Neutral, None, TempError, PermError
     public string? Domain { get; init; }
     public string? Ip { get; init; }
-    public string? Info { get; init; }
+    public string? Details { get; init; }
 }
 
 public sealed record DkimResult
 {
-    public required DkimStatus Status { get; init; }  // Pass, Fail, None
+    public DkimStatus Result { get; init; }  // Pass, Fail, None
     public string? Domain { get; init; }
     public string? Selector { get; init; }
-    public string? Info { get; init; }
+    public string? Signature { get; init; }
 }
 
 public sealed record DmarcResult
 {
-    public required DmarcStatus Status { get; init; }  // Pass, Fail, None
-    public DmarcPolicy? Policy { get; init; }          // None, Quarantine, Reject
+    public DmarcStatus Result { get; init; }  // Pass, Fail, None
+    public DmarcPolicy? Policy { get; init; }  // None, Quarantine, Reject
     public bool? Aligned { get; init; }
     public string? Domain { get; init; }
-    public string? Info { get; init; }
 }
 
 public sealed record ReverseDnsResult
 {
-    public required ReverseDnsStatus Status { get; init; }  // Pass, Fail, None
+    public bool Verified { get; init; }
     public string? Ip { get; init; }
     public string? Hostname { get; init; }
-    public string? Info { get; init; }
 }
 ```
 

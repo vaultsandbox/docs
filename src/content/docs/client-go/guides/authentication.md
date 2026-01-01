@@ -44,16 +44,16 @@ if validation.Passed {
 auth := email.AuthResults
 
 if auth.SPF != nil {
-	fmt.Printf("SPF: %s (IP: %s)\n", auth.SPF.Status, auth.SPF.IP)
+	fmt.Printf("SPF: %s (IP: %s)\n", auth.SPF.Result, auth.SPF.IP)
 }
 if len(auth.DKIM) > 0 {
-	fmt.Printf("DKIM: %s\n", auth.DKIM[0].Status)
+	fmt.Printf("DKIM: %s\n", auth.DKIM[0].Result)
 }
 if auth.DMARC != nil {
-	fmt.Printf("DMARC: %s (aligned: %v)\n", auth.DMARC.Status, auth.DMARC.Aligned)
+	fmt.Printf("DMARC: %s (aligned: %v)\n", auth.DMARC.Result, auth.DMARC.Aligned)
 }
 if auth.ReverseDNS != nil {
-	fmt.Printf("Reverse DNS: %s\n", auth.ReverseDNS.Status)
+	fmt.Printf("Reverse DNS verified: %v\n", auth.ReverseDNS.Verified)
 }
 ```
 
@@ -73,8 +73,8 @@ func TestEmailPassesSPFCheck(t *testing.T) {
 	if email.AuthResults.SPF == nil {
 		t.Fatal("expected SPF results")
 	}
-	if email.AuthResults.SPF.Status != "pass" {
-		t.Errorf("expected SPF pass, got %s", email.AuthResults.SPF.Status)
+	if email.AuthResults.SPF.Result != "pass" {
+		t.Errorf("expected SPF pass, got %s", email.AuthResults.SPF.Result)
 	}
 }
 ```
@@ -90,14 +90,14 @@ func TestSPFValidationDetails(t *testing.T) {
 
 	spf := email.AuthResults.SPF
 	if spf != nil {
-		if spf.Status != "pass" {
-			t.Errorf("expected SPF pass, got %s", spf.Status)
+		if spf.Result != "pass" {
+			t.Errorf("expected SPF pass, got %s", spf.Result)
 		}
 		if spf.Domain != "example.com" {
 			t.Errorf("expected domain example.com, got %s", spf.Domain)
 		}
 
-		t.Logf("SPF %s for %s from IP %s", spf.Status, spf.Domain, spf.IP)
+		t.Logf("SPF %s for %s from IP %s", spf.Result, spf.Domain, spf.IP)
 		t.Logf("Info: %s", spf.Info)
 	}
 }
@@ -113,11 +113,11 @@ func TestHandlesSPFFailure(t *testing.T) {
 	}
 
 	spf := email.AuthResults.SPF
-	if spf != nil && spf.Status != "pass" {
-		t.Logf("SPF %s: %s", spf.Status, spf.Info)
+	if spf != nil && spf.Result != "pass" {
+		t.Logf("SPF %s: %s", spf.Result, spf.Info)
 
 		// Common failures
-		switch spf.Status {
+		switch spf.Result {
 		case "fail":
 			t.Log("Server IP not authorized in SPF record")
 			t.Log("Action: Add server IP to SPF record")
@@ -147,8 +147,8 @@ func TestEmailHasValidDKIMSignature(t *testing.T) {
 	if len(email.AuthResults.DKIM) == 0 {
 		t.Fatal("expected DKIM results")
 	}
-	if email.AuthResults.DKIM[0].Status != "pass" {
-		t.Errorf("expected DKIM pass, got %s", email.AuthResults.DKIM[0].Status)
+	if email.AuthResults.DKIM[0].Result != "pass" {
+		t.Errorf("expected DKIM pass, got %s", email.AuthResults.DKIM[0].Result)
 	}
 }
 ```
@@ -167,18 +167,18 @@ func TestValidatesAllDKIMSignatures(t *testing.T) {
 		t.Logf("Email has %d DKIM signature(s)", len(dkim))
 
 		for i, sig := range dkim {
-			t.Logf("Signature %d: status=%s, domain=%s, selector=%s",
-				i+1, sig.Status, sig.Domain, sig.Selector)
+			t.Logf("Signature %d: result=%s, domain=%s, selector=%s",
+				i+1, sig.Result, sig.Domain, sig.Selector)
 
-			if sig.Status != "pass" {
-				t.Errorf("signature %d failed: %s", i+1, sig.Status)
+			if sig.Result != "pass" {
+				t.Errorf("signature %d failed: %s", i+1, sig.Result)
 			}
 		}
 
 		// At least one signature should pass
 		anyPassed := false
 		for _, sig := range dkim {
-			if sig.Status == "pass" {
+			if sig.Result == "pass" {
 				anyPassed = true
 				break
 			}
@@ -234,8 +234,8 @@ func TestEmailPassesDMARC(t *testing.T) {
 	if email.AuthResults.DMARC == nil {
 		t.Fatal("expected DMARC results")
 	}
-	if email.AuthResults.DMARC.Status != "pass" {
-		t.Errorf("expected DMARC pass, got %s", email.AuthResults.DMARC.Status)
+	if email.AuthResults.DMARC.Result != "pass" {
+		t.Errorf("expected DMARC pass, got %s", email.AuthResults.DMARC.Result)
 	}
 }
 ```
@@ -251,7 +251,7 @@ func TestDMARCPolicyIsEnforced(t *testing.T) {
 
 	dmarc := email.AuthResults.DMARC
 	if dmarc != nil {
-		t.Logf("DMARC status: %s", dmarc.Status)
+		t.Logf("DMARC result: %s", dmarc.Result)
 		t.Logf("DMARC policy: %s", dmarc.Policy)
 		t.Logf("DMARC aligned: %v", dmarc.Aligned)
 		if dmarc.Info != "" {
@@ -304,15 +304,15 @@ func TestServerHasValidReverseDNS(t *testing.T) {
 
 	rdns := email.AuthResults.ReverseDNS
 	if rdns != nil {
-		if rdns.Status != "pass" {
-			t.Errorf("expected reverse DNS pass, got %s", rdns.Status)
+		if !rdns.Verified {
+			t.Error("expected reverse DNS to be verified")
 		}
 		if rdns.Hostname == "" {
 			t.Error("expected hostname to be set")
 		}
 
 		t.Logf("Reverse DNS: %s -> %s", rdns.IP, rdns.Hostname)
-		t.Logf("Status: %s", rdns.Status)
+		t.Logf("Verified: %v", rdns.Verified)
 		if rdns.Info != "" {
 			t.Logf("Info: %s", rdns.Info)
 		}
@@ -417,8 +417,8 @@ func TestValidatesStagingEnvironmentEmailAuth(t *testing.T) {
 
 	// SPF should be configured
 	if auth.SPF != nil {
-		if auth.SPF.Status != "pass" && auth.SPF.Status != "neutral" {
-			t.Logf("SPF not configured correctly: %s", auth.SPF.Status)
+		if auth.SPF.Result != "pass" && auth.SPF.Result != "neutral" {
+			t.Logf("SPF not configured correctly: %s", auth.SPF.Result)
 			t.Logf("Info: %s", auth.SPF.Info)
 		}
 	}
@@ -427,7 +427,7 @@ func TestValidatesStagingEnvironmentEmailAuth(t *testing.T) {
 	if len(auth.DKIM) > 0 {
 		anyValid := false
 		for _, d := range auth.DKIM {
-			if d.Status == "pass" {
+			if d.Result == "pass" {
 				anyValid = true
 				break
 			}
@@ -572,7 +572,7 @@ func logAuthenticationDetails(email *vaultsandbox.Email) {
 	// SPF
 	if auth.SPF != nil {
 		fmt.Println("SPF:")
-		fmt.Printf("  Status: %s\n", auth.SPF.Status)
+		fmt.Printf("  Result: %s\n", auth.SPF.Result)
 		fmt.Printf("  Domain: %s\n", auth.SPF.Domain)
 		fmt.Printf("  IP: %s\n", auth.SPF.IP)
 		fmt.Printf("  Info: %s\n", auth.SPF.Info)
@@ -586,7 +586,7 @@ func logAuthenticationDetails(email *vaultsandbox.Email) {
 		fmt.Println("DKIM:")
 		for i, sig := range auth.DKIM {
 			fmt.Printf("  Signature %d:\n", i+1)
-			fmt.Printf("    Status: %s\n", sig.Status)
+			fmt.Printf("    Result: %s\n", sig.Result)
 			fmt.Printf("    Domain: %s\n", sig.Domain)
 			fmt.Printf("    Selector: %s\n", sig.Selector)
 			fmt.Printf("    Info: %s\n", sig.Info)
@@ -600,7 +600,7 @@ func logAuthenticationDetails(email *vaultsandbox.Email) {
 	if auth.DMARC != nil {
 		fmt.Println()
 		fmt.Println("DMARC:")
-		fmt.Printf("  Status: %s\n", auth.DMARC.Status)
+		fmt.Printf("  Result: %s\n", auth.DMARC.Result)
 		fmt.Printf("  Domain: %s\n", auth.DMARC.Domain)
 		fmt.Printf("  Policy: %s\n", auth.DMARC.Policy)
 		fmt.Printf("  Aligned: %v\n", auth.DMARC.Aligned)
@@ -616,7 +616,7 @@ func logAuthenticationDetails(email *vaultsandbox.Email) {
 	if auth.ReverseDNS != nil {
 		fmt.Println()
 		fmt.Println("Reverse DNS:")
-		fmt.Printf("  Status: %s\n", auth.ReverseDNS.Status)
+		fmt.Printf("  Verified: %v\n", auth.ReverseDNS.Verified)
 		fmt.Printf("  IP: %s\n", auth.ReverseDNS.IP)
 		fmt.Printf("  Hostname: %s\n", auth.ReverseDNS.Hostname)
 		if auth.ReverseDNS.Info != "" {

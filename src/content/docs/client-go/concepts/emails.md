@@ -224,11 +224,11 @@ Email authentication results (SPF, DKIM, DMARC, reverse DNS).
 auth := email.AuthResults
 
 if auth.SPF != nil {
-    fmt.Println(auth.SPF.Status) // "pass"
+    fmt.Println(auth.SPF.Result) // "pass"
 }
 fmt.Println(len(auth.DKIM)) // 1
 if auth.DMARC != nil {
-    fmt.Println(auth.DMARC.Status) // "pass"
+    fmt.Println(auth.DMARC.Result) // "pass"
 }
 
 // Validate all checks

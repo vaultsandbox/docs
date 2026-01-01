@@ -39,10 +39,10 @@ else:
 ```python
 auth = email.auth_results
 
-print(f"SPF: {auth.spf.status if auth.spf else 'N/A'}")
-print(f"DKIM: {auth.dkim[0].status if auth.dkim else 'N/A'}")
-print(f"DMARC: {auth.dmarc.status if auth.dmarc else 'N/A'}")
-print(f"Reverse DNS: {auth.reverse_dns.status if auth.reverse_dns else 'N/A'}")
+print(f"SPF: {auth.spf.result if auth.spf else 'N/A'}")
+print(f"DKIM: {auth.dkim[0].result if auth.dkim else 'N/A'}")
+print(f"DMARC: {auth.dmarc.result if auth.dmarc else 'N/A'}")
+print(f"Reverse DNS: {auth.reverse_dns.verified if auth.reverse_dns else 'N/A'}")
 ```
 
 ## Testing SPF
@@ -60,7 +60,7 @@ async def test_email_passes_spf_check(inbox):
     email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 
     assert email.auth_results.spf is not None
-    assert email.auth_results.spf.status == "pass"
+    assert email.auth_results.spf.result == "pass"
 ```
 
 ### Detailed SPF Validation
@@ -72,11 +72,11 @@ async def test_spf_validation_details(inbox):
     spf = email.auth_results.spf
 
     if spf:
-        assert spf.status == "pass"
+        assert spf.result == "pass"
         assert spf.domain == "example.com"
 
-        print(f"SPF {spf.status} for {spf.domain}")
-        print(f"Info: {spf.info}")
+        print(f"SPF {spf.result} for {spf.domain}")
+        print(f"Details: {spf.details}")
 ```
 
 ### Handling SPF Failures
@@ -87,16 +87,16 @@ async def test_handles_spf_failure(inbox):
     email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
     spf = email.auth_results.spf
 
-    if spf and spf.status != "pass":
-        print(f"SPF {spf.status}: {spf.info}")
+    if spf and spf.result != "pass":
+        print(f"SPF {spf.result}: {spf.details}")
 
         # Common failures
-        if spf.status == "fail":
+        if spf.result == "fail":
             print("Server IP not authorized in SPF record")
             print("Action: Add server IP to SPF record")
-        elif spf.status == "softfail":
+        elif spf.result == "softfail":
             print("Server probably not authorized (~all in SPF)")
-        elif spf.status == "none":
+        elif spf.result == "none":
             print("No SPF record found")
             print("Action: Add SPF record to DNS")
 ```
@@ -114,7 +114,7 @@ async def test_email_has_valid_dkim_signature(inbox):
 
     assert email.auth_results.dkim is not None
     assert len(email.auth_results.dkim) > 0
-    assert email.auth_results.dkim[0].status == "pass"
+    assert email.auth_results.dkim[0].result == "pass"
 ```
 
 ### Multiple DKIM Signatures
@@ -129,11 +129,11 @@ async def test_validates_all_dkim_signatures(inbox):
         print(f"Email has {len(dkim)} DKIM signature(s)")
 
         for i, sig in enumerate(dkim):
-            print(f"Signature {i + 1}: status={sig.status}, domain={sig.domain}, selector={sig.selector}")
-            assert sig.status == "pass"
+            print(f"Signature {i + 1}: result={sig.result}, domain={sig.domain}, selector={sig.selector}")
+            assert sig.result == "pass"
 
         # At least one signature should pass
-        any_passed = any(sig.status == "pass" for sig in dkim)
+        any_passed = any(sig.result == "pass" for sig in dkim)
         assert any_passed
 ```
 
@@ -166,7 +166,7 @@ async def test_email_passes_dmarc(inbox):
     email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 
     assert email.auth_results.dmarc is not None
-    assert email.auth_results.dmarc.status == "pass"
+    assert email.auth_results.dmarc.result == "pass"
 ```
 
 ### DMARC Policy Verification
@@ -178,7 +178,7 @@ async def test_dmarc_policy_is_enforced(inbox):
     dmarc = email.auth_results.dmarc
 
     if dmarc:
-        print(f"DMARC status: {dmarc.status}")
+        print(f"DMARC result: {dmarc.result}")
         print(f"DMARC policy: {dmarc.policy}")
 
         # Policy should be restrictive in production
@@ -194,13 +194,13 @@ async def test_dmarc_alignment_requirements(inbox):
 
     # DMARC requires either SPF or DKIM to align with From domain
     auth = email.auth_results
-    dmarc_passed = auth.dmarc and auth.dmarc.status == "pass"
+    dmarc_passed = auth.dmarc and auth.dmarc.result == "pass"
 
     if not dmarc_passed:
         print("DMARC failed. Checking alignment:")
 
-        spf_passed = auth.spf and auth.spf.status == "pass"
-        dkim_passed = auth.dkim and any(d.status == "pass" for d in auth.dkim)
+        spf_passed = auth.spf and auth.spf.result == "pass"
+        dkim_passed = auth.dkim and any(d.result == "pass" for d in auth.dkim)
 
         print(f"SPF passed: {spf_passed}")
         print(f"DKIM passed: {dkim_passed}")
@@ -220,11 +220,11 @@ async def test_server_has_valid_reverse_dns(inbox):
     rdns = email.auth_results.reverse_dns
 
     if rdns:
-        assert rdns.status == "pass"
+        assert rdns.verified is True
         assert rdns.hostname
 
         print(f"Reverse DNS: {rdns.ip} -> {rdns.hostname}")
-        print(f"Status: {rdns.status}")
+        print(f"Verified: {rdns.verified}")
 ```
 
 ## Complete Authentication Test
@@ -244,16 +244,16 @@ async def test_email_passes_all_authentication_checks(inbox):
 
     # Check individual components if needed (already covered by validation.passed)
     auth = email.auth_results
-    assert auth.spf and auth.spf.status == "pass"
-    assert auth.dkim and any(d.status == "pass" for d in auth.dkim)
-    assert auth.dmarc and auth.dmarc.status == "pass"
+    assert auth.spf and auth.spf.result == "pass"
+    assert auth.dkim and any(d.result == "pass" for d in auth.dkim)
+    assert auth.dmarc and auth.dmarc.result == "pass"
 
     # Log results
     print("Authentication Results:")
-    print(f"  SPF: {auth.spf.status if auth.spf else 'N/A'}")
-    print(f"  DKIM: {auth.dkim[0].status if auth.dkim else 'N/A'}")
-    print(f"  DMARC: {auth.dmarc.status if auth.dmarc else 'N/A'}")
-    print(f"  Reverse DNS: {auth.reverse_dns.status if auth.reverse_dns else 'N/A'}")
+    print(f"  SPF: {auth.spf.result if auth.spf else 'N/A'}")
+    print(f"  DKIM: {auth.dkim[0].result if auth.dkim else 'N/A'}")
+    print(f"  DMARC: {auth.dmarc.result if auth.dmarc else 'N/A'}")
+    print(f"  Reverse DNS: {auth.reverse_dns.verified if auth.reverse_dns else 'N/A'}")
 ```
 
 ### Graceful Failure Handling
@@ -313,8 +313,8 @@ class TestEmailAuthPreProduction:
         if not validation.spf_passed:
             print("SPF not configured correctly")
             if email.auth_results.spf:
-                print(f"   Status: {email.auth_results.spf.status}")
-                print(f"   Info: {email.auth_results.spf.info}")
+                print(f"   Result: {email.auth_results.spf.result}")
+                print(f"   Details: {email.auth_results.spf.details}")
             print("   Fix: Add SPF record to DNS")
         assert validation.spf_passed
 
@@ -336,13 +336,13 @@ async def test_production_email_configuration(inbox):
 
     # Helper functions to check status
     def check_spf():
-        return auth.spf and auth.spf.status == "pass"
+        return auth.spf and auth.spf.result == "pass"
 
     def check_dkim():
-        return auth.dkim and any(d.status == "pass" for d in auth.dkim)
+        return auth.dkim and any(d.result == "pass" for d in auth.dkim)
 
     def check_dmarc():
-        return auth.dmarc and auth.dmarc.status == "pass"
+        return auth.dmarc and auth.dmarc.result == "pass"
 
     # Production requirements
     production_ready = {
@@ -380,9 +380,9 @@ def log_authentication_details(email):
     # SPF
     if auth.spf:
         print("SPF:")
-        print(f"  Status: {auth.spf.status}")
+        print(f"  Result: {auth.spf.result}")
         print(f"  Domain: {auth.spf.domain}")
-        print(f"  Info: {auth.spf.info}")
+        print(f"  Details: {auth.spf.details}")
     else:
         print("SPF: No result")
 
@@ -391,17 +391,17 @@ def log_authentication_details(email):
         print("\nDKIM:")
         for i, sig in enumerate(auth.dkim):
             print(f"  Signature {i + 1}:")
-            print(f"    Status: {sig.status}")
+            print(f"    Result: {sig.result}")
             print(f"    Domain: {sig.domain}")
             print(f"    Selector: {sig.selector}")
-            print(f"    Info: {sig.info}")
+            print(f"    Signature: {sig.signature}")
     else:
         print("\nDKIM: No signatures")
 
     # DMARC
     if auth.dmarc:
         print("\nDMARC:")
-        print(f"  Status: {auth.dmarc.status}")
+        print(f"  Result: {auth.dmarc.result}")
         print(f"  Domain: {auth.dmarc.domain}")
         print(f"  Policy: {auth.dmarc.policy}")
     else:
@@ -410,7 +410,7 @@ def log_authentication_details(email):
     # Reverse DNS
     if auth.reverse_dns:
         print("\nReverse DNS:")
-        print(f"  Status: {auth.reverse_dns.status}")
+        print(f"  Verified: {auth.reverse_dns.verified}")
         print(f"  IP: {auth.reverse_dns.ip}")
         print(f"  Hostname: {auth.reverse_dns.hostname}")
 

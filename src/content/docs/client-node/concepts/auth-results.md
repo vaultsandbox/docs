@@ -39,9 +39,9 @@ Verifies the sending server is authorized to send from the sender's domain.
 const spf = email.authResults.spf;
 
 if (spf) {
-	console.log(spf.status); // "pass", "fail", "softfail", "neutral", etc.
+	console.log(spf.result); // "pass", "fail", "softfail", "neutral", etc.
 	console.log(spf.domain); // Domain checked
-	console.log(spf.info); // Human-readable details
+	console.log(spf.details); // Human-readable details
 }
 ```
 
@@ -65,10 +65,10 @@ const email = await inbox.waitForEmail({ timeout: 10000 });
 if (email.authResults.spf) {
 	const spf = email.authResults.spf;
 
-	expect(spf.status).toBe('pass');
+	expect(spf.result).toBe('pass');
 	expect(spf.domain).toBe('example.com');
 
-	console.log(`SPF ${spf.status} for ${spf.domain}`);
+	console.log(`SPF ${spf.result} for ${spf.domain}`);
 }
 ```
 
@@ -83,10 +83,10 @@ const dkim = email.authResults.dkim; // Array of results
 
 if (dkim && dkim.length > 0) {
 	dkim.forEach((result) => {
-		console.log(result.status); // "pass", "fail", "none"
+		console.log(result.result); // "pass", "fail", "none"
 		console.log(result.domain); // Signing domain
 		console.log(result.selector); // DKIM selector
-		console.log(result.info); // Human-readable details
+		console.log(result.signature); // DKIM signature details
 	});
 }
 ```
@@ -109,10 +109,10 @@ const email = await inbox.waitForEmail({ timeout: 10000 });
 if (email.authResults.dkim && email.authResults.dkim.length > 0) {
 	const dkim = email.authResults.dkim[0];
 
-	expect(dkim.status).toBe('pass');
+	expect(dkim.result).toBe('pass');
 	expect(dkim.domain).toBe('example.com');
 
-	console.log(`DKIM ${dkim.status} (${dkim.selector}._domainkey.${dkim.domain})`);
+	console.log(`DKIM ${dkim.result} (${dkim.selector}._domainkey.${dkim.domain})`);
 }
 ```
 
@@ -126,11 +126,10 @@ Checks that SPF or DKIM align with the From address and enforces the domain's po
 const dmarc = email.authResults.dmarc;
 
 if (dmarc) {
-	console.log(dmarc.status); // "pass", "fail", "none"
+	console.log(dmarc.result); // "pass", "fail", "none"
 	console.log(dmarc.domain); // Domain checked
 	console.log(dmarc.policy); // Domain's policy (none, quarantine, reject)
 	console.log(dmarc.aligned); // Whether SPF/DKIM aligns with From domain
-	console.log(dmarc.info); // Human-readable details
 }
 ```
 
@@ -158,10 +157,10 @@ const email = await inbox.waitForEmail({ timeout: 10000 });
 if (email.authResults.dmarc) {
 	const dmarc = email.authResults.dmarc;
 
-	expect(dmarc.status).toBe('pass');
+	expect(dmarc.result).toBe('pass');
 	expect(dmarc.domain).toBe('example.com');
 
-	console.log(`DMARC ${dmarc.status} (policy: ${dmarc.policy})`);
+	console.log(`DMARC ${dmarc.result} (policy: ${dmarc.policy})`);
 }
 ```
 
@@ -175,20 +174,18 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 const reverseDns = email.authResults.reverseDns;
 
 if (reverseDns) {
-	console.log(reverseDns.status); // "pass", "fail", "none"
+	console.log(reverseDns.verified); // true or false
 	console.log(reverseDns.ip); // Server IP
 	console.log(reverseDns.hostname); // Resolved hostname (may be empty)
-	console.log(reverseDns.info); // Human-readable details
 }
 ```
 
-### Reverse DNS Status Values
+### Reverse DNS Values
 
-| Status | Meaning              |
-| ------ | -------------------- |
-| `pass` | Reverse DNS verified |
-| `fail` | Reverse DNS failed   |
-| `none` | No PTR record        |
+| Value   | Meaning              |
+| ------- | -------------------- |
+| `true`  | Reverse DNS verified |
+| `false` | Reverse DNS failed   |
 
 ### Reverse DNS Example
 
@@ -199,7 +196,7 @@ if (email.authResults.reverseDns) {
 	const rdns = email.authResults.reverseDns;
 
 	console.log(`Reverse DNS: ${rdns.ip} → ${rdns.hostname}`);
-	console.log(`Status: ${rdns.status}`);
+	console.log(`Verified: ${rdns.verified}`);
 }
 ```
 
@@ -304,7 +301,7 @@ test('email has valid DKIM signature', async () => {
 	// Only check DKIM (most reliable)
 	expect(email.authResults.dkim).toBeDefined();
 	expect(email.authResults.dkim.length).toBeGreaterThan(0);
-	expect(email.authResults.dkim[0].status).toBe('pass');
+	expect(email.authResults.dkim[0].result).toBe('pass');
 });
 ```
 
@@ -346,20 +343,20 @@ describe('Email Authentication', () => {
 
 	test('SPF check', () => {
 		if (email.authResults.spf) {
-			expect(email.authResults.spf.status).toMatch(/pass|neutral|softfail/);
+			expect(email.authResults.spf.result).toMatch(/pass|neutral|softfail/);
 		}
 	});
 
 	test('DKIM check', () => {
 		if (email.authResults.dkim && email.authResults.dkim.length > 0) {
-			const anyPassed = email.authResults.dkim.some((d) => d.status === 'pass');
+			const anyPassed = email.authResults.dkim.some((d) => d.result === 'pass');
 			expect(anyPassed).toBe(true);
 		}
 	});
 
 	test('DMARC check', () => {
 		if (email.authResults.dmarc) {
-			expect(email.authResults.dmarc.status).toMatch(/pass|none/);
+			expect(email.authResults.dmarc.result).toMatch(/pass|none/);
 		}
 	});
 });

@@ -37,10 +37,10 @@ if (validation.passed) {
 ```javascript
 const auth = email.authResults;
 
-console.log('SPF:', auth.spf?.status);
-console.log('DKIM:', auth.dkim?.[0]?.status);
-console.log('DMARC:', auth.dmarc?.status);
-console.log('Reverse DNS:', auth.reverseDns?.status);
+console.log('SPF:', auth.spf?.result);
+console.log('DKIM:', auth.dkim?.[0]?.result);
+console.log('DMARC:', auth.dmarc?.result);
+console.log('Reverse DNS:', auth.reverseDns?.verified);
 ```
 
 ## Testing SPF
@@ -54,7 +54,7 @@ test('email passes SPF check', async () => {
 	const email = await inbox.waitForEmail({ timeout: 10000 });
 
 	expect(email.authResults.spf).toBeDefined();
-	expect(email.authResults.spf.status).toBe('pass');
+	expect(email.authResults.spf.result).toBe('pass');
 });
 ```
 
@@ -66,11 +66,11 @@ test('SPF validation details', async () => {
 	const spf = email.authResults.spf;
 
 	if (spf) {
-		expect(spf.status).toBe('pass');
+		expect(spf.result).toBe('pass');
 		expect(spf.domain).toBe('example.com');
 
-		console.log(`SPF ${spf.status} for ${spf.domain}`);
-		console.log(`Info: ${spf.info}`);
+		console.log(`SPF ${spf.result} for ${spf.domain}`);
+		console.log(`Details: ${spf.details}`);
 	}
 });
 ```
@@ -82,16 +82,16 @@ test('handles SPF failure', async () => {
 	const email = await inbox.waitForEmail({ timeout: 10000 });
 	const spf = email.authResults.spf;
 
-	if (spf && spf.status !== 'pass') {
-		console.warn(`SPF ${spf.status}:`, spf.info);
+	if (spf && spf.result !== 'pass') {
+		console.warn(`SPF ${spf.result}:`, spf.details);
 
 		// Common failures
-		if (spf.status === 'fail') {
+		if (spf.result === 'fail') {
 			console.error('Server IP not authorized in SPF record');
 			console.error('Action: Add server IP to SPF record');
-		} else if (spf.status === 'softfail') {
+		} else if (spf.result === 'softfail') {
 			console.warn('Server probably not authorized (~all in SPF)');
-		} else if (spf.status === 'none') {
+		} else if (spf.result === 'none') {
 			console.error('No SPF record found');
 			console.error('Action: Add SPF record to DNS');
 		}
@@ -111,7 +111,7 @@ test('email has valid DKIM signature', async () => {
 
 	expect(email.authResults.dkim).toBeDefined();
 	expect(email.authResults.dkim.length).toBeGreaterThan(0);
-	expect(email.authResults.dkim[0].status).toBe('pass');
+	expect(email.authResults.dkim[0].result).toBe('pass');
 });
 ```
 
@@ -127,16 +127,16 @@ test('validates all DKIM signatures', async () => {
 
 		dkim.forEach((sig, index) => {
 			console.log(`Signature ${index + 1}:`, {
-				status: sig.status,
+				result: sig.result,
 				domain: sig.domain,
 				selector: sig.selector,
 			});
 
-			expect(sig.status).toBe('pass');
+			expect(sig.result).toBe('pass');
 		});
 
 		// At least one signature should pass
-		const anyPassed = dkim.some((sig) => sig.status === 'pass');
+		const anyPassed = dkim.some((sig) => sig.result === 'pass');
 		expect(anyPassed).toBe(true);
 	}
 });
@@ -171,7 +171,7 @@ test('email passes DMARC', async () => {
 	const email = await inbox.waitForEmail({ timeout: 10000 });
 
 	expect(email.authResults.dmarc).toBeDefined();
-	expect(email.authResults.dmarc.status).toBe('pass');
+	expect(email.authResults.dmarc.result).toBe('pass');
 });
 ```
 
@@ -183,7 +183,7 @@ test('DMARC policy is enforced', async () => {
 	const dmarc = email.authResults.dmarc;
 
 	if (dmarc) {
-		console.log('DMARC status:', dmarc.status);
+		console.log('DMARC result:', dmarc.result);
 		console.log('DMARC policy:', dmarc.policy);
 
 		// Policy should be restrictive in production
@@ -222,11 +222,11 @@ test('server has valid reverse DNS', async () => {
 	const rdns = email.authResults.reverseDns;
 
 	if (rdns) {
-		expect(rdns.status).toBe('pass');
+		expect(rdns.verified).toBe(true);
 		expect(rdns.hostname).toBeTruthy();
 
 		console.log(`Reverse DNS: ${rdns.ip} → ${rdns.hostname}`);
-		console.log(`Status: ${rdns.status}`);
+		console.log(`Verified: ${rdns.verified}`);
 	}
 });
 ```
@@ -306,17 +306,17 @@ describe('Email Authentication - Pre-Production', () => {
 
 		// SPF should be configured
 		if (auth.spf) {
-			if (auth.spf.status !== 'pass') {
+			if (auth.spf.result !== 'pass') {
 				console.error('❌ SPF not configured correctly');
-				console.error(`   Status: ${auth.spf.status}`);
-				console.error(`   Info: ${auth.spf.info}`);
+				console.error(`   Result: ${auth.spf.result}`);
+				console.error(`   Details: ${auth.spf.details}`);
 			}
-			expect(auth.spf.status).toMatch(/pass|neutral/);
+			expect(auth.spf.result).toMatch(/pass|neutral/);
 		}
 
 		// DKIM should be present
 		if (auth.dkim && auth.dkim.length > 0) {
-			const anyValid = auth.dkim.some((d) => d.status === 'pass');
+			const anyValid = auth.dkim.some((d) => d.result === 'pass');
 			if (!anyValid) {
 				console.error('❌ No valid DKIM signatures');
 				console.error('   Fix: Configure DKIM signing in mail server');
@@ -370,9 +370,9 @@ function logAuthenticationDetails(email) {
 	// SPF
 	if (auth.spf) {
 		console.log('SPF:');
-		console.log(`  Status: ${auth.spf.status}`);
+		console.log(`  Result: ${auth.spf.result}`);
 		console.log(`  Domain: ${auth.spf.domain}`);
-		console.log(`  Info: ${auth.spf.info}`);
+		console.log(`  Details: ${auth.spf.details}`);
 	} else {
 		console.log('SPF: No result');
 	}
@@ -382,10 +382,10 @@ function logAuthenticationDetails(email) {
 		console.log('\nDKIM:');
 		auth.dkim.forEach((sig, i) => {
 			console.log(`  Signature ${i + 1}:`);
-			console.log(`    Status: ${sig.status}`);
+			console.log(`    Result: ${sig.result}`);
 			console.log(`    Domain: ${sig.domain}`);
 			console.log(`    Selector: ${sig.selector}`);
-			console.log(`    Info: ${sig.info}`);
+			console.log(`    Signature: ${sig.signature}`);
 		});
 	} else {
 		console.log('\nDKIM: No signatures');
@@ -394,7 +394,7 @@ function logAuthenticationDetails(email) {
 	// DMARC
 	if (auth.dmarc) {
 		console.log('\nDMARC:');
-		console.log(`  Status: ${auth.dmarc.status}`);
+		console.log(`  Result: ${auth.dmarc.result}`);
 		console.log(`  Domain: ${auth.dmarc.domain}`);
 		console.log(`  Policy: ${auth.dmarc.policy}`);
 	} else {
@@ -404,7 +404,7 @@ function logAuthenticationDetails(email) {
 	// Reverse DNS
 	if (auth.reverseDns) {
 		console.log('\nReverse DNS:');
-		console.log(`  Status: ${auth.reverseDns.status}`);
+		console.log(`  Verified: ${auth.reverseDns.verified}`);
 		console.log(`  IP: ${auth.reverseDns.ip}`);
 		console.log(`  Hostname: ${auth.reverseDns.hostname}`);
 	}

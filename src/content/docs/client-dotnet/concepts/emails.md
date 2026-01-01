@@ -211,9 +211,9 @@ Email authentication results (SPF, DKIM, DMARC, reverse DNS).
 ```csharp
 if (email.AuthResults is not null)
 {
-    Console.WriteLine($"SPF: {email.AuthResults.Spf?.Status}");
-    Console.WriteLine($"DKIM: {email.AuthResults.Dkim?.FirstOrDefault()?.Status}");
-    Console.WriteLine($"DMARC: {email.AuthResults.Dmarc?.Status}");
+    Console.WriteLine($"SPF: {email.AuthResults.Spf?.Result}");
+    Console.WriteLine($"DKIM: {email.AuthResults.Dkim?.FirstOrDefault()?.Result}");
+    Console.WriteLine($"DMARC: {email.AuthResults.Dmarc?.Result}");
 
     // Validate all checks
     var validation = email.AuthResults.Validate();

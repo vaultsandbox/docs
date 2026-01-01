@@ -340,15 +340,15 @@ if (!validation.passed) {
 
 // Check individual results
 if (email.authResults.spf) {
-	console.log(`SPF Status: ${email.authResults.spf.status}`);
+	console.log(`SPF Result: ${email.authResults.spf.result}`);
 }
 
 if (email.authResults.dkim && email.authResults.dkim.length > 0) {
-	console.log(`DKIM Status: ${email.authResults.dkim[0].status}`);
+	console.log(`DKIM Result: ${email.authResults.dkim[0].result}`);
 }
 
 if (email.authResults.dmarc) {
-	console.log(`DMARC Status: ${email.authResults.dmarc.status}`);
+	console.log(`DMARC Result: ${email.authResults.dmarc.result}`);
 }
 ```
 
@@ -473,10 +473,10 @@ SPF (Sender Policy Framework) validation result.
 
 ```typescript
 interface SPFResult {
-	status: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
+	result: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
 	domain?: string;
 	ip?: string;
-	info?: string;
+	details?: string;
 }
 ```
 
@@ -490,10 +490,10 @@ DKIM (DomainKeys Identified Mail) validation results. May have multiple signatur
 
 ```typescript
 interface DKIMResult {
-	status: 'pass' | 'fail' | 'none';
+	result: 'pass' | 'fail' | 'none';
 	domain?: string;
 	selector?: string;
-	info?: string;
+	signature?: string;
 }
 ```
 
@@ -507,11 +507,10 @@ DMARC (Domain-based Message Authentication) validation result.
 
 ```typescript
 interface DMARCResult {
-	status: 'pass' | 'fail' | 'none';
+	result: 'pass' | 'fail' | 'none';
 	policy?: 'none' | 'quarantine' | 'reject';
 	aligned?: boolean;
 	domain?: string;
-	info?: string;
 }
 ```
 
@@ -525,10 +524,9 @@ Reverse DNS lookup result.
 
 ```typescript
 interface ReverseDNSResult {
-	status: 'pass' | 'fail' | 'none';
+	verified: boolean;
 	ip?: string;
 	hostname?: string;
-	info?: string;
 }
 ```
 

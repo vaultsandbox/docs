@@ -399,13 +399,13 @@ fmt.Printf("Attachments: %d\n", len(email.Attachments))
 // Check authentication results
 if email.AuthResults != nil {
 	if email.AuthResults.SPF != nil {
-		fmt.Printf("SPF: %s\n", email.AuthResults.SPF.Status)
+		fmt.Printf("SPF: %s\n", email.AuthResults.SPF.Result)
 	}
 	for _, dkim := range email.AuthResults.DKIM {
-		fmt.Printf("DKIM: %s (domain: %s)\n", dkim.Status, dkim.Domain)
+		fmt.Printf("DKIM: %s (domain: %s)\n", dkim.Result, dkim.Domain)
 	}
 	if email.AuthResults.DMARC != nil {
-		fmt.Printf("DMARC: %s\n", email.AuthResults.DMARC.Status)
+		fmt.Printf("DMARC: %s\n", email.AuthResults.DMARC.Result)
 	}
 
 	// Use convenience method to check if all auth checks passed

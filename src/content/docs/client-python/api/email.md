@@ -379,13 +379,13 @@ if not validation.passed:
 
 # Check individual results
 if email.auth_results.spf:
-    print(f"SPF Status: {email.auth_results.spf.status.value}")
+    print(f"SPF Result: {email.auth_results.spf.result.value}")
 
 if email.auth_results.dkim:
-    print(f"DKIM Status: {email.auth_results.dkim[0].status.value}")
+    print(f"DKIM Result: {email.auth_results.dkim[0].result.value}")
 
 if email.auth_results.dmarc:
-    print(f"DMARC Status: {email.auth_results.dmarc.status.value}")
+    print(f"DMARC Result: {email.auth_results.dmarc.result.value}")
 ```
 
 See the [Authentication Guide](/client-python/guides/authentication/) for more details.
@@ -530,10 +530,10 @@ SPF (Sender Policy Framework) validation result.
 ```python
 @dataclass
 class SPFResult:
-    status: SPFStatus
+    result: SPFStatus
     domain: str | None = None
     ip: str | None = None
-    info: str | None = None
+    details: str | None = None
 
 class SPFStatus(str, Enum):
     PASS = "pass"
@@ -556,10 +556,10 @@ DKIM (DomainKeys Identified Mail) validation results. May have multiple signatur
 ```python
 @dataclass
 class DKIMResult:
-    status: DKIMStatus
+    result: DKIMStatus
     domain: str | None = None
     selector: str | None = None
-    info: str | None = None
+    signature: str | None = None
 
 class DKIMStatus(str, Enum):
     PASS = "pass"
@@ -578,11 +578,10 @@ DMARC (Domain-based Message Authentication) validation result.
 ```python
 @dataclass
 class DMARCResult:
-    status: DMARCStatus
+    result: DMARCStatus
     policy: DMARCPolicy | None = None
     aligned: bool | None = None
     domain: str | None = None
-    info: str | None = None
 
 class DMARCStatus(str, Enum):
     PASS = "pass"
@@ -606,15 +605,9 @@ Reverse DNS lookup result.
 ```python
 @dataclass
 class ReverseDNSResult:
-    status: ReverseDNSStatus
+    verified: bool
     ip: str | None = None
     hostname: str | None = None
-    info: str | None = None
-
-class ReverseDNSStatus(str, Enum):
-    PASS = "pass"
-    FAIL = "fail"
-    NONE = "none"
 ```
 
 ### Methods
@@ -722,11 +715,11 @@ async def complete_email_example():
         print(f"Overall: {'PASS' if validation.passed else 'FAIL'}")
 
         if email.auth_results.spf:
-            print(f"SPF: {email.auth_results.spf.status.value}")
+            print(f"SPF: {email.auth_results.spf.result.value}")
         if email.auth_results.dkim:
-            print(f"DKIM: {email.auth_results.dkim[0].status.value}")
+            print(f"DKIM: {email.auth_results.dkim[0].result.value}")
         if email.auth_results.dmarc:
-            print(f"DMARC: {email.auth_results.dmarc.status.value}")
+            print(f"DMARC: {email.auth_results.dmarc.result.value}")
 
         if not validation.passed:
             print("Failures:", validation.failures)

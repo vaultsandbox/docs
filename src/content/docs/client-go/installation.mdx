@@ -3,6 +3,8 @@ title: Client Installation
 description: Install and set up the VaultSandbox Go client SDK
 ---
 
+import { versions } from '../../../data/versions';
+
 The `github.com/vaultsandbox/client-go` SDK provides a developer-friendly interface for integrating email testing into your Go applications and test suites.
 
 ## Requirements
@@ -25,9 +27,7 @@ This adds the dependency to your `go.mod` file automatically.
 
 Add to your `go.mod`:
 
-```
-require github.com/vaultsandbox/client-go v0.5.0
-```
+<pre><code>{`require github.com/vaultsandbox/client-go v${versions.go}`}</code></pre>
 
 Then run:
 

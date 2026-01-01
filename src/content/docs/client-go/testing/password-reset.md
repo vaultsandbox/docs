@@ -324,11 +324,11 @@ func TestEmailAuthenticationChecks(t *testing.T) {
 
 	// Check individual authentication methods
 	if email.AuthResults.SPF != nil {
-		assert.Regexp(t, regexp.MustCompile(`pass|neutral|softfail`), email.AuthResults.SPF.Status)
+		assert.Regexp(t, regexp.MustCompile(`pass|neutral|softfail`), email.AuthResults.SPF.Result)
 	}
 
 	if len(email.AuthResults.DKIM) > 0 {
-		assert.NotEmpty(t, email.AuthResults.DKIM[0].Status)
+		assert.NotEmpty(t, email.AuthResults.DKIM[0].Result)
 	}
 }
 

@@ -116,8 +116,7 @@ void shouldHaveValidReverseDns() {
     Email email = inbox.waitForEmail(Duration.ofSeconds(30));
     ReverseDnsResult rdns = email.getAuthResults().getReverseDns();
 
-    assertThat(rdns.getStatus()).isEqualToIgnoringCase("pass");
-    assertThat(rdns.isValid()).isTrue();  // Convenience method
+    assertThat(rdns.isVerified()).isTrue();
     assertThat(rdns.getHostname()).isNotBlank();
     assertThat(rdns.getIp()).isNotBlank();
 }
@@ -144,8 +143,8 @@ void shouldPassAllAuthentication() {
     assertThat(auth.getDmarc().getResult())
         .isEqualToIgnoringCase("pass");
 
-    assertThat(auth.getReverseDns().getStatus())
-        .isEqualToIgnoringCase("pass");
+    assertThat(auth.getReverseDns().isVerified())
+        .isTrue();
 
     // Or use the validation helper
     AuthValidation validation = auth.validate();
@@ -392,7 +391,8 @@ void debugAuthResults(Email email) {
     ReverseDnsResult rdns = auth.getReverseDns();
     if (rdns != null) {
         System.out.printf("Reverse DNS: %s (ip: %s, hostname: %s)%n",
-            rdns.getStatus(), rdns.getIp(), rdns.getHostname());
+            rdns.isVerified() ? "verified" : "not verified",
+            rdns.getIp(), rdns.getHostname());
     }
 
     // Summary

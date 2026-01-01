@@ -3,6 +3,8 @@ title: Client Installation
 description: Install and set up the VaultSandbox .NET client SDK
 ---
 
+import { versions } from '../../../data/versions';
+
 The `VaultSandbox.Client` SDK provides a developer-friendly interface for integrating email testing into your .NET applications and test suites.
 
 ## Requirements
@@ -33,9 +35,7 @@ Install-Package VaultSandbox.Client
 
 ### PackageReference
 
-```xml
-<PackageReference Include="VaultSandbox.Client" Version="1.*" />
-```
+<pre><code class="language-xml">{`<PackageReference Include="VaultSandbox.Client" Version="${versions.dotnet}" />`}</code></pre>
 
 ## Quick Start
 

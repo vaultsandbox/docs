@@ -387,17 +387,17 @@ if (email.AuthResults is not null)
     // Check individual results
     if (email.AuthResults.Spf is not null)
     {
-        Console.WriteLine($"SPF Status: {email.AuthResults.Spf.Status}");
+        Console.WriteLine($"SPF Result: {email.AuthResults.Spf.Result}");
     }
 
     if (email.AuthResults.Dkim?.Count > 0)
     {
-        Console.WriteLine($"DKIM Status: {email.AuthResults.Dkim[0].Status}");
+        Console.WriteLine($"DKIM Result: {email.AuthResults.Dkim[0].Result}");
     }
 
     if (email.AuthResults.Dmarc is not null)
     {
-        Console.WriteLine($"DMARC Status: {email.AuthResults.Dmarc.Status}");
+        Console.WriteLine($"DMARC Result: {email.AuthResults.Dmarc.Result}");
     }
 }
 ```

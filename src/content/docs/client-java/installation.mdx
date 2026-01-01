@@ -3,6 +3,9 @@ title: Installation
 description: Installing the VaultSandbox Java SDK in your project
 ---
 
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import { versions } from '../../../data/versions';
+
 This guide covers installing the VaultSandbox Java SDK and verifying your setup.
 
 ## Requirements
@@ -13,31 +16,23 @@ This guide covers installing the VaultSandbox Java SDK and verifying your setup.
 
 ## Add the Dependency
 
-import { Tabs, TabItem } from '@astrojs/starlight/components';
-
 <Tabs>
   <TabItem label="Gradle (Groovy)">
-```groovy
-dependencies {
-    implementation 'com.vaultsandbox:client:0.5.1'
-}
-```
+<pre><code class="language-groovy">{`dependencies {
+    implementation 'com.vaultsandbox:client:${versions.java}'
+}`}</code></pre>
   </TabItem>
   <TabItem label="Gradle (Kotlin)">
-```kotlin
-dependencies {
-    implementation("com.vaultsandbox:client:0.5.1")
-}
-```
+<pre><code class="language-kotlin">{`dependencies {
+    implementation("com.vaultsandbox:client:${versions.java}")
+}`}</code></pre>
   </TabItem>
   <TabItem label="Maven">
-```xml
-<dependency>
+<pre><code class="language-xml">{`<dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.1</version>
-</dependency>
-```
+    <version>${versions.java}</version>
+</dependency>`}</code></pre>
   </TabItem>
 </Tabs>
 
@@ -47,28 +42,22 @@ If you only need the SDK for testing, add it as a test dependency:
 
 <Tabs>
   <TabItem label="Gradle (Groovy)">
-```groovy
-dependencies {
-    testImplementation 'com.vaultsandbox:client:0.5.1'
-}
-```
+<pre><code class="language-groovy">{`dependencies {
+    testImplementation 'com.vaultsandbox:client:${versions.java}'
+}`}</code></pre>
   </TabItem>
   <TabItem label="Gradle (Kotlin)">
-```kotlin
-dependencies {
-    testImplementation("com.vaultsandbox:client:0.5.1")
-}
-```
+<pre><code class="language-kotlin">{`dependencies {
+    testImplementation("com.vaultsandbox:client:${versions.java}")
+}`}</code></pre>
   </TabItem>
   <TabItem label="Maven">
-```xml
-<dependency>
+<pre><code class="language-xml">{`<dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
-    <version>0.5.1</version>
+    <version>${versions.java}</version>
     <scope>test</scope>
-</dependency>
-```
+</dependency>`}</code></pre>
   </TabItem>
 </Tabs>
 

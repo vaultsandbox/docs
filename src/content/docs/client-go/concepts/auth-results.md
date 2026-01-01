@@ -53,7 +53,7 @@ Verifies the sending server is authorized to send from the sender's domain.
 
 ```go
 type SPFResult struct {
-    Status string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror"
+    Result string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror"
     Domain string
     IP     string
     Info   string
@@ -63,7 +63,7 @@ type SPFResult struct {
 ```go
 if email.AuthResults.SPF != nil {
     spf := email.AuthResults.SPF
-    fmt.Printf("Status: %s\n", spf.Status)
+    fmt.Printf("Result: %s\n", spf.Result)
     fmt.Printf("Domain: %s\n", spf.Domain)
     fmt.Printf("Info: %s\n", spf.Info)
 }
@@ -92,14 +92,14 @@ if err != nil {
 if email.AuthResults.SPF != nil {
     spf := email.AuthResults.SPF
 
-    if spf.Status != "pass" {
-        t.Errorf("expected SPF pass, got %s", spf.Status)
+    if spf.Result != "pass" {
+        t.Errorf("expected SPF pass, got %s", spf.Result)
     }
     if spf.Domain != "example.com" {
         t.Errorf("expected domain example.com, got %s", spf.Domain)
     }
 
-    fmt.Printf("SPF %s for %s\n", spf.Status, spf.Domain)
+    fmt.Printf("SPF %s for %s\n", spf.Result, spf.Domain)
 }
 ```
 
@@ -111,7 +111,7 @@ Cryptographically verifies the email hasn't been modified and came from the clai
 
 ```go
 type DKIMResult struct {
-    Status   string // "pass", "fail", "none"
+    Result   string // "pass", "fail", "none"
     Domain   string
     Selector string
     Info     string
@@ -123,7 +123,7 @@ dkim := email.AuthResults.DKIM // []DKIMResult
 
 if len(dkim) > 0 {
     for _, result := range dkim {
-        fmt.Printf("Status: %s\n", result.Status)
+        fmt.Printf("Result: %s\n", result.Result)
         fmt.Printf("Domain: %s\n", result.Domain)
         fmt.Printf("Selector: %s\n", result.Selector)
         fmt.Printf("Info: %s\n", result.Info)
@@ -152,14 +152,14 @@ if err != nil {
 if len(email.AuthResults.DKIM) > 0 {
     dkim := email.AuthResults.DKIM[0]
 
-    if dkim.Status != "pass" {
-        t.Errorf("expected DKIM pass, got %s", dkim.Status)
+    if dkim.Result != "pass" {
+        t.Errorf("expected DKIM pass, got %s", dkim.Result)
     }
     if dkim.Domain != "example.com" {
         t.Errorf("expected domain example.com, got %s", dkim.Domain)
     }
 
-    fmt.Printf("DKIM %s (%s._domainkey.%s)\n", dkim.Status, dkim.Selector, dkim.Domain)
+    fmt.Printf("DKIM %s (%s._domainkey.%s)\n", dkim.Result, dkim.Selector, dkim.Domain)
 }
 ```
 
@@ -171,7 +171,7 @@ Checks that SPF or DKIM align with the From address and enforces the domain's po
 
 ```go
 type DMARCResult struct {
-    Status  string // "pass", "fail", "none"
+    Result  string // "pass", "fail", "none"
     Policy  string // "none", "quarantine", "reject"
     Aligned bool
     Domain  string
@@ -182,7 +182,7 @@ type DMARCResult struct {
 ```go
 if email.AuthResults.DMARC != nil {
     dmarc := email.AuthResults.DMARC
-    fmt.Printf("Status: %s\n", dmarc.Status)
+    fmt.Printf("Result: %s\n", dmarc.Result)
     fmt.Printf("Domain: %s\n", dmarc.Domain)
     fmt.Printf("Policy: %s\n", dmarc.Policy)
     fmt.Printf("Aligned: %v\n", dmarc.Aligned)
@@ -217,14 +217,14 @@ if err != nil {
 if email.AuthResults.DMARC != nil {
     dmarc := email.AuthResults.DMARC
 
-    if dmarc.Status != "pass" {
-        t.Errorf("expected DMARC pass, got %s", dmarc.Status)
+    if dmarc.Result != "pass" {
+        t.Errorf("expected DMARC pass, got %s", dmarc.Result)
     }
     if dmarc.Domain != "example.com" {
         t.Errorf("expected domain example.com, got %s", dmarc.Domain)
     }
 
-    fmt.Printf("DMARC %s (policy: %s)\n", dmarc.Status, dmarc.Policy)
+    fmt.Printf("DMARC %s (policy: %s)\n", dmarc.Result, dmarc.Policy)
 }
 ```
 
@@ -236,7 +236,7 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 
 ```go
 type ReverseDNSResult struct {
-    Status   string // "pass", "fail", "none"
+    Verified bool   // true if reverse DNS verified
     IP       string
     Hostname string
     Info     string
@@ -246,20 +246,19 @@ type ReverseDNSResult struct {
 ```go
 if email.AuthResults.ReverseDNS != nil {
     rdns := email.AuthResults.ReverseDNS
-    fmt.Printf("Status: %s\n", rdns.Status)
+    fmt.Printf("Verified: %v\n", rdns.Verified)
     fmt.Printf("IP: %s\n", rdns.IP)
     fmt.Printf("Hostname: %s\n", rdns.Hostname)
     fmt.Printf("Info: %s\n", rdns.Info)
 }
 ```
 
-### Reverse DNS Status Values
+### Reverse DNS Verified Values
 
-| Status | Meaning              |
-| ------ | -------------------- |
-| `pass` | Reverse DNS verified |
-| `fail` | Reverse DNS failed   |
-| `none` | No PTR record        |
+| Verified | Meaning              |
+| -------- | -------------------- |
+| `true`   | Reverse DNS verified |
+| `false`  | Reverse DNS failed   |
 
 ### Reverse DNS Example
 
@@ -273,7 +272,7 @@ if email.AuthResults.ReverseDNS != nil {
     rdns := email.AuthResults.ReverseDNS
 
     fmt.Printf("Reverse DNS: %s -> %s\n", rdns.IP, rdns.Hostname)
-    fmt.Printf("Status: %s\n", rdns.Status)
+    fmt.Printf("Verified: %v\n", rdns.Verified)
 }
 ```
 
@@ -493,8 +492,8 @@ func TestEmailHasValidDKIMSignature(t *testing.T) {
     if len(email.AuthResults.DKIM) == 0 {
         t.Fatal("expected DKIM results")
     }
-    if email.AuthResults.DKIM[0].Status != "pass" {
-        t.Errorf("expected DKIM pass, got %s", email.AuthResults.DKIM[0].Status)
+    if email.AuthResults.DKIM[0].Result != "pass" {
+        t.Errorf("expected DKIM pass, got %s", email.AuthResults.DKIM[0].Result)
     }
 }
 ```
@@ -538,9 +537,9 @@ func TestEmailAuthentication(t *testing.T) {
 
     t.Run("SPF check", func(t *testing.T) {
         if email.AuthResults.SPF != nil {
-            status := email.AuthResults.SPF.Status
-            if status != "pass" && status != "neutral" && status != "softfail" {
-                t.Errorf("unexpected SPF status: %s", status)
+            result := email.AuthResults.SPF.Result
+            if result != "pass" && result != "neutral" && result != "softfail" {
+                t.Errorf("unexpected SPF result: %s", result)
             }
         }
     })
@@ -549,7 +548,7 @@ func TestEmailAuthentication(t *testing.T) {
         if len(email.AuthResults.DKIM) > 0 {
             anyPassed := false
             for _, d := range email.AuthResults.DKIM {
-                if d.Status == "pass" {
+                if d.Result == "pass" {
                     anyPassed = true
                     break
                 }
@@ -562,9 +561,9 @@ func TestEmailAuthentication(t *testing.T) {
 
     t.Run("DMARC check", func(t *testing.T) {
         if email.AuthResults.DMARC != nil {
-            status := email.AuthResults.DMARC.Status
-            if status != "pass" && status != "none" {
-                t.Errorf("unexpected DMARC status: %s", status)
+            result := email.AuthResults.DMARC.Result
+            if result != "pass" && result != "none" {
+                t.Errorf("unexpected DMARC result: %s", result)
             }
         }
     })

@@ -29,7 +29,7 @@ if (email.AuthResults is not null)
     // SPF result
     if (email.AuthResults.Spf is not null)
     {
-        Console.WriteLine(email.AuthResults.Spf.Status);   // SpfStatus enum
+        Console.WriteLine(email.AuthResults.Spf.Result);   // SpfStatus enum
         Console.WriteLine(email.AuthResults.Spf.Domain);   // Sender domain
         Console.WriteLine(email.AuthResults.Spf.Ip);       // Sending IP
     }
@@ -39,7 +39,7 @@ if (email.AuthResults is not null)
     {
         foreach (var dkim in email.AuthResults.Dkim)
         {
-            Console.WriteLine(dkim.Status);    // DkimStatus enum
+            Console.WriteLine(dkim.Result);    // DkimStatus enum
             Console.WriteLine(dkim.Domain);    // Signing domain
             Console.WriteLine(dkim.Selector);  // DKIM selector
         }
@@ -48,7 +48,7 @@ if (email.AuthResults is not null)
     // DMARC result
     if (email.AuthResults.Dmarc is not null)
     {
-        Console.WriteLine(email.AuthResults.Dmarc.Status);   // DmarcStatus enum
+        Console.WriteLine(email.AuthResults.Dmarc.Result);   // DmarcStatus enum
         Console.WriteLine(email.AuthResults.Dmarc.Policy);   // DmarcPolicy enum
         Console.WriteLine(email.AuthResults.Dmarc.Aligned);  // bool?
     }
@@ -56,7 +56,7 @@ if (email.AuthResults is not null)
     // Reverse DNS result
     if (email.AuthResults.ReverseDns is not null)
     {
-        Console.WriteLine(email.AuthResults.ReverseDns.Status);    // ReverseDnsStatus enum
+        Console.WriteLine(email.AuthResults.ReverseDns.Verified);  // bool
         Console.WriteLine(email.AuthResults.ReverseDns.Hostname);  // PTR hostname
     }
 }
@@ -71,10 +71,10 @@ Verifies the sending server is authorized to send from the sender's domain.
 ```csharp
 public sealed record SpfResult
 {
-    public required SpfStatus Status { get; init; }
+    public SpfStatus Result { get; init; }
     public string? Domain { get; init; }
     public string? Ip { get; init; }
-    public string? Info { get; init; }
+    public string? Details { get; init; }
 }
 ```
 
@@ -100,11 +100,11 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 if (email.AuthResults?.Spf is not null)
 {
-    Console.WriteLine($"SPF: {email.AuthResults.Spf.Status}");
+    Console.WriteLine($"SPF: {email.AuthResults.Spf.Result}");
     // SPF: Pass
 
     // Assert in tests
-    Assert.Equal(SpfStatus.Pass, email.AuthResults.Spf.Status);
+    Assert.Equal(SpfStatus.Pass, email.AuthResults.Spf.Result);
 }
 ```
 
@@ -117,10 +117,10 @@ Cryptographically verifies the email hasn't been modified and came from the clai
 ```csharp
 public sealed record DkimResult
 {
-    public required DkimStatus Status { get; init; }
+    public DkimStatus Result { get; init; }
     public string? Domain { get; init; }
     public string? Selector { get; init; }
-    public string? Info { get; init; }
+    public string? Signature { get; init; }
 }
 ```
 
@@ -143,11 +143,11 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 if (email.AuthResults?.Dkim is { Count: > 0 })
 {
     // Check if at least one DKIM signature passed
-    var anyPassed = email.AuthResults.Dkim.Any(d => d.Status == DkimStatus.Pass);
+    var anyPassed = email.AuthResults.Dkim.Any(d => d.Result == DkimStatus.Pass);
     Console.WriteLine($"DKIM: {(anyPassed ? "Pass" : "Fail")}");
 
     // Assert in tests
-    Assert.Contains(email.AuthResults.Dkim, d => d.Status == DkimStatus.Pass);
+    Assert.Contains(email.AuthResults.Dkim, d => d.Result == DkimStatus.Pass);
 }
 ```
 
@@ -160,11 +160,10 @@ Checks that SPF or DKIM align with the From address and enforces the domain's po
 ```csharp
 public sealed record DmarcResult
 {
-    public required DmarcStatus Status { get; init; }
+    public DmarcStatus Result { get; init; }
     public DmarcPolicy? Policy { get; init; }
     public bool? Aligned { get; init; }
     public string? Domain { get; init; }
-    public string? Info { get; init; }
 }
 ```
 
@@ -194,11 +193,11 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 if (email.AuthResults?.Dmarc is not null)
 {
-    Console.WriteLine($"DMARC: {email.AuthResults.Dmarc.Status}");
+    Console.WriteLine($"DMARC: {email.AuthResults.Dmarc.Result}");
     // DMARC: Pass
 
     // Assert in tests
-    Assert.Equal(DmarcStatus.Pass, email.AuthResults.Dmarc.Status);
+    Assert.Equal(DmarcStatus.Pass, email.AuthResults.Dmarc.Result);
 }
 ```
 
@@ -211,20 +210,11 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ```csharp
 public sealed record ReverseDnsResult
 {
-    public required ReverseDnsStatus Status { get; init; }
+    public bool Verified { get; init; }
     public string? Ip { get; init; }
     public string? Hostname { get; init; }
-    public string? Info { get; init; }
 }
 ```
-
-### ReverseDnsStatus Enum
-
-| Status | Description                    |
-| ------ | ------------------------------ |
-| `Pass` | Reverse DNS verified           |
-| `Fail` | Reverse DNS failed             |
-| `None` | No PTR record or not performed |
 
 ### Reverse DNS Example
 
@@ -236,8 +226,8 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 if (email.AuthResults?.ReverseDns is not null)
 {
-    Console.WriteLine($"Reverse DNS: {email.AuthResults.ReverseDns.Status}");
-    // Reverse DNS: Pass
+    Console.WriteLine($"Reverse DNS Verified: {email.AuthResults.ReverseDns.Verified}");
+    // Reverse DNS Verified: True
 }
 ```
 
@@ -389,7 +379,7 @@ public async Task Email_Should_Have_Valid_DKIM_Signature()
     Assert.NotNull(email.AuthResults?.Dkim);
 
     // Only check DKIM (most reliable) - at least one signature must pass
-    Assert.Contains(email.AuthResults.Dkim, d => d.Status == DkimStatus.Pass);
+    Assert.Contains(email.AuthResults.Dkim, d => d.Result == DkimStatus.Pass);
 }
 ```
 
@@ -453,8 +443,8 @@ public class EmailAuthenticationTests : IAsyncLifetime
     {
         if (_email.AuthResults?.Spf is not null)
         {
-            var acceptableStatuses = new[] { SpfStatus.Pass, SpfStatus.Neutral, SpfStatus.SoftFail };
-            Assert.Contains(_email.AuthResults.Spf.Status, acceptableStatuses);
+            var acceptableResults = new[] { SpfStatus.Pass, SpfStatus.Neutral, SpfStatus.SoftFail };
+            Assert.Contains(_email.AuthResults.Spf.Result, acceptableResults);
         }
     }
 
@@ -463,7 +453,7 @@ public class EmailAuthenticationTests : IAsyncLifetime
     {
         if (_email.AuthResults?.Dkim is { Count: > 0 })
         {
-            Assert.Contains(_email.AuthResults.Dkim, d => d.Status == DkimStatus.Pass);
+            Assert.Contains(_email.AuthResults.Dkim, d => d.Result == DkimStatus.Pass);
         }
     }
 
@@ -472,8 +462,8 @@ public class EmailAuthenticationTests : IAsyncLifetime
     {
         if (_email.AuthResults?.Dmarc is not null)
         {
-            var acceptableStatuses = new[] { DmarcStatus.Pass, DmarcStatus.None };
-            Assert.Contains(_email.AuthResults.Dmarc.Status, acceptableStatuses);
+            var acceptableResults = new[] { DmarcStatus.Pass, DmarcStatus.None };
+            Assert.Contains(_email.AuthResults.Dmarc.Result, acceptableResults);
         }
     }
 }
@@ -605,12 +595,12 @@ C# pattern matching makes working with authentication results elegant:
 var message = email.AuthResults switch
 {
     null => "No authentication data available",
-    { Spf.Status: SpfStatus.Pass, Dmarc.Status: DmarcStatus.Pass } auth
-        when auth.Dkim?.Any(d => d.Status == DkimStatus.Pass) == true
+    { Spf.Result: SpfStatus.Pass, Dmarc.Result: DmarcStatus.Pass } auth
+        when auth.Dkim?.Any(d => d.Result == DkimStatus.Pass) == true
         => "All authentication checks passed",
-    { Spf.Status: SpfStatus.Fail } => "SPF check failed - sender not authorized",
-    { Dmarc.Status: DmarcStatus.Fail } => "DMARC check failed - policy violation",
-    _ when email.AuthResults.Dkim?.All(d => d.Status == DkimStatus.Fail) == true
+    { Spf.Result: SpfStatus.Fail } => "SPF check failed - sender not authorized",
+    { Dmarc.Result: DmarcStatus.Fail } => "DMARC check failed - policy violation",
+    _ when email.AuthResults.Dkim?.All(d => d.Result == DkimStatus.Fail) == true
         => "DKIM check failed - email may have been modified",
     _ => "Some authentication checks did not pass"
 };
