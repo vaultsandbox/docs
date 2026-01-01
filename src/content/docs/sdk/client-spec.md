@@ -73,6 +73,36 @@ VaultSandbox is a secure, receive-only SMTP server designed for QA/testing envir
 | **DeliveryStrategy**   | Abstract interface for SSE/polling implementations         |
 | **Crypto Module**      | Keypair generation, decryption, signature verification     |
 
+### Client Configuration Options
+
+SDKs should support these configuration options when creating a client:
+
+| Option                    | Type       | Default                   | Description                                    |
+| ------------------------- | ---------- | ------------------------- | ---------------------------------------------- |
+| `apiKey`                  | string     | (required)                | API key for authentication                     |
+| `baseUrl`                 | string     | Platform-specific         | VaultSandbox API base URL                      |
+| `strategy`                | enum       | `auto`                    | Delivery strategy: `auto`, `sse`, `polling`    |
+| `timeout`                 | number     | 30000                     | HTTP request timeout (ms)                      |
+| `maxRetries`              | number     | 3                         | Maximum retry attempts for failed requests     |
+| `retryDelay`              | number     | 1000                      | Base delay between retries (ms)                |
+| `retryOn`                 | number[]   | [408,429,500,502,503,504] | HTTP status codes that trigger retry           |
+| `pollingInterval`         | number     | 2000                      | Initial polling interval (ms)                  |
+| `pollingMaxBackoff`       | number     | 30000                     | Maximum polling interval (ms)                  |
+| `pollingBackoffMultiplier`| number     | 1.5                       | Polling backoff multiplier                     |
+| `pollingJitterFactor`     | number     | 0.3                       | Random jitter factor (0-1)                     |
+| `sseReconnectInterval`    | number     | 5000                      | SSE reconnection interval (ms)                 |
+| `sseMaxReconnectAttempts` | number     | 10                        | Max SSE reconnection attempts                  |
+| `sseConnectionTimeout`    | number     | 5000                      | SSE connection timeout for auto fallback (ms)  |
+| `httpClient`              | object     | Platform default          | Custom HTTP client (optional)                  |
+| `onSyncError`             | function   | null                      | Callback for background sync errors (optional) |
+
+### Inbox Creation Options
+
+| Option          | Type   | Default  | Description                               |
+| --------------- | ------ | -------- | ----------------------------------------- |
+| `ttl`           | number | 3600     | Time-to-live in seconds (60-604800)       |
+| `emailAddress`  | string | null     | Desired email address or domain (optional)|
+
 ---
 
 ## Authentication
@@ -116,19 +146,24 @@ X-API-Key: your-api-key
 
 ### Key Sizes
 
-| Key Type              | Size (bytes) |
-| --------------------- | ------------ |
-| ML-KEM-768 Public Key | 1184         |
-| ML-KEM-768 Secret Key | 2400         |
-| ML-DSA-65 Public Key  | 1952         |
-| AES-256 Key           | 32           |
-| AES-GCM Nonce         | 12           |
-| AES-GCM Tag           | 16           |
+| Key Type                  | Size (bytes) |
+| ------------------------- | ------------ |
+| ML-KEM-768 Public Key     | 1184         |
+| ML-KEM-768 Secret Key     | 2400         |
+| ML-KEM-768 Ciphertext     | 1088         |
+| ML-KEM-768 Shared Secret  | 32           |
+| ML-DSA-65 Public Key      | 1952         |
+| ML-DSA-65 Signature       | 3309         |
+| AES-256 Key               | 32           |
+| AES-GCM Nonce             | 12           |
+| AES-GCM Tag               | 16           |
 
 ### Constants
 
 ```
 HKDF_CONTEXT = "vaultsandbox:email:v1"
+ALGS_CIPHERSUITE = "ML-KEM-768:ML-DSA-65:AES-256-GCM:HKDF-SHA-512"
+PUBLIC_KEY_OFFSET = 1152  # Byte offset of public key within ML-KEM-768 secret key
 ```
 
 ### Keypair Generation
@@ -207,6 +242,23 @@ transcript = version (1 byte)
 valid = ml_dsa65.verify(signature, transcript, server_sig_pk)
 ```
 
+### Server Key Pinning (Security Critical)
+
+**CRITICAL:** When verifying signatures, the client MUST compare the payload's `server_sig_pk` against the pinned server public key captured at inbox creation time. This prevents man-in-the-middle attacks where an attacker could inject payloads signed with their own key.
+
+```python
+# Pseudocode
+def verify_with_pinning(encrypted_payload, pinned_server_pk):
+    payload_server_pk = from_base64url(encrypted_payload.server_sig_pk)
+
+    # Security check: reject if server keys don't match
+    if payload_server_pk != pinned_server_pk:
+        raise ServerKeyMismatchError("Server key in payload does not match pinned key - possible MITM attack")
+
+    # Proceed with signature verification using the pinned key
+    return verify_signature(encrypted_payload, pinned_server_pk)
+```
+
 ### Deriving Public Key from Secret Key
 
 In ML-KEM-768, the secret key structure is:
@@ -224,6 +276,8 @@ The public key starts at byte offset 1152:
 ```python
 public_key = secret_key[1152:2336]  # Bytes 1152-2335 (1184 bytes)
 ```
+
+**Library-Specific Note:** The offset approach (1152) follows NIST FIPS 203 and works with libraries like `cloudflare/circl`. Some libraries may use different internal representations. Always verify with your chosen library's documentation and test against the server.
 
 ---
 
@@ -339,6 +393,13 @@ Returns inbox sync status for efficient polling.
 }
 ```
 
+| Field        | Type   | Description                                           |
+| ------------ | ------ | ----------------------------------------------------- |
+| `emailCount` | number | Number of emails currently in the inbox               |
+| `emailsHash` | string | Hash of email IDs; changes indicate new/deleted emails|
+
+**Usage:** Compare `emailsHash` to detect changes without fetching all emails. This enables efficient polling by skipping unchanged inboxes.
+
 ### Email Operations
 
 #### GET /api/inboxes/{emailAddress}/emails
@@ -365,9 +426,26 @@ Lists all emails in an inbox (metadata only).
 
 #### GET /api/inboxes/{emailAddress}/emails/{emailId}
 
-Retrieves a specific email.
+Retrieves a specific email with full content.
 
-**Response:** Same structure as list item.
+**Response:**
+
+```json
+{
+	"id": "email-uuid",
+	"inboxId": "inbox-hash",
+	"receivedAt": "2024-01-15T12:00:00.000Z",
+	"isRead": false,
+	"encryptedMetadata": {
+		/* EncryptedPayload - email headers */
+	},
+	"encryptedParsed": {
+		/* EncryptedPayload - full email body, attachments, auth results */
+	}
+}
+```
+
+**Note:** Unlike the list endpoint, this returns `encryptedParsed` which contains the complete email body, HTML content, attachments, links, and authentication results.
 
 #### GET /api/inboxes/{emailAddress}/emails/{emailId}/raw
 
@@ -420,6 +498,22 @@ Accept: text/event-stream
 data: {"inboxId":"inbox-hash","emailId":"email-uuid","encryptedMetadata":{...}}
 ```
 
+| Field               | Type            | Description                                 |
+| ------------------- | --------------- | ------------------------------------------- |
+| `inboxId`           | string          | The inbox hash that received the email      |
+| `emailId`           | string          | Unique identifier for the new email         |
+| `encryptedMetadata` | EncryptedPayload| Encrypted email metadata (from, to, subject)|
+
+**Note:** SSE events only include metadata. To get full email content (body, attachments), fetch the email by ID after receiving the notification.
+
+**Connection Management:**
+
+1. Subscribe to inboxes by adding their hashes to the query parameter
+2. On connection open, reset reconnection counter
+3. On connection error, disconnect and attempt reconnection with exponential backoff
+4. When adding/removing inbox subscriptions, reconnect with updated hash list
+5. On reconnection success, sync all inboxes to catch emails received during downtime
+
 ---
 
 ## Data Structures
@@ -436,6 +530,47 @@ After decrypting `encryptedMetadata`:
 	"receivedAt": "2024-01-15T12:00:00.000Z"
 }
 ```
+
+### Email Object Structure
+
+The fully decrypted Email object exposed to users:
+
+```json
+{
+	"id": "email-uuid",
+	"from": "sender@example.com",
+	"to": ["recipient@mail.example.com"],
+	"subject": "Welcome Email",
+	"text": "Plain text content",
+	"html": "<html>HTML content</html>",
+	"receivedAt": "2024-01-15T12:00:00.000Z",
+	"isRead": false,
+	"headers": {
+		"message-id": "<abc123@example.com>",
+		"date": "Mon, 15 Jan 2024 12:00:00 +0000"
+	},
+	"attachments": [/* AttachmentData[] */],
+	"links": ["https://example.com/verify?token=abc123"],
+	"authResults": {/* AuthResults */},
+	"metadata": {}
+}
+```
+
+| Field         | Type              | Description                                      |
+| ------------- | ----------------- | ------------------------------------------------ |
+| `id`          | string            | Unique email identifier                          |
+| `from`        | string            | Sender email address                             |
+| `to`          | string[]          | Recipient email addresses                        |
+| `subject`     | string            | Email subject line                               |
+| `text`        | string \| null    | Plain text body (null if not available)          |
+| `html`        | string \| null    | HTML body (null if not available)                |
+| `receivedAt`  | Date/string       | When email was received                          |
+| `isRead`      | boolean           | Read status                                      |
+| `headers`     | object            | Email headers as key-value pairs                 |
+| `attachments` | AttachmentData[]  | Email attachments                                |
+| `links`       | string[]          | URLs extracted from email body                   |
+| `authResults` | AuthResults       | SPF/DKIM/DMARC/ReverseDNS results                |
+| `metadata`    | object            | Additional metadata (reserved for extensions)    |
 
 ### Decrypted Email Content
 
@@ -487,30 +622,30 @@ After decrypting `encryptedParsed`:
 
 Client libraries should provide a validation helper that verifies:
 
-1. **SPF**: `status` must be `"pass"`
-2. **DKIM**: At least one result in the array must have `status: "pass"`
-3. **DMARC**: `status` must be `"pass"`
-4. **Reverse DNS**: `status` must be `"pass"` (if checked)
+1. **SPF**: `result` must be `"pass"`
+2. **DKIM**: At least one entry in the array must have `result: "pass"`
+3. **DMARC**: `result` must be `"pass"`
+4. **Reverse DNS**: `verified` must be `true`
 
 #### SPF Result
 
 ```json
 {
-	"status": "pass",
+	"result": "pass",
 	"domain": "example.com",
 	"ip": "192.0.2.1",
-	"info": "SPF record validated"
+	"details": "SPF record validated"
 }
 ```
 
-| Field    | Type     | Description                      |
-| -------- | -------- | -------------------------------- |
-| `status` | `string` | SPF check result (see values)    |
-| `domain` | `string` | Domain checked (optional)        |
-| `ip`     | `string` | Sender IP address (optional)     |
-| `info`   | `string` | Human-readable details (optional)|
+| Field     | Type     | Description                      |
+| --------- | -------- | -------------------------------- |
+| `result`  | `string` | SPF check result (see values)    |
+| `domain`  | `string` | Domain checked (optional)        |
+| `ip`      | `string` | Sender IP address (optional)     |
+| `details` | `string` | Human-readable details (optional)|
 
-| Status      | Meaning                 |
+| Result      | Meaning                 |
 | ----------- | ----------------------- |
 | `pass`      | Authorized sender       |
 | `fail`      | Not authorized          |
@@ -524,21 +659,21 @@ Client libraries should provide a validation helper that verifies:
 
 ```json
 {
-	"status": "pass",
+	"result": "pass",
 	"domain": "example.com",
 	"selector": "selector1",
-	"info": "DKIM signature verified"
+	"signature": "base64-encoded-sig"
 }
 ```
 
 | Field      | Type     | Description                       |
 | ---------- | -------- | --------------------------------- |
-| `status`   | `string` | DKIM check result (see values)    |
+| `result`   | `string` | DKIM check result (see values)    |
 | `domain`   | `string` | Signing domain (optional)         |
 | `selector` | `string` | DKIM selector (optional)          |
-| `info`     | `string` | Human-readable details (optional) |
+| `signature`| `string` | DKIM signature info (optional)    |
 
-| Status | Meaning           |
+| Result | Meaning           |
 | ------ | ----------------- |
 | `pass` | Valid signature   |
 | `fail` | Invalid signature |
@@ -548,23 +683,21 @@ Client libraries should provide a validation helper that verifies:
 
 ```json
 {
-	"status": "pass",
+	"result": "pass",
 	"policy": "reject",
 	"aligned": true,
-	"domain": "example.com",
-	"info": "DMARC check passed"
+	"domain": "example.com"
 }
 ```
 
-| Field     | Type      | Description                       |
-| --------- | --------- | --------------------------------- |
-| `status`  | `string`  | DMARC check result (see values)   |
-| `policy`  | `string`  | Domain's DMARC policy (optional)  |
+| Field     | Type      | Description                        |
+| --------- | --------- | ---------------------------------- |
+| `result`  | `string`  | DMARC check result (see values)    |
+| `policy`  | `string`  | Domain's DMARC policy (optional)   |
 | `aligned` | `boolean` | Whether SPF/DKIM aligned (optional)|
-| `domain`  | `string`  | Domain checked (optional)         |
-| `info`    | `string`  | Human-readable details (optional) |
+| `domain`  | `string`  | Domain checked (optional)          |
 
-| Status | Meaning         |
+| Result | Meaning         |
 | ------ | --------------- |
 | `pass` | DMARC passed    |
 | `fail` | DMARC failed    |
@@ -580,25 +713,19 @@ Client libraries should provide a validation helper that verifies:
 
 ```json
 {
-	"status": "pass",
+	"verified": true,
 	"ip": "192.0.2.1",
-	"hostname": "mail.example.com",
-	"info": "PTR record matches"
+	"hostname": "mail.example.com"
 }
 ```
 
-| Field      | Type     | Description                        |
-| ---------- | -------- | ---------------------------------- |
-| `status`   | `string` | Reverse DNS result (see values)    |
-| `ip`       | `string` | Server IP address (optional)       |
-| `hostname` | `string` | Resolved hostname (optional)       |
-| `info`     | `string` | Human-readable details (optional)  |
+| Field      | Type      | Description                        |
+| ---------- | --------- | ---------------------------------- |
+| `verified` | `boolean` | Whether reverse DNS verified       |
+| `ip`       | `string`  | Server IP address (optional)       |
+| `hostname` | `string`  | Resolved hostname (optional)       |
 
-| Status | Meaning              |
-| ------ | -------------------- |
-| `pass` | Reverse DNS verified |
-| `fail` | Reverse DNS failed   |
-| `none` | No PTR record        |
+**Note:** Unlike other auth results, ReverseDNS uses a `verified` boolean instead of a `result` string. SDKs may provide a convenience method like `isPassing()` that returns `verified`.
 
 ### Exported Inbox Data
 
@@ -706,6 +833,7 @@ while not timeout:
 ```
 VaultSandboxError (base)
 ├── ApiError (HTTP errors)
+│   └── Contains: statusCode, message, requestId (optional)
 ├── NetworkError (connection failures)
 ├── TimeoutError (operation timeouts)
 ├── InboxNotFoundError (404 for inbox)
@@ -714,8 +842,12 @@ VaultSandboxError (base)
 ├── InvalidImportDataError (validation failure)
 ├── DecryptionError (crypto failure)
 ├── SignatureVerificationError (tampering detected)
+│   └── ServerKeyMismatchError (server key doesn't match pinned key - possible MITM)
 ├── SSEError (SSE connection issues)
-└── StrategyError (strategy configuration)
+├── StrategyError (strategy configuration)
+├── RateLimitedError (429 - too many requests)
+├── UnauthorizedError (401 - invalid API key)
+└── ClientClosedError (operation on closed client)
 ```
 
 ### HTTP Retry Logic
@@ -763,15 +895,23 @@ for attempt in range(max_retries + 1):
 
 ### Default Values
 
-| Configuration              | Default |
-| -------------------------- | ------- |
-| HTTP timeout               | 30000ms |
-| Wait timeout               | 30000ms |
-| Poll interval              | 2000ms  |
-| Max retries                | 3       |
-| Retry delay                | 1000ms  |
-| SSE reconnect interval     | 5000ms  |
-| SSE max reconnect attempts | 10      |
+| Configuration              | Default  | Description                                        |
+| -------------------------- | -------- | -------------------------------------------------- |
+| HTTP timeout               | 30000ms  | Maximum time for HTTP request completion           |
+| Wait timeout               | 30000ms  | Maximum time to wait for email arrival             |
+| Poll interval (initial)    | 2000ms   | Starting interval for polling strategy             |
+| Poll max backoff           | 30000ms  | Maximum polling interval after backoff             |
+| Poll backoff multiplier    | 1.5      | Multiplier for exponential backoff                 |
+| Poll jitter factor         | 0.3      | Random jitter (0-30%) to prevent thundering herd   |
+| Max retries                | 3        | Maximum HTTP retry attempts                        |
+| Retry delay                | 1000ms   | Base delay between retries (doubles each attempt)  |
+| SSE reconnect interval     | 5000ms   | Initial SSE reconnection delay                     |
+| SSE max reconnect attempts | 10       | Maximum SSE reconnection attempts before fallback  |
+| SSE backoff multiplier     | 2        | SSE reconnection backoff multiplier                |
+| SSE connection timeout     | 5000ms   | Time to wait for SSE before falling back (auto)    |
+| Default inbox TTL          | 3600s    | Default inbox time-to-live (1 hour)                |
+| Min inbox TTL              | 60s      | Minimum allowed inbox TTL                          |
+| Max inbox TTL              | 604800s  | Maximum allowed inbox TTL (7 days)                 |
 
 ### Email Filtering
 
@@ -791,6 +931,82 @@ for attempt in range(max_retries + 1):
 2. **Use**: Receive emails, decrypt, process
 3. **Export** (optional): Save keypair + metadata
 4. **Delete**: Clean up server resources
+
+### Inbox Methods
+
+| Method               | Description                                          | Returns              |
+| -------------------- | ---------------------------------------------------- | -------------------- |
+| `getEmails()`        | Fetch and decrypt all emails                         | `Email[]`            |
+| `getEmail(id)`       | Fetch and decrypt specific email                     | `Email`              |
+| `getRawEmail(id)`    | Get decrypted raw RFC 5322 source                    | `string`             |
+| `waitForEmail(opts)` | Wait for email matching filters                      | `Email`              |
+| `waitForEmailCount(n, opts)` | Wait for at least N matching emails          | `Email[]`            |
+| `watch()`            | Subscribe to new emails (returns channel/observable) | `Channel<Email>`     |
+| `onNewEmail(cb)`     | Subscribe with callback                              | `Subscription`       |
+| `getSyncStatus()`    | Get email count and hash for change detection        | `SyncStatus`         |
+| `markEmailAsRead(id)`| Mark email as read                                   | `void`               |
+| `deleteEmail(id)`    | Delete specific email                                | `void`               |
+| `delete()`           | Delete inbox and all emails                          | `void`               |
+| `export()`           | Export inbox data including keys                     | `ExportedInboxData`  |
+| `isExpired()`        | Check if inbox TTL has passed                        | `boolean`            |
+
+### Email Methods
+
+Email objects may include convenience methods for common operations:
+
+| Method         | Description                       | Returns     |
+| -------------- | --------------------------------- | ----------- |
+| `markAsRead()` | Mark this email as read           | `void`      |
+| `delete()`     | Delete this email                 | `void`      |
+| `getRaw()`     | Fetch raw RFC 5322 source         | `RawEmail`  |
+
+### Client Methods
+
+| Method                    | Description                                  | Returns              |
+| ------------------------- | -------------------------------------------- | -------------------- |
+| `createInbox(opts)`       | Create new inbox with auto-generated keypair | `Inbox`              |
+| `importInbox(data)`       | Import inbox from exported data              | `Inbox`              |
+| `importInboxFromFile(path)` | Import inbox from JSON file                | `Inbox`              |
+| `exportInboxToFile(inbox, path)` | Export inbox to JSON file             | `void`               |
+| `deleteInbox(email)`      | Delete specific inbox                        | `void`               |
+| `deleteAllInboxes()`      | Delete all inboxes for API key               | `number` (count)     |
+| `getInbox(email)`         | Get tracked inbox by email address           | `Inbox?`             |
+| `getInboxes()`            | Get all tracked inboxes                      | `Inbox[]`            |
+| `watchInboxes(inboxes)`   | Monitor multiple inboxes simultaneously      | `InboxMonitor`       |
+| `getServerInfo()`         | Get server configuration                     | `ServerInfo`         |
+| `checkKey()`              | Validate API key                             | `boolean`            |
+| `close()`                 | Close client and release resources           | `void`               |
+
+### Subscription Pattern
+
+For real-time email notifications, implement a subscription interface:
+
+```python
+# Pseudocode
+class Subscription:
+    def unsubscribe(self):
+        """Stop receiving notifications and clean up resources"""
+        pass
+
+# Usage
+subscription = inbox.on_new_email(lambda email: print(email.subject))
+# ... later ...
+subscription.unsubscribe()
+```
+
+### InboxMonitor (Multiple Inbox Watching)
+
+For monitoring multiple inboxes simultaneously:
+
+```python
+# Pseudocode
+monitor = client.watch_inboxes([inbox1, inbox2, inbox3])
+monitor.on('email', lambda inbox, email:
+    print(f"New email in {inbox.email_address}: {email.subject}")
+)
+# ... later ...
+monitor.unsubscribe()  # Stop all subscriptions
+```
 
 ### Email Processing Flow
 
@@ -812,51 +1028,75 @@ for attempt in range(max_retries + 1):
 ### Core Requirements
 
 - [ ] ML-KEM-768 keypair generation
+- [ ] ML-KEM-768 decapsulation
 - [ ] ML-DSA-65 signature verification
+- [ ] Server key pinning (compare payload key vs pinned key)
 - [ ] AES-256-GCM decryption
-- [ ] HKDF-SHA-512 key derivation
+- [ ] HKDF-SHA-512 key derivation with correct salt/info construction
 - [ ] Base64url encoding/decoding
 - [ ] HTTP client with retry logic
 - [ ] API key authentication
+- [ ] Derive public key from secret key (offset 1152)
 
 ### Client Features
 
 - [ ] Create inbox with auto-generated keypair
 - [ ] Delete inbox / delete all inboxes
-- [ ] List emails in inbox
-- [ ] Get specific email by ID
+- [ ] Get inbox by email address
+- [ ] List all tracked inboxes
+- [ ] List emails in inbox (metadata only)
+- [ ] Get specific email by ID (with full content)
 - [ ] Get raw email source
 - [ ] Mark email as read
 - [ ] Delete email
-- [ ] Wait for email with filters
+- [ ] Wait for email with filters (subject, from, predicate)
 - [ ] Wait for email count
+- [ ] Watch/subscribe to single inbox
+- [ ] Get sync status for change detection
+- [ ] Check inbox expiration
 
 ### Delivery Strategies
 
-- [ ] SSE strategy with reconnection
-- [ ] Polling strategy with exponential backoff
-- [ ] Auto strategy selection
+- [ ] SSE strategy with reconnection and backoff
+- [ ] Polling strategy with exponential backoff and jitter
+- [ ] Auto strategy (SSE with polling fallback)
+- [ ] Strategy-agnostic subscription interface
+- [ ] Sync after SSE reconnection (catch missed emails)
 
 ### Advanced Features
 
-- [ ] Export inbox (keypair + metadata)
+- [ ] Export inbox (keypair + metadata to JSON)
 - [ ] Import inbox from exported data
-- [ ] Monitor multiple inboxes simultaneously
-- [ ] Authentication results validation
+- [ ] Import/export to file
+- [ ] Monitor multiple inboxes simultaneously (InboxMonitor)
+- [ ] Authentication results validation helper
+- [ ] Custom HTTP client support
 
 ### Error Handling
 
 - [ ] All error types from hierarchy
 - [ ] HTTP retry with exponential backoff
-- [ ] Timeout handling
+- [ ] Timeout handling for all operations
 - [ ] SSE reconnection with backoff
+- [ ] Server key mismatch detection (MITM protection)
+- [ ] Graceful client close/cleanup
+
+### Email Object
+
+- [ ] All fields populated (id, from, to, subject, text, html, etc.)
+- [ ] Convenience methods (markAsRead, delete, getRaw)
+- [ ] Auth results with validation method
+- [ ] Attachment content base64 decoding
 
 ### Testing
 
 - [ ] Unit tests for crypto operations
+- [ ] Unit tests for transcript construction
+- [ ] Unit tests for HKDF key derivation
 - [ ] Integration tests against live server
 - [ ] Error scenario coverage
 - [ ] Concurrent inbox handling
+- [ ] Import/export round-trip tests
 
 ---
 
@@ -952,6 +1192,12 @@ def derive_key(shared_secret, context, aad, ct_kem):
 
 ## Version History
 
-| Version | Date    | Changes               |
-| ------- | ------- | --------------------- |
-| 0.5.0   | 2025-12 | Initial specification |
+| Version | Date       | Changes                                                        |
+| ------- | ---------- | -------------------------------------------------------------- |
+| 0.7.0   | 2025-12-30 | Simplified auth results: SDKs use wire format field names      |
+|         |            | (`result`, `details`, `signature`, `verified`) directly.       |
+|         |            | Removed JSON→SDK field mapping requirement.                    |
+| 0.6.0   | 2025-12-30 | Added: key sizes, client config options, inbox/email methods,  |
+|         |            | server key pinning, auth results JSON mapping, error types,    |
+|         |            | subscription patterns, expanded checklist                      |
+| 0.5.0   | 2025-12    | Initial specification                                          |

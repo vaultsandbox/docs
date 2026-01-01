@@ -59,6 +59,7 @@ All environment variables at a glance. See sections below for details.
 | **Other**                            |                   |                                           |
 | `NODE_ENV`                           | `production`      | Environment                               |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                        |
+| `VSB_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)          |
 
 ## Configuration Methods
 
@@ -453,10 +454,33 @@ If `VSB_GATEWAY_MODE` is `backend`, or if `VSB_ORCHESTRATION_ENABLED` is `true`,
 
 ## Miscellaneous
 
-| Variable                  | Default      | Description                                              |
-| :------------------------ | :----------- | :------------------------------------------------------- |
-| `NODE_ENV`                | `production` | Application environment (`development` or `production`). |
-| `VSB_SSE_CONSOLE_ENABLED` | `true`       | Enable Server-Sent Events console for real-time logs.    |
+| Variable                  | Default      | Description                                                                  |
+| :------------------------ | :----------- | :--------------------------------------------------------------------------- |
+| `NODE_ENV`                | `production` | Application environment (`development` or `production`).                     |
+| `VSB_SSE_CONSOLE_ENABLED` | `true`       | Enable Server-Sent Events console for real-time logs.                        |
+| `VSB_DEVELOPMENT`         | `false`      | Enable development mode. Exposes test endpoints for SDK testing (see below). |
+
+### VSB_DEVELOPMENT
+
+**Description**: Enables development-only features, including a test endpoint for creating emails with controlled authentication results. Useful for SDK development and testing email auth flows without SMTP infrastructure.
+
+**Default**: `false`
+
+**Example**:
+
+```bash
+VSB_DEVELOPMENT=true
+```
+
+:::caution[Not for production]
+Never enable this in production environments. The test endpoint bypasses normal email delivery.
+:::
+
+**What it enables**:
+
+- `POST /api/test/emails` - Create test emails with controlled SPF/DKIM/DMARC results
+
+See the [SDK Test Specification](/sdk/tests-spec/#9-development-test-endpoint) for endpoint details and usage examples.
 
 ## Crypto / Signing
 

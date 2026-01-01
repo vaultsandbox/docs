@@ -497,6 +497,84 @@ Tests should respect these environment variables:
 
 ---
 
+## 9. Development Test Endpoint
+
+When `VSB_DEVELOPMENT=true` is set on the gateway, a test endpoint becomes available that allows creating emails with controlled authentication results. This eliminates the need for a real SMTP server when testing email authentication flows in SDK implementations.
+
+### 9.1 Endpoint Overview
+
+| Property | Value |
+|----------|-------|
+| Endpoint | `POST /api/test/emails` |
+| Authentication | API Key (`X-API-Key` header) |
+| Availability | Only when `VSB_DEVELOPMENT=true` |
+
+### 9.2 Request Schema
+
+```json
+{
+  "to": "inbox@example.com",        // Required: inbox email address
+  "from": "sender@example.com",     // Optional, default: "test@vaultsandbox.test"
+  "subject": "Test Subject",        // Optional, default: "Test Email"
+  "text": "Plain text body",        // Optional, default: "Test email body"
+  "html": "<p>HTML body</p>",       // Optional
+  "auth": {
+    "spf": "pass",                  // "pass" | "fail" | "softfail" | "neutral" | "none" | "temperror" | "permerror"
+    "dkim": "pass",                 // "pass" | "fail" | "none"
+    "dmarc": "pass",                // "pass" | "fail" | "none"
+    "reverseDns": true              // boolean
+  }
+}
+```
+
+### 9.3 Response
+
+```json
+{
+  "emailId": "uuid-of-created-email"
+}
+```
+
+### 9.4 Use Cases
+
+This endpoint is useful for:
+
+- **Testing authentication validation logic** without configuring SPF/DKIM/DMARC
+- **Simulating authentication failures** to verify SDK error handling
+- **Running E2E tests in CI/CD** without SMTP infrastructure
+- **Rapid local development** of email-dependent features
+
+### 9.5 Example: Testing Auth Validation
+
+```javascript
+// Create an email with failing SPF
+const response = await fetch(`${baseUrl}/api/test/emails`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-API-Key': apiKey,
+  },
+  body: JSON.stringify({
+    to: inbox.emailAddress,
+    subject: 'Auth Test',
+    auth: {
+      spf: 'fail',
+      dkim: 'pass',
+      dmarc: 'fail',
+    },
+  }),
+});
+
+// Now fetch the email and verify auth_results
+const email = await inbox.waitForEmail({ timeout: 5000 });
+const validation = email.authResults.validate();
+assert(validation.passed === false);
+assert(validation.spfPassed === false);
+assert(validation.dmarcPassed === false);
+```
+
+---
+
 ## Appendix: Test Counts
 
 Minimum required tests by category:
