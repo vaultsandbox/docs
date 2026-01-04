@@ -22,35 +22,35 @@ The dashboard automatically watches all stored inboxes and displays incoming ema
 
 ### Navigation
 
-| Key | Action |
-|-----|--------|
-| `↑` / `k` | Move up in email list |
-| `↓` / `j` | Move down in email list |
-| `←` / `h` | Switch to previous inbox |
-| `→` / `l` | Switch to next inbox |
-| `Enter` | View selected email |
-| `Esc` / `Backspace` | Go back / close view |
+| Key                 | Action                   |
+| ------------------- | ------------------------ |
+| `↑` / `k`           | Move up in email list    |
+| `↓` / `j`           | Move down in email list  |
+| `←` / `h`           | Switch to previous inbox |
+| `→` / `l`           | Switch to next inbox     |
+| `Enter`             | View selected email      |
+| `Esc` / `Backspace` | Go back / close view     |
 
 ### Actions
 
-| Key | Action |
-|-----|--------|
-| `n` | Create new inbox |
-| `d` | Delete selected email |
+| Key | Action                                 |
+| --- | -------------------------------------- |
+| `n` | Create new inbox                       |
+| `d` | Delete selected email                  |
 | `o` | Open first link in browser (list view) |
-| `v` | Open HTML email in browser |
-| `/` | Filter emails |
-| `?` | Show all keyboard shortcuts |
-| `q` | Quit dashboard |
+| `v` | Open HTML email in browser             |
+| `/` | Filter emails                          |
+| `?` | Show all keyboard shortcuts            |
+| `q` | Quit dashboard                         |
 
 ### Tab Navigation (Detail View)
 
-| Key | Action |
-|-----|--------|
-| `1-5` | Jump to specific tab |
-| `↑` / `k` | Navigate up in links/attachments list |
+| Key       | Action                                  |
+| --------- | --------------------------------------- |
+| `1-5`     | Jump to specific tab                    |
+| `↑` / `k` | Navigate up in links/attachments list   |
 | `↓` / `j` | Navigate down in links/attachments list |
-| `Enter` | Open selected link or save attachment |
+| `Enter`   | Open selected link or save attachment   |
 
 ## Email Detail Tabs
 

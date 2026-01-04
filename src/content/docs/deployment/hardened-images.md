@@ -7,10 +7,10 @@ VaultSandbox offers hardened Docker images for security-conscious deployments. T
 
 ## Overview
 
-| Image Tag | Shell Access | Use Case |
-|-----------|--------------|----------|
-| `vaultsandbox/gateway:latest` | ✅ Yes | Development, debugging, standard deployments |
-| `vaultsandbox/gateway:latest-harden` | ❌ No | Production, compliance, security-hardened environments |
+| Image Tag                            | Shell Access | Use Case                                               |
+| ------------------------------------ | ------------ | ------------------------------------------------------ |
+| `vaultsandbox/gateway:latest`        | ✅ Yes       | Development, debugging, standard deployments           |
+| `vaultsandbox/gateway:latest-harden` | ❌ No        | Production, compliance, security-hardened environments |
 
 :::caution[Key Difference]
 Hardened images have **no shell access**. Commands like `docker exec gateway sh` or `docker compose exec gateway cat /app/data/.api-key` will not work. You must configure everything via environment variables and access logs via Docker's logging system.
@@ -53,6 +53,7 @@ head -c 32 /dev/urandom | base64 | tr -d "=+/" | cut -c1-32
 ```
 
 Example output:
+
 ```
 7kB9qF2mP5tX8nL3wR6vY1zA4cE0sJ7h
 ```
@@ -159,8 +160,8 @@ services:
     logging:
       driver: 'json-file'
       options:
-        max-size: '10m'    # Max 10MB per log file
-        max-file: '5'      # Keep 5 rotated log files
+        max-size: '10m' # Max 10MB per log file
+        max-file: '5' # Keep 5 rotated log files
 ```
 
 For centralized logging:
@@ -217,9 +218,9 @@ services:
     restart: unless-stopped
 
     ports:
-      - '25:25'      # SMTP
-      - '80:80'      # HTTP (ACME challenges)
-      - '443:443'    # HTTPS (Web UI + API)
+      - '25:25' # SMTP
+      - '80:80' # HTTP (ACME challenges)
+      - '443:443' # HTTPS (Web UI + API)
 
     environment:
       # DNS Configuration (choose one)
@@ -232,8 +233,8 @@ services:
       VSB_LOCAL_API_KEY: '${VSB_LOCAL_API_KEY}'
 
       # Optional settings
-      VSB_LOCAL_INBOX_MAX_TTL: '604800'       # 7 days
-      VSB_LOCAL_INBOX_DEFAULT_TTL: '3600'     # 1 hour
+      VSB_LOCAL_INBOX_MAX_TTL: '604800' # 7 days
+      VSB_LOCAL_INBOX_DEFAULT_TTL: '3600' # 1 hour
 
     volumes:
       - gateway-data:/app/data
@@ -298,18 +299,20 @@ curl -H "X-API-Key: your-api-key" https://your-domain.vsx.email/api/inboxes
 To migrate from standard to hardened images:
 
 1. **Export your API key** (if auto-generated):
+
    ```bash
    # From the standard image container
    docker compose exec gateway cat /app/data/.api-key > ./api-key-backup.txt
    ```
 
 2. **Update your docker-compose.yml**:
+
    ```yaml
    services:
      gateway:
-       image: vaultsandbox/gateway:latest-harden  # Changed from :latest
+       image: vaultsandbox/gateway:latest-harden # Changed from :latest
        environment:
-         VSB_LOCAL_API_KEY: 'your-exported-api-key'  # Add this
+         VSB_LOCAL_API_KEY: 'your-exported-api-key' # Add this
    ```
 
 3. **Deploy the hardened image**:
@@ -335,6 +338,7 @@ docker compose logs gateway | grep -i "api key"
 Look for: `[ConfigValidation] ✓ Local API key loaded from environment`
 
 **Verify key format:**
+
 - Must be at least 32 characters
 - No extra whitespace or newlines
 - Check for copy/paste errors
@@ -348,6 +352,7 @@ docker compose logs gateway
 ```
 
 **Common issues:**
+
 - Missing `VSB_LOCAL_API_KEY` environment variable
 - API key shorter than 32 characters
 - Port conflicts (25, 80, 443 already in use)
@@ -366,14 +371,14 @@ Visit [vsx.email](https://vsx.email) to look up your server's IP address.
 
 ## Comparison: Standard vs Hardened
 
-| Feature | Standard (`:latest`) | Hardened (`:latest-harden`) |
-|---------|---------------------|---------------------------|
-| Shell access | ✅ Available | ❌ Removed |
-| API key auto-generation | ✅ Supported | ⚠️ Requires env var |
-| `docker exec` commands | ✅ Work | ❌ No shell |
-| Log access | ✅ Logs + exec | ✅ Docker logs only |
-| Attack surface | Standard | Reduced |
-| Compliance | Standard | Enhanced |
+| Feature                 | Standard (`:latest`) | Hardened (`:latest-harden`) |
+| ----------------------- | -------------------- | --------------------------- |
+| Shell access            | ✅ Available         | ❌ Removed                  |
+| API key auto-generation | ✅ Supported         | ⚠️ Requires env var         |
+| `docker exec` commands  | ✅ Work              | ❌ No shell                 |
+| Log access              | ✅ Logs + exec       | ✅ Docker logs only         |
+| Attack surface          | Standard             | Reduced                     |
+| Compliance              | Standard             | Enhanced                    |
 
 ## Next Steps
 

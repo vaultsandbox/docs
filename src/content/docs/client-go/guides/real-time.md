@@ -631,13 +631,13 @@ func TestMultiInboxMonitoring(t *testing.T) {
 
 ## Comparison: Watch vs WatchInboxes
 
-| Aspect | `Inbox.Watch()` | `Client.WatchInboxes()` |
-|--------|-----------------|-------------------------|
-| **Scope** | Single inbox | Multiple inboxes |
-| **Return Type** | `<-chan *Email` | `<-chan *InboxEvent` |
-| **Inbox Info** | Implicit (from receiver) | `event.Inbox` field |
-| **Lifecycle** | Context cancellation | Context cancellation |
-| **Cleanup** | Automatic on ctx cancel | Automatic on ctx cancel |
+| Aspect          | `Inbox.Watch()`          | `Client.WatchInboxes()` |
+| --------------- | ------------------------ | ----------------------- |
+| **Scope**       | Single inbox             | Multiple inboxes        |
+| **Return Type** | `<-chan *Email`          | `<-chan *InboxEvent`    |
+| **Inbox Info**  | Implicit (from receiver) | `event.Inbox` field     |
+| **Lifecycle**   | Context cancellation     | Context cancellation    |
+| **Cleanup**     | Automatic on ctx cancel  | Automatic on ctx cancel |
 
 ## Channel Behavior
 

@@ -24,14 +24,17 @@ public static VaultSandboxClient create(ClientConfig config)
 ```
 
 **Parameters:**
+
 - `config` - `ClientConfig` with all settings
 
 **Returns:** Configured `VaultSandboxClient` instance
 
 **Throws:**
+
 - `NullPointerException` - if config or config.apiKey is null
 
 **Example:**
+
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey("your-api-key")
@@ -67,22 +70,22 @@ ClientConfig config = ClientConfig.builder()
 
 ### Configuration Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `apiKey` | `String` | required | API authentication key |
-| `baseUrl` | `String` | required | API base URL |
-| `strategy` | `StrategyType` | `AUTO` | Delivery strategy (AUTO, SSE, POLLING) |
-| `httpTimeout` | `Duration` | 30s | HTTP request timeout |
-| `waitTimeout` | `Duration` | 30s | Default wait timeout for emails |
-| `maxRetries` | `int` | 3 | Max retry attempts for failed requests |
-| `retryDelay` | `Duration` | 1s | Initial retry delay |
-| `retryOn` | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry |
-| `sseReconnectInterval` | `Duration` | 5s | SSE reconnect interval |
-| `sseMaxReconnectAttempts` | `int` | 10 | Max SSE reconnection attempts |
-| `pollInterval` | `Duration` | 2s | Polling interval |
-| `maxBackoff` | `Duration` | 30s | Max backoff duration |
-| `backoffMultiplier` | `double` | 1.5 | Backoff multiplier |
-| `jitterFactor` | `double` | 0.3 | Jitter factor (0-1) |
+| Property                  | Type           | Default           | Description                            |
+| ------------------------- | -------------- | ----------------- | -------------------------------------- |
+| `apiKey`                  | `String`       | required          | API authentication key                 |
+| `baseUrl`                 | `String`       | required          | API base URL                           |
+| `strategy`                | `StrategyType` | `AUTO`            | Delivery strategy (AUTO, SSE, POLLING) |
+| `httpTimeout`             | `Duration`     | 30s               | HTTP request timeout                   |
+| `waitTimeout`             | `Duration`     | 30s               | Default wait timeout for emails        |
+| `maxRetries`              | `int`          | 3                 | Max retry attempts for failed requests |
+| `retryDelay`              | `Duration`     | 1s                | Initial retry delay                    |
+| `retryOn`                 | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry             |
+| `sseReconnectInterval`    | `Duration`     | 5s                | SSE reconnect interval                 |
+| `sseMaxReconnectAttempts` | `int`          | 10                | Max SSE reconnection attempts          |
+| `pollInterval`            | `Duration`     | 2s                | Polling interval                       |
+| `maxBackoff`              | `Duration`     | 30s               | Max backoff duration                   |
+| `backoffMultiplier`       | `double`       | 1.5               | Backoff multiplier                     |
+| `jitterFactor`            | `double`       | 0.3               | Jitter factor (0-1)                    |
 
 ## Inbox Methods
 
@@ -96,15 +99,18 @@ public Inbox createInbox(CreateInboxOptions options)
 ```
 
 **Parameters:**
+
 - `options` - Optional creation options (email address, TTL)
 
 **Returns:** New `Inbox` instance ready to receive emails
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
 **Examples:**
+
 ```java
 // Default options
 Inbox inbox = client.createInbox();
@@ -120,10 +126,10 @@ Inbox inbox = client.createInbox(options);
 
 ### CreateInboxOptions
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `emailAddress` | `String` | auto-generated | Custom email address or domain |
-| `ttl` | `Duration` | server default | Inbox time-to-live |
+| Option         | Type       | Default        | Description                    |
+| -------------- | ---------- | -------------- | ------------------------------ |
+| `emailAddress` | `String`   | auto-generated | Custom email address or domain |
+| `ttl`          | `Duration` | server default | Inbox time-to-live             |
 
 ### getInbox(String emailAddress)
 
@@ -134,6 +140,7 @@ public Inbox getInbox(String emailAddress)
 ```
 
 **Parameters:**
+
 - `emailAddress` - Email address of the inbox
 
 **Returns:** The `Inbox`, or `null` if not found in client's registry
@@ -149,14 +156,17 @@ public void deleteInbox(String emailAddress)
 ```
 
 **Parameters:**
+
 - `emailAddress` - Email address of inbox to delete
 
 **Throws:**
+
 - `InboxNotFoundException` - if inbox doesn't exist
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
 **Example:**
+
 ```java
 client.deleteInbox("test-abc123@vaultsandbox.com");
 ```
@@ -172,10 +182,12 @@ public int deleteAllInboxes()
 **Returns:** Number of inboxes deleted
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
 **Example:**
+
 ```java
 int count = client.deleteAllInboxes();
 System.out.println("Deleted " + count + " inbox(es)");
@@ -193,17 +205,20 @@ public ExportedInbox exportInbox(String emailAddress)
 ```
 
 **Parameters:**
+
 - `inbox` - Inbox to export, or
 - `emailAddress` - Email address of inbox to export
 
 **Returns:** `ExportedInbox` containing credentials
 
 **Throws:**
+
 - `InboxNotFoundException` - if inbox not found (email address variant)
 
 **Security Warning:** The exported data contains private cryptographic keys. Store securely!
 
 **Example:**
+
 ```java
 ExportedInbox exported = client.exportInbox(inbox);
 // Store exported data securely
@@ -218,13 +233,16 @@ public void exportInboxToFile(Inbox inbox, Path path) throws IOException
 ```
 
 **Parameters:**
+
 - `inbox` - Inbox to export
 - `path` - File path to write
 
 **Throws:**
+
 - `IOException` - on file write errors
 
 **Example:**
+
 ```java
 client.exportInboxToFile(inbox, Path.of("inbox-backup.json"));
 ```
@@ -238,15 +256,18 @@ public Inbox importInbox(ExportedInbox data) throws InvalidImportDataException
 ```
 
 **Parameters:**
+
 - `data` - Exported inbox data
 
 **Returns:** Restored `Inbox` instance
 
 **Throws:**
+
 - `InvalidImportDataException` - if data is invalid or inbox no longer exists
 - `InboxAlreadyExistsException` - if inbox already registered with this client
 
 **Example:**
+
 ```java
 ExportedInbox data = // load from storage
 Inbox inbox = client.importInbox(data);
@@ -261,16 +282,19 @@ public Inbox importInboxFromFile(Path path) throws IOException, InvalidImportDat
 ```
 
 **Parameters:**
+
 - `path` - Path to exported JSON file
 
 **Returns:** Restored `Inbox` instance
 
 **Throws:**
+
 - `IOException` - on file read errors
 - `InvalidImportDataException` - if data is invalid or inbox no longer exists
 - `InboxAlreadyExistsException` - if inbox already registered with this client
 
 **Example:**
+
 ```java
 Inbox inbox = client.importInboxFromFile(Path.of("inbox-backup.json"));
 ```
@@ -287,11 +311,13 @@ public InboxMonitor monitorInboxes(List<Inbox> inboxes)
 ```
 
 **Parameters:**
+
 - `inboxes` - Inboxes to monitor (varargs or List)
 
 **Returns:** `InboxMonitor` for registering callbacks
 
 **Example:**
+
 ```java
 Inbox inbox1 = client.createInbox();
 Inbox inbox2 = client.createInbox();
@@ -309,12 +335,12 @@ try (InboxMonitor monitor = client.monitorInboxes(inbox1, inbox2)) {
 
 ### InboxMonitor Methods
 
-| Method | Description |
-|--------|-------------|
-| `onEmail(Consumer<Email>)` | Register callback for incoming emails |
-| `removeCallback(Consumer<Email>)` | Remove a registered callback |
-| `getInboxes()` | Get list of monitored inboxes |
-| `close()` | Close monitor and release resources |
+| Method                            | Description                           |
+| --------------------------------- | ------------------------------------- |
+| `onEmail(Consumer<Email>)`        | Register callback for incoming emails |
+| `removeCallback(Consumer<Email>)` | Remove a registered callback          |
+| `getInboxes()`                    | Get list of monitored inboxes         |
+| `close()`                         | Close monitor and release resources   |
 
 ## Server Methods
 
@@ -329,12 +355,14 @@ public ServerInfo getServerInfo()
 **Returns:** `ServerInfo` with algorithms, limits, allowed domains
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
 **Note:** Server info is cached after first call.
 
 **Example:**
+
 ```java
 ServerInfo info = client.getServerInfo();
 System.out.println("Max TTL: " + info.getMaxTtl());
@@ -343,31 +371,32 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 
 ### ServerInfo Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `serverSigPk` | `String` | Server's public signing key |
-| `context` | `String` | Server context identifier |
-| `maxTtl` | `int` | Maximum inbox TTL in seconds |
-| `defaultTtl` | `int` | Default inbox TTL in seconds |
-| `sseConsole` | `boolean` | Whether SSE console is enabled (getter: `isSseConsole()`) |
-| `allowedDomains` | `List<String>` | Allowed email domains |
-| `algorithms` | `Algorithms` | Supported cryptographic algorithms |
-| `version` | `String` | Server version |
-| `domain` | `String` | Server domain |
-| `limits` | `Limits` | Rate limits and constraints |
+| Property         | Type           | Description                                               |
+| ---------------- | -------------- | --------------------------------------------------------- |
+| `serverSigPk`    | `String`       | Server's public signing key                               |
+| `context`        | `String`       | Server context identifier                                 |
+| `maxTtl`         | `int`          | Maximum inbox TTL in seconds                              |
+| `defaultTtl`     | `int`          | Default inbox TTL in seconds                              |
+| `sseConsole`     | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`) |
+| `allowedDomains` | `List<String>` | Allowed email domains                                     |
+| `algorithms`     | `Algorithms`   | Supported cryptographic algorithms                        |
+| `version`        | `String`       | Server version                                            |
+| `domain`         | `String`       | Server domain                                             |
+| `limits`         | `Limits`       | Rate limits and constraints                               |
 
 ### Algorithms Properties
 
 The `Algorithms` object contains the cryptographic algorithms used by the server:
 
-| Property | Type | Description | Example |
-|----------|------|-------------|---------|
-| `kem` | `String` | Key encapsulation mechanism | `"ML-KEM-768"` |
-| `sig` | `String` | Digital signature algorithm | `"ML-DSA-65"` |
-| `aead` | `String` | Authenticated encryption | `"AES-256-GCM"` |
-| `kdf` | `String` | Key derivation function | `"HKDF-SHA-512"` |
+| Property | Type     | Description                 | Example          |
+| -------- | -------- | --------------------------- | ---------------- |
+| `kem`    | `String` | Key encapsulation mechanism | `"ML-KEM-768"`   |
+| `sig`    | `String` | Digital signature algorithm | `"ML-DSA-65"`    |
+| `aead`   | `String` | Authenticated encryption    | `"AES-256-GCM"`  |
+| `kdf`    | `String` | Key derivation function     | `"HKDF-SHA-512"` |
 
 **Example:**
+
 ```java
 ServerInfo info = client.getServerInfo();
 Algorithms algs = info.getAlgorithms();
@@ -383,13 +412,14 @@ if (algs != null) {
 
 The `Limits` object contains rate limit information:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `maxInboxes` | `int` | Maximum number of inboxes per API key |
-| `maxEmailsPerInbox` | `int` | Maximum emails per inbox |
-| `inboxTtlSeconds` | `int` | Default inbox TTL in seconds |
+| Property            | Type  | Description                           |
+| ------------------- | ----- | ------------------------------------- |
+| `maxInboxes`        | `int` | Maximum number of inboxes per API key |
+| `maxEmailsPerInbox` | `int` | Maximum emails per inbox              |
+| `inboxTtlSeconds`   | `int` | Default inbox TTL in seconds          |
 
 **Example:**
+
 ```java
 ServerInfo info = client.getServerInfo();
 ServerInfo.Limits limits = info.getLimits();
@@ -410,10 +440,12 @@ public boolean checkKey()
 **Returns:** `true` if key is valid, `false` if unauthorized
 
 **Throws:**
+
 - `ApiException` - on unexpected API errors (other than 401)
 - `NetworkException` - on network connectivity issues
 
 **Example:**
+
 ```java
 if (client.checkKey()) {
     System.out.println("API key is valid");
@@ -445,6 +477,7 @@ public void close()
 Closes SSE connections, stops polling threads, and clears the inbox registry. Inboxes on the server are **not** deleted.
 
 **Usage with try-with-resources (preferred):**
+
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
@@ -459,6 +492,7 @@ try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
 ```
 
 **Manual close:**
+
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
@@ -478,19 +512,19 @@ try {
 
 All exceptions extend `VaultSandboxException` (a `RuntimeException`):
 
-| Exception | Description |
-|-----------|-------------|
-| `VaultSandboxException` | Base exception type |
-| `ApiException` | API returned an error (has `getStatusCode()`) |
-| `NetworkException` | Network connectivity issues |
-| `TimeoutException` | Operation timed out |
-| `InboxNotFoundException` | Inbox doesn't exist |
-| `InboxAlreadyExistsException` | Inbox already exists (import) |
-| `InvalidImportDataException` | Invalid export data |
-| `EmailNotFoundException` | Email doesn't exist |
-| `SseException` | SSE connection failed |
-| `DecryptionException` | Email decryption failed |
-| `SignatureVerificationException` | Signature verification failed |
+| Exception                        | Description                                   |
+| -------------------------------- | --------------------------------------------- |
+| `VaultSandboxException`          | Base exception type                           |
+| `ApiException`                   | API returned an error (has `getStatusCode()`) |
+| `NetworkException`               | Network connectivity issues                   |
+| `TimeoutException`               | Operation timed out                           |
+| `InboxNotFoundException`         | Inbox doesn't exist                           |
+| `InboxAlreadyExistsException`    | Inbox already exists (import)                 |
+| `InvalidImportDataException`     | Invalid export data                           |
+| `EmailNotFoundException`         | Email doesn't exist                           |
+| `SseException`                   | SSE connection failed                         |
+| `DecryptionException`            | Email decryption failed                       |
+| `SignatureVerificationException` | Signature verification failed                 |
 
 ### Exception Handling Example
 

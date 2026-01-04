@@ -89,7 +89,7 @@ if inbox.IsExpired() {
 
 ### GetEmails
 
-Lists all emails in the inbox. Emails are automatically decrypted.
+Lists all emails in the inbox with full content. Emails are automatically decrypted.
 
 ```go
 func (i *Inbox) GetEmails(ctx context.Context) ([]*Email, error)
@@ -97,7 +97,7 @@ func (i *Inbox) GetEmails(ctx context.Context) ([]*Email, error)
 
 #### Returns
 
-`[]*Email` - Slice of decrypted email objects, sorted by received time (newest first)
+`[]*Email` - Slice of decrypted email objects with full content, sorted by received time (newest first)
 
 #### Example
 
@@ -113,6 +113,72 @@ for _, email := range emails {
     fmt.Printf("- %s from %s\n", email.Subject, email.From)
 }
 ```
+
+---
+
+### GetEmailsMetadataOnly
+
+Lists all emails in the inbox with metadata only (no body or attachments). This is more efficient when you only need to display email summaries.
+
+```go
+func (i *Inbox) GetEmailsMetadataOnly(ctx context.Context) ([]*EmailMetadata, error)
+```
+
+#### Returns
+
+`[]*EmailMetadata` - Slice of email metadata objects, sorted by received time (newest first)
+
+```go
+type EmailMetadata struct {
+    ID         string
+    From       string
+    Subject    string
+    ReceivedAt time.Time
+    IsRead     bool
+}
+```
+
+#### Example
+
+```go
+// Efficient listing for UI display
+emails, err := inbox.GetEmailsMetadataOnly(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Inbox has %d emails\n", len(emails))
+
+for _, email := range emails {
+    status := " "
+    if email.IsRead {
+        status = "✓"
+    }
+    fmt.Printf("[%s] %s - %s (%s)\n",
+        status,
+        email.From,
+        email.Subject,
+        email.ReceivedAt.Format(time.RFC822))
+}
+
+// Fetch full content only when needed
+if len(emails) > 0 {
+    fullEmail, err := inbox.GetEmail(ctx, emails[0].ID)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Body: %s\n", fullEmail.Text)
+}
+```
+
+#### When to Use
+
+Use `GetEmailsMetadataOnly` instead of `GetEmails` when:
+
+- Displaying email lists in a UI
+- Checking email counts or subjects without reading content
+- Implementing pagination or lazy loading
+- Reducing bandwidth and processing time
 
 ---
 
@@ -165,14 +231,14 @@ func (i *Inbox) WaitForEmail(ctx context.Context, opts ...WaitOption) (*Email, e
 
 #### Options
 
-| Option | Description |
-| ------ | ----------- |
-| `WithWaitTimeout(d time.Duration)` | Maximum time to wait (default: 60s) |
-| `WithSubject(s string)` | Filter by exact subject match |
-| `WithSubjectRegex(r *regexp.Regexp)` | Filter by subject pattern |
-| `WithFrom(s string)` | Filter by exact sender address |
-| `WithFromRegex(r *regexp.Regexp)` | Filter by sender pattern |
-| `WithPredicate(fn func(*Email) bool)` | Custom filter function |
+| Option                                | Description                         |
+| ------------------------------------- | ----------------------------------- |
+| `WithWaitTimeout(d time.Duration)`    | Maximum time to wait (default: 60s) |
+| `WithSubject(s string)`               | Filter by exact subject match       |
+| `WithSubjectRegex(r *regexp.Regexp)`  | Filter by subject pattern           |
+| `WithFrom(s string)`                  | Filter by exact sender address      |
+| `WithFromRegex(r *regexp.Regexp)`     | Filter by sender pattern            |
+| `WithPredicate(fn func(*Email) bool)` | Custom filter function              |
 
 #### Returns
 
@@ -242,14 +308,14 @@ func (i *Inbox) WaitForEmailCount(ctx context.Context, count int, opts ...WaitOp
 
 #### Options
 
-| Option | Description |
-| ------ | ----------- |
-| `WithWaitTimeout(d time.Duration)` | Maximum time to wait (default: 60s) |
-| `WithSubject(s string)` | Filter by exact subject match |
-| `WithSubjectRegex(r *regexp.Regexp)` | Filter by subject pattern |
-| `WithFrom(s string)` | Filter by exact sender address |
-| `WithFromRegex(r *regexp.Regexp)` | Filter by sender pattern |
-| `WithPredicate(fn func(*Email) bool)` | Custom filter function |
+| Option                                | Description                         |
+| ------------------------------------- | ----------------------------------- |
+| `WithWaitTimeout(d time.Duration)`    | Maximum time to wait (default: 60s) |
+| `WithSubject(s string)`               | Filter by exact subject match       |
+| `WithSubjectRegex(r *regexp.Regexp)`  | Filter by subject pattern           |
+| `WithFrom(s string)`                  | Filter by exact sender address      |
+| `WithFromRegex(r *regexp.Regexp)`     | Filter by sender pattern            |
+| `WithPredicate(fn func(*Email) bool)` | Custom filter function              |
 
 #### Returns
 
@@ -392,6 +458,7 @@ inbox.WatchFunc(ctx, func(email *vaultsandbox.Email) {
 #### When to Use
 
 Use `WatchFunc` instead of `Watch` when:
+
 - You prefer callback-style processing over channel iteration
 - You want simpler code without channel select statements
 - You're processing emails in a blocking manner

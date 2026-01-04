@@ -147,6 +147,26 @@ afterAll(async () => {
 
 ---
 
+### deleteInbox()
+
+Deletes a specific inbox by its email address.
+
+```typescript
+deleteInbox(emailAddress: string): Promise<void>
+```
+
+#### Parameters
+
+- `emailAddress`: The email address of the inbox to delete
+
+#### Example
+
+```javascript
+await client.deleteInbox('test123@inbox.vaultsandbox.com');
+```
+
+---
+
 ### getServerInfo()
 
 Retrieves information about the VaultSandbox Gateway server.
@@ -301,13 +321,13 @@ exportInbox(inboxOrEmail: Inbox | string): ExportedInboxData
 
 ```typescript
 interface ExportedInboxData {
+	version: number; // Export format version (currently 1)
 	emailAddress: string;
 	inboxHash: string;
-	expiresAt: string;
-	serverSigPk: string;
-	publicKeyB64: string;
-	secretKeyB64: string;
-	exportedAt: string;
+	expiresAt: string; // ISO 8601 timestamp
+	serverSigPk: string; // ML-DSA-65 public key (base64url)
+	secretKey: string; // ML-KEM-768 secret key (base64url)
+	exportedAt: string; // ISO 8601 timestamp
 }
 ```
 

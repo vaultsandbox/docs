@@ -90,7 +90,7 @@ if (inbox.IsDisposed)
 
 ### GetEmailsAsync
 
-Lists all emails in the inbox. Emails are automatically decrypted.
+Lists all emails in the inbox with full content. Emails are automatically decrypted.
 
 ```csharp
 Task<IReadOnlyList<Email>> GetEmailsAsync(CancellationToken cancellationToken = default)
@@ -98,7 +98,7 @@ Task<IReadOnlyList<Email>> GetEmailsAsync(CancellationToken cancellationToken = 
 
 #### Returns
 
-`Task<IReadOnlyList<Email>>` - List of decrypted email records, sorted by received time (newest first)
+`Task<IReadOnlyList<Email>>` - List of decrypted email records with full content, sorted by received time (newest first)
 
 #### Example
 
@@ -110,8 +110,78 @@ Console.WriteLine($"Inbox has {emails.Count} emails");
 foreach (var email in emails)
 {
     Console.WriteLine($"- {email.Subject} from {email.From}");
+    Console.WriteLine($"  Body: {email.Text?[..Math.Min(100, email.Text?.Length ?? 0)]}...");
 }
 ```
+
+---
+
+### GetEmailsMetadataOnlyAsync
+
+Lists all emails in the inbox with metadata only (no body content). This is more efficient when you only need basic email information like subject, sender, and received time.
+
+```csharp
+Task<IReadOnlyList<EmailMetadata>> GetEmailsMetadataOnlyAsync(CancellationToken cancellationToken = default)
+```
+
+#### Returns
+
+`Task<IReadOnlyList<EmailMetadata>>` - List of email metadata records (without body content)
+
+```csharp
+public sealed record EmailMetadata(
+    string Id,
+    string From,
+    string Subject,
+    DateTimeOffset ReceivedAt,
+    bool IsRead);
+```
+
+| Property     | Type             | Description                               |
+| ------------ | ---------------- | ----------------------------------------- |
+| `Id`         | `string`         | Unique identifier for the email           |
+| `From`       | `string`         | Sender's email address                    |
+| `Subject`    | `string`         | Email subject line                        |
+| `ReceivedAt` | `DateTimeOffset` | When the email was received               |
+| `IsRead`     | `bool`           | Whether the email has been marked as read |
+
+#### Example
+
+```csharp
+// Get just metadata - more efficient for listing
+var emailsMetadata = await inbox.GetEmailsMetadataOnlyAsync();
+
+Console.WriteLine($"Inbox has {emailsMetadata.Count} emails");
+
+foreach (var metadata in emailsMetadata)
+{
+    Console.WriteLine($"- [{(metadata.IsRead ? "Read" : "Unread")}] {metadata.Subject}");
+    Console.WriteLine($"  From: {metadata.From} at {metadata.ReceivedAt:g}");
+}
+
+// Fetch full content only for emails you need
+var importantEmail = emailsMetadata.FirstOrDefault(m => m.Subject.Contains("Important"));
+if (importantEmail is not null)
+{
+    var fullEmail = await inbox.GetEmailAsync(importantEmail.Id);
+    Console.WriteLine($"Body: {fullEmail.Text}");
+}
+```
+
+#### When to Use
+
+Use `GetEmailsMetadataOnlyAsync` when:
+
+- You need to display a list of emails without their content
+- You want to filter emails before fetching full content
+- You're building a UI that shows email summaries
+- Performance is important and you don't need email bodies
+
+Use `GetEmailsAsync` when:
+
+- You need access to email body (`Text`, `Html`)
+- You need attachments, links, or headers
+- You're processing all emails and need their full content
 
 ---
 
@@ -203,14 +273,14 @@ public sealed class WaitForEmailOptions
 }
 ```
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `Timeout` | `TimeSpan?` | 30s | Maximum time to wait |
-| `PollInterval` | `TimeSpan?` | 2s | Polling interval |
-| `Subject` | `string?` | - | Filter by subject (exact match or regex based on `UseRegex`) |
-| `From` | `string?` | - | Filter by sender address (exact match or regex based on `UseRegex`) |
-| `UseRegex` | `bool` | `false` | When `true`, `Subject` and `From` are treated as regex patterns |
-| `Predicate` | `Func<Email, bool>?` | - | Custom filter function |
+| Property       | Type                 | Default | Description                                                         |
+| -------------- | -------------------- | ------- | ------------------------------------------------------------------- |
+| `Timeout`      | `TimeSpan?`          | 30s     | Maximum time to wait                                                |
+| `PollInterval` | `TimeSpan?`          | 2s      | Polling interval                                                    |
+| `Subject`      | `string?`            | -       | Filter by subject (exact match or regex based on `UseRegex`)        |
+| `From`         | `string?`            | -       | Filter by sender address (exact match or regex based on `UseRegex`) |
+| `UseRegex`     | `bool`               | `false` | When `true`, `Subject` and `From` are treated as regex patterns     |
+| `Predicate`    | `Func<Email, bool>?` | -       | Custom filter function                                              |
 
 #### Returns
 
@@ -295,9 +365,9 @@ public sealed class WaitForEmailCountOptions
 }
 ```
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `Timeout` | `TimeSpan?` | 30s | Maximum time to wait |
+| Property  | Type        | Default | Description          |
+| --------- | ----------- | ------- | -------------------- |
+| `Timeout` | `TimeSpan?` | 30s     | Maximum time to wait |
 
 #### Returns
 
@@ -549,12 +619,12 @@ Task<InboxExport> ExportAsync()
 ```csharp
 public sealed record InboxExport
 {
+    public int Version { get; init; } = 1;
     public required string EmailAddress { get; init; }
-    public required string InboxHash { get; init; }
     public required DateTimeOffset ExpiresAt { get; init; }
+    public required string InboxHash { get; init; }
     public required string ServerSigPk { get; init; }
-    public required string PublicKeyB64 { get; init; }
-    public required string SecretKeyB64 { get; init; }
+    public required string SecretKey { get; init; }  // Public key derived from bytes 1152-2400
     public required DateTimeOffset ExportedAt { get; init; }
 }
 ```

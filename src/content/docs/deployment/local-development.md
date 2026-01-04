@@ -34,8 +34,8 @@ services:
     container_name: vaultsandbox-gateway-local
     restart: unless-stopped
     ports:
-      - '127.0.0.1:2525:25'   # SMTP on localhost only
-      - '127.0.0.1:8080:80'   # HTTP Web UI on localhost only
+      - '127.0.0.1:2525:25' # SMTP on localhost only
+      - '127.0.0.1:8080:80' # HTTP Web UI on localhost only
     environment:
       # Accept emails for any domain (development mode)
       VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'test.localhost'
@@ -73,11 +73,11 @@ curl http://localhost:8080/health
 
 ## Accessing the Gateway
 
-| Service | URL / Address |
-| :------ | :------------ |
-| Web UI | http://localhost:8080/app |
-| API | http://localhost:8080/api |
-| SMTP | localhost:2525 |
+| Service | URL / Address             |
+| :------ | :------------------------ |
+| Web UI  | http://localhost:8080/app |
+| API     | http://localhost:8080/api |
+| SMTP    | localhost:2525            |
 
 ## Configuring Your Application
 
@@ -98,8 +98,8 @@ const { VaultSandboxClient } = require('@vaultsandbox/client');
 
 // Create VaultSandbox client
 const client = new VaultSandboxClient({
-  url: 'http://localhost:8080',
-  apiKey: 'YOUR_API_KEY',
+	url: 'http://localhost:8080',
+	apiKey: 'YOUR_API_KEY',
 });
 
 // Create an inbox to receive emails
@@ -107,20 +107,20 @@ const inbox = await client.createInbox();
 
 // Configure Nodemailer to send through local gateway
 const transporter = nodemailer.createTransport({
-  host: 'localhost',
-  port: 2525,
-  secure: false, // No TLS for local development
-  tls: {
-    rejectUnauthorized: false
-  }
+	host: 'localhost',
+	port: 2525,
+	secure: false, // No TLS for local development
+	tls: {
+		rejectUnauthorized: false,
+	},
 });
 
 // Send a test email to the inbox's generated address
 await transporter.sendMail({
-  from: 'test@example.com',
-  to: inbox.emailAddress,
-  subject: 'Test Email',
-  text: 'Hello from local development!'
+	from: 'test@example.com',
+	to: inbox.emailAddress,
+	subject: 'Test Email',
+	text: 'Hello from local development!',
 });
 
 // Wait for the email to arrive
@@ -161,8 +161,8 @@ See the [API Reference](/gateway/api-reference/) for complete documentation.
 const { VaultSandboxClient } = require('@vaultsandbox/client');
 
 const client = new VaultSandboxClient({
-  url: 'http://localhost:8080',
-  apiKey: 'YOUR_API_KEY',
+	url: 'http://localhost:8080',
+	apiKey: 'YOUR_API_KEY',
 });
 
 // Create an inbox (generates a unique email address)
@@ -196,8 +196,8 @@ If ports 2525 or 8080 are already in use, modify the port mappings:
 
 ```yaml
 ports:
-  - '127.0.0.1:2526:25'   # Use port 2526 instead
-  - '127.0.0.1:8081:80'   # Use port 8081 instead
+  - '127.0.0.1:2526:25' # Use port 2526 instead
+  - '127.0.0.1:8081:80' # Use port 8081 instead
 ```
 
 ### Connection Refused

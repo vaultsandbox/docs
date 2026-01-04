@@ -60,21 +60,21 @@ if (spf != null) {
 
 ### SpfResult Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | SPF check result: pass, fail, softfail, neutral, none, temperror, permerror |
-| `domain` | `String` | Domain being checked |
-| `ip` | `String` | IP address of the sending server |
-| `details` | `String` | Additional explanation about the result |
+| Property  | Type     | Description                                                                 |
+| --------- | -------- | --------------------------------------------------------------------------- |
+| `result`  | `String` | SPF check result: pass, fail, softfail, neutral, none, temperror, permerror |
+| `domain`  | `String` | Domain being checked                                                        |
+| `ip`      | `String` | IP address of the sending server                                            |
+| `details` | `String` | Additional explanation about the result                                     |
 
 ### SpfResult Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `getResult()` | `String` | Returns the SPF result |
-| `getDomain()` | `String` | Returns the checked domain |
-| `getIp()` | `String` | Returns the sending server IP |
-| `getDetails()` | `String` | Returns additional explanation |
+| Method         | Return Type | Description                    |
+| -------------- | ----------- | ------------------------------ |
+| `getResult()`  | `String`    | Returns the SPF result         |
+| `getDomain()`  | `String`    | Returns the checked domain     |
+| `getIp()`      | `String`    | Returns the sending server IP  |
+| `getDetails()` | `String`    | Returns additional explanation |
 
 ### SPF Example
 
@@ -121,21 +121,21 @@ if (dkim != null && !dkim.isEmpty()) {
 
 ### DkimResult Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | DKIM verification result: pass, fail, none |
-| `domain` | `String` | Signing domain |
-| `selector` | `String` | DKIM selector (identifies the public key in DNS) |
-| `signature` | `String` | DKIM signature information |
+| Property    | Type     | Description                                      |
+| ----------- | -------- | ------------------------------------------------ |
+| `result`    | `String` | DKIM verification result: pass, fail, none       |
+| `domain`    | `String` | Signing domain                                   |
+| `selector`  | `String` | DKIM selector (identifies the public key in DNS) |
+| `signature` | `String` | DKIM signature information                       |
 
 ### DkimResult Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `getResult()` | `String` | Returns the DKIM result |
-| `getDomain()` | `String` | Returns the signing domain |
-| `getSelector()` | `String` | Returns the DKIM selector |
-| `getSignature()` | `String` | Returns DKIM signature info |
+| Method           | Return Type | Description                 |
+| ---------------- | ----------- | --------------------------- |
+| `getResult()`    | `String`    | Returns the DKIM result     |
+| `getDomain()`    | `String`    | Returns the signing domain  |
+| `getSelector()`  | `String`    | Returns the DKIM selector   |
+| `getSignature()` | `String`    | Returns DKIM signature info |
 
 ### DKIM Example
 
@@ -198,22 +198,22 @@ if (dmarc != null) {
 
 ### DmarcResult Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | DMARC check result: pass, fail, none |
-| `domain` | `String` | From domain being checked |
-| `policy` | `String` | Domain's DMARC policy: `none`, `quarantine`, or `reject` |
+| Property  | Type      | Description                                                |
+| --------- | --------- | ---------------------------------------------------------- |
+| `result`  | `String`  | DMARC check result: pass, fail, none                       |
+| `domain`  | `String`  | From domain being checked                                  |
+| `policy`  | `String`  | Domain's DMARC policy: `none`, `quarantine`, or `reject`   |
 | `aligned` | `Boolean` | Whether SPF/DKIM results align with the From header domain |
 
 ### DmarcResult Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `getResult()` | `String` | Returns the DMARC result |
-| `getDomain()` | `String` | Returns the From domain |
-| `getPolicy()` | `String` | Returns the domain's DMARC policy |
-| `getAligned()` | `Boolean` | Returns alignment status (may be null) |
-| `isAligned()` | `boolean` | Convenience: true if aligned, false otherwise |
+| Method         | Return Type | Description                                   |
+| -------------- | ----------- | --------------------------------------------- |
+| `getResult()`  | `String`    | Returns the DMARC result                      |
+| `getDomain()`  | `String`    | Returns the From domain                       |
+| `getPolicy()`  | `String`    | Returns the domain's DMARC policy             |
+| `getAligned()` | `Boolean`   | Returns alignment status (may be null)        |
+| `isAligned()`  | `boolean`   | Convenience: true if aligned, false otherwise |
 
 ### DMARC Example
 
@@ -248,19 +248,19 @@ if (reverseDns != null) {
 
 ### ReverseDnsResult Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property   | Type      | Description                             |
+| ---------- | --------- | --------------------------------------- |
 | `verified` | `boolean` | Whether reverse DNS verification passed |
-| `ip` | `String` | IP address of the sending server |
-| `hostname` | `String` | Resolved hostname from PTR record |
+| `ip`       | `String`  | IP address of the sending server        |
+| `hostname` | `String`  | Resolved hostname from PTR record       |
 
 ### ReverseDnsResult Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `isVerified()` | `boolean` | Returns true if reverse DNS is verified |
-| `getIp()` | `String` | Returns the IP address being validated |
-| `getHostname()` | `String` | Returns the resolved hostname |
+| Method          | Return Type | Description                             |
+| --------------- | ----------- | --------------------------------------- |
+| `isVerified()`  | `boolean`   | Returns true if reverse DNS is verified |
+| `getIp()`       | `String`    | Returns the IP address being validated  |
+| `getHostname()` | `String`    | Returns the resolved hostname           |
 
 ### Reverse DNS Example
 
@@ -299,17 +299,17 @@ System.out.println(validation.getFailures());          // Alias for getFailed()
 
 ### AuthValidation Methods
 
-| Method                   | Return Type    | Description                                 |
-| ------------------------ | -------------- | ------------------------------------------- |
+| Method                   | Return Type    | Description                                       |
+| ------------------------ | -------------- | ------------------------------------------------- |
 | `isFullyAuthenticated()` | `boolean`      | True if all checks passed and at least one exists |
-| `isPassed()`             | `boolean`      | Alias for isFullyAuthenticated()            |
-| `hasSpf()`               | `boolean`      | SPF check passed                            |
-| `hasDkim()`              | `boolean`      | At least one DKIM signature passed          |
-| `hasDmarc()`             | `boolean`      | DMARC check passed                          |
-| `hasReverseDns()`        | `boolean`      | Reverse DNS check passed                    |
-| `getPassed()`            | `List<String>` | List of passed check names                  |
-| `getFailed()`            | `List<String>` | List of failure descriptions                |
-| `getFailures()`          | `List<String>` | Alias for getFailed()                       |
+| `isPassed()`             | `boolean`      | Alias for isFullyAuthenticated()                  |
+| `hasSpf()`               | `boolean`      | SPF check passed                                  |
+| `hasDkim()`              | `boolean`      | At least one DKIM signature passed                |
+| `hasDmarc()`             | `boolean`      | DMARC check passed                                |
+| `hasReverseDns()`        | `boolean`      | Reverse DNS check passed                          |
+| `getPassed()`            | `List<String>` | List of passed check names                        |
+| `getFailed()`            | `List<String>` | List of failure descriptions                      |
+| `getFailures()`          | `List<String>` | Alias for getFailed()                             |
 
 ### Validation Examples
 

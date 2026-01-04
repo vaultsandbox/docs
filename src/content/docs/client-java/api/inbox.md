@@ -15,12 +15,12 @@ An inbox has a unique email address that can receive emails. Emails are end-to-e
 
 ## Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `emailAddress` | `String` | Full email address for this inbox |
-| `hash` | `String` | Unique identifier hash |
-| `expiresAt` | `Instant` | When the inbox expires |
-| `serverSigPk` | `String` | Server's signature public key |
+| Property       | Type      | Description                       |
+| -------------- | --------- | --------------------------------- |
+| `emailAddress` | `String`  | Full email address for this inbox |
+| `hash`         | `String`  | Unique identifier hash            |
+| `expiresAt`    | `Instant` | When the inbox expires            |
+| `serverSigPk`  | `String`  | Server's signature public key     |
 
 ### Getters
 
@@ -35,24 +35,56 @@ public String getServerSigPk()
 
 ### listEmails()
 
-Lists all emails in the inbox.
+Lists all emails in the inbox with full content.
 
 ```java
 public List<Email> listEmails()
 ```
 
-**Returns:** List of `Email` objects with metadata only (from, to, subject, receivedAt). Use `getEmail()` for full content.
+**Returns:** List of fully hydrated `Email` objects including body text, HTML, headers, attachments, links, and authentication results.
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 - `DecryptionException` - on decryption failure
 
 **Example:**
+
 ```java
 List<Email> emails = inbox.listEmails();
 for (Email email : emails) {
     System.out.println(email.getSubject());
+    System.out.println(email.getText());  // Full content available
+}
+```
+
+### listEmailsMetadataOnly()
+
+Lists all emails returning only metadata (no body content). More efficient when you only need basic email information.
+
+```java
+public List<EmailMetadata> listEmailsMetadataOnly()
+```
+
+**Returns:** List of `EmailMetadata` objects containing id, from, subject, receivedAt, and isRead.
+
+**Throws:**
+
+- `ApiException` - on API errors
+- `NetworkException` - on network connectivity issues
+- `DecryptionException` - on decryption failure
+
+**Example:**
+
+```java
+List<EmailMetadata> emails = inbox.listEmailsMetadataOnly();
+for (EmailMetadata meta : emails) {
+    System.out.println(meta.getId() + ": " + meta.getSubject());
+    if (!meta.isRead()) {
+        // Fetch full email only if needed
+        Email full = inbox.getEmail(meta.getId());
+    }
 }
 ```
 
@@ -65,16 +97,19 @@ public Email getEmail(String emailId)
 ```
 
 **Parameters:**
+
 - `emailId` - Unique email identifier
 
 **Returns:** `Email` with full content (body, attachments, headers, auth results)
 
 **Throws:**
+
 - `EmailNotFoundException` - if email doesn't exist
 - `ApiException` - on API errors
 - `DecryptionException` - on decryption failure
 
 **Example:**
+
 ```java
 Email email = inbox.getEmail("email-123");
 System.out.println(email.getText());
@@ -90,15 +125,18 @@ public String getRawEmail(String emailId)
 ```
 
 **Parameters:**
+
 - `emailId` - Unique email identifier
 
 **Returns:** Raw email as string including all headers and MIME boundaries
 
 **Throws:**
+
 - `EmailNotFoundException` - if email doesn't exist
 - `ApiException` - on API errors
 
 **Example:**
+
 ```java
 String raw = inbox.getRawEmail("email-123");
 // Parse with javax.mail or similar library
@@ -118,6 +156,7 @@ public Email waitForEmail(WaitOptions options)
 ```
 
 **Parameters:**
+
 - `filter` - Optional filter criteria (default: any email)
 - `timeout` - Maximum wait time (default: from config)
 - `options` - `WaitOptions` with filter, timeout, and poll interval
@@ -125,9 +164,11 @@ public Email waitForEmail(WaitOptions options)
 **Returns:** The matching email
 
 **Throws:**
+
 - `TimeoutException` - if no matching email arrives within timeout
 
 **Examples:**
+
 ```java
 // Wait for any email
 Email email = inbox.waitForEmail();
@@ -161,15 +202,18 @@ public List<Email> waitForEmailCount(int count, Duration timeout)
 ```
 
 **Parameters:**
+
 - `count` - Number of emails to wait for
 - `timeout` - Maximum wait time (default: from config)
 
 **Returns:** List of received emails
 
 **Throws:**
+
 - `TimeoutException` - if count not reached within timeout
 
 **Example:**
+
 ```java
 // Wait for 3 emails
 List<Email> emails = inbox.waitForEmailCount(3, Duration.ofSeconds(60));
@@ -187,12 +231,14 @@ public Email awaitEmail(EmailFilter filter, Duration timeout)
 ```
 
 **Parameters:**
+
 - `filter` - Optional filter criteria (default: any email)
 - `timeout` - Maximum wait time (default: from config)
 
 **Returns:** The matching email, or `null` if timeout
 
 **Example:**
+
 ```java
 Email email = inbox.awaitEmail(
     EmailFilter.subjectContains("Optional"),
@@ -217,11 +263,13 @@ public Subscription onNewEmail(Consumer<Email> callback)
 ```
 
 **Parameters:**
+
 - `callback` - Consumer called when new emails arrive
 
 **Returns:** `Subscription` handle to unsubscribe
 
 **Example:**
+
 ```java
 Subscription sub = inbox.onNewEmail(email -> {
     System.out.println("New email: " + email.getSubject());
@@ -243,9 +291,11 @@ public void markEmailAsRead(String emailId)
 ```
 
 **Parameters:**
+
 - `emailId` - Email to mark
 
 **Throws:**
+
 - `EmailNotFoundException` - if email doesn't exist
 - `ApiException` - on API errors
 
@@ -260,9 +310,11 @@ public void deleteEmail(String emailId)
 ```
 
 **Parameters:**
+
 - `emailId` - Email to delete
 
 **Throws:**
+
 - `EmailNotFoundException` - if email doesn't exist
 - `ApiException` - on API errors
 
@@ -277,10 +329,12 @@ public void delete()
 ```
 
 **Throws:**
+
 - `InboxNotFoundException` - if inbox doesn't exist
 - `ApiException` - on API errors
 
 **Example:**
+
 ```java
 // Cleanup when done
 inbox.delete();
@@ -300,13 +354,14 @@ public SyncStatus getSyncStatus()
 
 ### SyncStatus Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `emailCount` | `int` | Total number of emails in the inbox |
-| `emailsHash` | `String` | Hash of all email IDs (changes when emails are added/removed) |
-| `lastUpdated` | `String` | Timestamp of last sync |
+| Property      | Type     | Description                                                   |
+| ------------- | -------- | ------------------------------------------------------------- |
+| `emailCount`  | `int`    | Total number of emails in the inbox                           |
+| `emailsHash`  | `String` | Hash of all email IDs (changes when emails are added/removed) |
+| `lastUpdated` | `String` | Timestamp of last sync                                        |
 
 **Example:**
+
 ```java
 SyncStatus status = inbox.getSyncStatus();
 System.out.println("Email count: " + status.getEmailCount());
@@ -327,6 +382,7 @@ public ExportedInbox export()
 **Security Warning:** Contains private keys - store securely!
 
 **Example:**
+
 ```java
 ExportedInbox exported = inbox.export();
 // Equivalent to: client.exportInbox(inbox)
@@ -377,15 +433,15 @@ EmailFilter filter = EmailFilter.builder()
 
 ### Builder Methods
 
-| Method | Description |
-|--------|-------------|
-| `subject(String)` | Subject contains substring |
-| `subjectMatches(String)` | Subject matches regex string |
-| `subjectMatches(Pattern)` | Subject matches regex pattern |
-| `from(String)` | From address contains substring |
-| `fromMatches(String)` | From address matches regex string |
-| `fromMatches(Pattern)` | From address matches regex pattern |
-| `where(Predicate<Email>)` | Custom predicate |
+| Method                    | Description                        |
+| ------------------------- | ---------------------------------- |
+| `subject(String)`         | Subject contains substring         |
+| `subjectMatches(String)`  | Subject matches regex string       |
+| `subjectMatches(Pattern)` | Subject matches regex pattern      |
+| `from(String)`            | From address contains substring    |
+| `fromMatches(String)`     | From address matches regex string  |
+| `fromMatches(Pattern)`    | From address matches regex pattern |
+| `where(Predicate<Email>)` | Custom predicate                   |
 
 ### Filter Examples
 
@@ -431,11 +487,51 @@ WaitOptions options = WaitOptions.builder()
 
 ### Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `filter` | `EmailFilter` | `any()` | Filter criteria |
-| `timeout` | `Duration` | from config | Maximum wait time |
-| `pollInterval` | `Duration` | from config | Poll frequency (polling strategy) |
+| Property       | Type          | Default     | Description                       |
+| -------------- | ------------- | ----------- | --------------------------------- |
+| `filter`       | `EmailFilter` | `any()`     | Filter criteria                   |
+| `timeout`      | `Duration`    | from config | Maximum wait time                 |
+| `pollInterval` | `Duration`    | from config | Poll frequency (polling strategy) |
+
+## EmailMetadata Class
+
+Lightweight representation of an email containing only metadata (no body content).
+
+```java
+public class EmailMetadata
+```
+
+### Properties
+
+| Property     | Type      | Description                               |
+| ------------ | --------- | ----------------------------------------- |
+| `id`         | `String`  | Unique email identifier                   |
+| `from`       | `String`  | Sender's email address                    |
+| `subject`    | `String`  | Email subject line                        |
+| `receivedAt` | `String`  | When the email was received               |
+| `isRead`     | `boolean` | Whether the email has been marked as read |
+
+### Getters
+
+```java
+public String getId()
+public String getFrom()
+public String getSubject()
+public String getReceivedAt()
+public boolean isRead()
+```
+
+### Example
+
+```java
+List<EmailMetadata> emails = inbox.listEmailsMetadataOnly();
+for (EmailMetadata meta : emails) {
+    System.out.printf("[%s] %s - %s%n",
+        meta.isRead() ? "READ" : "NEW",
+        meta.getFrom(),
+        meta.getSubject());
+}
+```
 
 ## Subscription Interface
 
@@ -450,11 +546,12 @@ public interface Subscription {
 
 ### Methods
 
-| Method | Description |
-|--------|-------------|
+| Method          | Description            |
+| --------------- | ---------------------- |
 | `unsubscribe()` | Stops the subscription |
 
 **Example:**
+
 ```java
 Subscription sub = inbox.onNewEmail(email -> {
     processEmail(email);

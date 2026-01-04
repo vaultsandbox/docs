@@ -355,6 +355,7 @@ export default defineConfig({
 					collapsed: true,
 					items: [
 						{ label: 'Client SDK Specification', link: '/sdk/client-spec/' },
+						{ label: 'Cryptographic Protocol', link: '/sdk/crypto-spec/' },
 						{ label: 'Test Specification', link: '/sdk/tests-spec/' },
 					],
 				},

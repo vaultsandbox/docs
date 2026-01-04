@@ -8,6 +8,7 @@ This guide covers testing scenarios that involve multiple emails, including wait
 ## Overview
 
 Multi-email testing covers:
+
 - Waiting for multiple emails
 - Email sequences and workflows
 - Parallel email sending
@@ -477,13 +478,13 @@ void shouldHandlePartialDelivery() {
 
 ## Java Concurrency Utilities
 
-| Utility | Use Case |
-|---------|----------|
-| `ExecutorService` | Parallel email sending |
-| `CompletableFuture` | Async operations with composition |
-| `CountDownLatch` | Synchronizing on multiple events |
-| `AtomicInteger` | Thread-safe counters |
-| `Stream API` | Bulk processing and filtering |
+| Utility                        | Use Case                             |
+| ------------------------------ | ------------------------------------ |
+| `ExecutorService`              | Parallel email sending               |
+| `CompletableFuture`            | Async operations with composition    |
+| `CountDownLatch`               | Synchronizing on multiple events     |
+| `AtomicInteger`                | Thread-safe counters                 |
+| `Stream API`                   | Bulk processing and filtering        |
 | `Collections.synchronizedList` | Thread-safe collection for callbacks |
 
 ## Related Pages

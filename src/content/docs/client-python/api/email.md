@@ -281,15 +281,15 @@ class Attachment:
     checksum: str | None = None
 ```
 
-| Property             | Type          | Description                                  |
-| -------------------- | ------------- | -------------------------------------------- |
-| `filename`           | `str`         | Attachment filename                          |
-| `content_type`       | `str`         | MIME content type                            |
-| `size`               | `int`         | Attachment size in bytes                     |
-| `content`            | `bytes`       | Attachment content as bytes                  |
-| `content_id`         | `str \| None` | Content ID for inline attachments            |
-| `content_disposition`| `str \| None` | Content disposition (attachment/inline)      |
-| `checksum`           | `str \| None` | SHA-256 hash of the attachment content       |
+| Property              | Type          | Description                             |
+| --------------------- | ------------- | --------------------------------------- |
+| `filename`            | `str`         | Attachment filename                     |
+| `content_type`        | `str`         | MIME content type                       |
+| `size`                | `int`         | Attachment size in bytes                |
+| `content`             | `bytes`       | Attachment content as bytes             |
+| `content_id`          | `str \| None` | Content ID for inline attachments       |
+| `content_disposition` | `str \| None` | Content disposition (attachment/inline) |
+| `checksum`            | `str \| None` | SHA-256 hash of the attachment content  |
 
 #### Example
 

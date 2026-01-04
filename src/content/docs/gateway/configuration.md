@@ -9,57 +9,57 @@ This page documents all configuration options for the VaultSandbox Gateway backe
 
 All environment variables at a glance. See sections below for details.
 
-| Variable                             | Default           | Description                               |
-| :----------------------------------- | :---------------- | :---------------------------------------- |
-| **VSX DNS**                          |                   |                                           |
-| `VSB_VSX_DNS_ENABLED`                | `false`           | Enable automatic DNS via vsx.email        |
-| **Custom Domain**                    |                   |                                           |
-| `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | —                 | Domains to accept emails for              |
-| **SMTP**                             |                   |                                           |
-| `VSB_SMTP_HOST`                      | `0.0.0.0`         | SMTP bind address                         |
-| `VSB_SMTP_PORT`                      | `25`              | SMTP port                                 |
-| `VSB_SMTP_SECURE`                    | `false`           | Immediate TLS (SMTPS)                     |
-| `VSB_SMTP_MAX_MESSAGE_SIZE`          | `10485760`        | Max email size (bytes)                    |
-| `VSB_SMTP_MAX_HEADER_SIZE`           | `65536`           | Max header size (bytes)                   |
-| `VSB_SMTP_SESSION_TIMEOUT`           | `300000`          | Session timeout (ms)                      |
-| `VSB_SMTP_MAX_CONNECTIONS`           | `25`              | Max concurrent connections                |
-| `VSB_SMTP_BANNER`                    | `VaultSandbox...` | SMTP greeting                             |
-| **TLS/Certificates**                 |                   |                                           |
-| `VSB_CERT_ENABLED`                   | `false`           | Enable Let's Encrypt                      |
-| `VSB_CERT_EMAIL`                     | —                 | Let's Encrypt email (optional)            |
-| `VSB_CERT_DOMAIN`                    | (auto)            | Primary certificate domain                |
-| `VSB_CERT_STAGING`                   | `false`           | Use staging environment                   |
-| `VSB_SMTP_TLS_CERT_PATH`             | —                 | Manual cert path                          |
-| `VSB_SMTP_TLS_KEY_PATH`              | —                 | Manual key path                           |
-| `VSB_SMTP_TLS_MIN_VERSION`           | `TLSv1.2`         | Minimum TLS version                       |
-| **HTTP Server**                      |                   |                                           |
-| `VSB_SERVER_PORT`                    | `80`              | HTTP port                                 |
-| `VSB_SERVER_HTTPS_ENABLED`           | (auto)            | Enable HTTPS server                       |
-| `VSB_SERVER_HTTPS_PORT`              | `443`             | HTTPS port                                |
-| `VSB_SERVER_ORIGIN`                  | (auto)            | CORS origin                               |
-| **Local Mode**                       |                   |                                           |
-| `VSB_GATEWAY_MODE`                   | `local`           | Operation mode (see note below)           |
-| `VSB_LOCAL_API_KEY`                  | (auto)            | API key (min 32 chars)                    |
-| `VSB_LOCAL_API_KEY_STRICT`           | `false`           | Require explicit API key                  |
-| `VSB_DATA_PATH`                      | `/app/data`       | Data directory                            |
-| `VSB_LOCAL_INBOX_DEFAULT_TTL`        | `3600`            | Default inbox TTL (seconds)               |
-| `VSB_LOCAL_INBOX_MAX_TTL`            | `604800`          | Max inbox TTL (seconds)                   |
-| `VSB_LOCAL_CLEANUP_INTERVAL`         | `300`             | Cleanup interval (seconds)                |
-| **Rate Limiting**                    |                   |                                           |
-| `VSB_THROTTLE_TTL`                   | `60000`           | API rate limit window (ms)                |
-| `VSB_THROTTLE_LIMIT`                 | `500`             | API requests per window                   |
-| `VSB_SMTP_RATE_LIMIT_ENABLED`        | `true`            | Enable SMTP rate limiting                 |
-| `VSB_SMTP_RATE_LIMIT_MAX_EMAILS`     | `500`             | Max emails per duration                   |
-| `VSB_SMTP_RATE_LIMIT_DURATION`       | `900`             | SMTP rate window (seconds)                |
-| **Clustering**                       |                   |                                           |
-| `VSB_ORCHESTRATION_ENABLED`          | `false`           | Enable distributed mode                   |
-| `VSB_CLUSTER_NAME`                   | `default`         | Cluster name                              |
-| `VSB_NODE_ID`                        | (auto)            | Node identifier                           |
-| `VSB_CLUSTER_PEERS`                  | —                 | Peer URLs                                 |
-| **Other**                            |                   |                                           |
-| `NODE_ENV`                           | `production`      | Environment                               |
-| `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                        |
-| `VSB_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)          |
+| Variable                             | Default           | Description                        |
+| :----------------------------------- | :---------------- | :--------------------------------- |
+| **VSX DNS**                          |                   |                                    |
+| `VSB_VSX_DNS_ENABLED`                | `false`           | Enable automatic DNS via vsx.email |
+| **Custom Domain**                    |                   |                                    |
+| `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | —                 | Domains to accept emails for       |
+| **SMTP**                             |                   |                                    |
+| `VSB_SMTP_HOST`                      | `0.0.0.0`         | SMTP bind address                  |
+| `VSB_SMTP_PORT`                      | `25`              | SMTP port                          |
+| `VSB_SMTP_SECURE`                    | `false`           | Immediate TLS (SMTPS)              |
+| `VSB_SMTP_MAX_MESSAGE_SIZE`          | `10485760`        | Max email size (bytes)             |
+| `VSB_SMTP_MAX_HEADER_SIZE`           | `65536`           | Max header size (bytes)            |
+| `VSB_SMTP_SESSION_TIMEOUT`           | `300000`          | Session timeout (ms)               |
+| `VSB_SMTP_MAX_CONNECTIONS`           | `25`              | Max concurrent connections         |
+| `VSB_SMTP_BANNER`                    | `VaultSandbox...` | SMTP greeting                      |
+| **TLS/Certificates**                 |                   |                                    |
+| `VSB_CERT_ENABLED`                   | `false`           | Enable Let's Encrypt               |
+| `VSB_CERT_EMAIL`                     | —                 | Let's Encrypt email (optional)     |
+| `VSB_CERT_DOMAIN`                    | (auto)            | Primary certificate domain         |
+| `VSB_CERT_STAGING`                   | `false`           | Use staging environment            |
+| `VSB_SMTP_TLS_CERT_PATH`             | —                 | Manual cert path                   |
+| `VSB_SMTP_TLS_KEY_PATH`              | —                 | Manual key path                    |
+| `VSB_SMTP_TLS_MIN_VERSION`           | `TLSv1.2`         | Minimum TLS version                |
+| **HTTP Server**                      |                   |                                    |
+| `VSB_SERVER_PORT`                    | `80`              | HTTP port                          |
+| `VSB_SERVER_HTTPS_ENABLED`           | (auto)            | Enable HTTPS server                |
+| `VSB_SERVER_HTTPS_PORT`              | `443`             | HTTPS port                         |
+| `VSB_SERVER_ORIGIN`                  | (auto)            | CORS origin                        |
+| **Local Mode**                       |                   |                                    |
+| `VSB_GATEWAY_MODE`                   | `local`           | Operation mode (see note below)    |
+| `VSB_LOCAL_API_KEY`                  | (auto)            | API key (min 32 chars)             |
+| `VSB_LOCAL_API_KEY_STRICT`           | `false`           | Require explicit API key           |
+| `VSB_DATA_PATH`                      | `/app/data`       | Data directory                     |
+| `VSB_LOCAL_INBOX_DEFAULT_TTL`        | `3600`            | Default inbox TTL (seconds)        |
+| `VSB_LOCAL_INBOX_MAX_TTL`            | `604800`          | Max inbox TTL (seconds)            |
+| `VSB_LOCAL_CLEANUP_INTERVAL`         | `300`             | Cleanup interval (seconds)         |
+| **Rate Limiting**                    |                   |                                    |
+| `VSB_THROTTLE_TTL`                   | `60000`           | API rate limit window (ms)         |
+| `VSB_THROTTLE_LIMIT`                 | `500`             | API requests per window            |
+| `VSB_SMTP_RATE_LIMIT_ENABLED`        | `true`            | Enable SMTP rate limiting          |
+| `VSB_SMTP_RATE_LIMIT_MAX_EMAILS`     | `500`             | Max emails per duration            |
+| `VSB_SMTP_RATE_LIMIT_DURATION`       | `900`             | SMTP rate window (seconds)         |
+| **Clustering**                       |                   |                                    |
+| `VSB_ORCHESTRATION_ENABLED`          | `false`           | Enable distributed mode            |
+| `VSB_CLUSTER_NAME`                   | `default`         | Cluster name                       |
+| `VSB_NODE_ID`                        | (auto)            | Node identifier                    |
+| `VSB_CLUSTER_PEERS`                  | —                 | Peer URLs                          |
+| **Other**                            |                   |                                    |
+| `NODE_ENV`                           | `production`      | Environment                        |
+| `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
+| `VSB_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)   |
 
 ## Configuration Methods
 
@@ -103,6 +103,7 @@ After starting the gateway, find your assigned domain by entering your IP at [vs
 ```bash
 docker compose exec gateway cat /app/data/certificates/metadata.json; echo
 ```
+
 :::
 
 ---

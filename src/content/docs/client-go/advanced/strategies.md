@@ -109,11 +109,11 @@ client, err := vaultsandbox.New(
 
 The SSE strategy uses these configuration values (defined in the `delivery` package):
 
-| Constant                  | Value | Description                                  |
-| ------------------------- | ----- | -------------------------------------------- |
-| `SSEReconnectInterval`    | 5s    | Base interval before reconnection attempts   |
-| `SSEMaxReconnectAttempts` | 10    | Maximum consecutive reconnection attempts    |
-| `SSEBackoffMultiplier`    | 2     | Multiplier for exponential backoff           |
+| Constant                  | Value | Description                                |
+| ------------------------- | ----- | ------------------------------------------ |
+| `SSEReconnectInterval`    | 5s    | Base interval before reconnection attempts |
+| `SSEMaxReconnectAttempts` | 10    | Maximum consecutive reconnection attempts  |
+| `SSEBackoffMultiplier`    | 2     | Multiplier for exponential backoff         |
 
 ### Reconnection Behavior
 
@@ -245,12 +245,12 @@ client, err := vaultsandbox.New(
 
 The polling strategy uses these configuration values (defined in the `delivery` package):
 
-| Constant                          | Value | Description                                |
-| --------------------------------- | ----- | ------------------------------------------ |
-| `DefaultPollingInitialInterval`   | 2s    | Starting interval between polls            |
-| `DefaultPollingMaxBackoff`        | 30s   | Maximum interval between polls             |
-| `DefaultPollingBackoffMultiplier` | 1.5   | Multiplier for adaptive backoff            |
-| `DefaultPollingJitterFactor`      | 0.3   | Random jitter to prevent thundering herd   |
+| Constant                          | Value | Description                              |
+| --------------------------------- | ----- | ---------------------------------------- |
+| `DefaultPollingInitialInterval`   | 2s    | Starting interval between polls          |
+| `DefaultPollingMaxBackoff`        | 30s   | Maximum interval between polls           |
+| `DefaultPollingBackoffMultiplier` | 1.5   | Multiplier for adaptive backoff          |
+| `DefaultPollingJitterFactor`      | 0.3   | Random jitter to prevent thundering herd |
 
 ### Adaptive Backoff
 

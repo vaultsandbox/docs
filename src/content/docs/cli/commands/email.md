@@ -16,10 +16,10 @@ vsb email ls [flags]
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag      | Description                                  |
+| --------- | -------------------------------------------- |
 | `--inbox` | Specify inbox (uses active inbox if omitted) |
-| `-o json` | Output in JSON format |
+| `-o json` | Output in JSON format                        |
 
 ### Examples
 
@@ -61,18 +61,18 @@ If no email ID is specified, views the most recent email.
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                      |
+| ---------- | ------------------------------------------------ |
 | `email-id` | Email ID (optional, uses most recent if omitted) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag         | Description                               |
+| ------------ | ----------------------------------------- |
 | `-t, --text` | Show plain text only (prints to terminal) |
-| `-r, --raw` | Show raw email source (RFC 5322) |
-| `--inbox` | Specify inbox |
-| `-o json` | Output in JSON format |
+| `-r, --raw`  | Show raw email source (RFC 5322)          |
+| `--inbox`    | Specify inbox                             |
+| `-o json`    | Output in JSON format                     |
 
 ### Examples
 
@@ -121,15 +121,15 @@ vsb email audit [email-id] [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                      |
+| ---------- | ------------------------------------------------ |
 | `email-id` | Email ID (optional, uses most recent if omitted) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
-| `--inbox` | Specify inbox |
+| Flag      | Description           |
+| --------- | --------------------- |
+| `--inbox` | Specify inbox         |
 | `-o json` | Output in JSON format |
 
 ### Examples
@@ -192,17 +192,17 @@ vsb email url [email-id] [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                      |
+| ---------- | ------------------------------------------------ |
 | `email-id` | Email ID (optional, uses most recent if omitted) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag           | Description                           |
+| -------------- | ------------------------------------- |
 | `-O, --open N` | Open the Nth URL in browser (1=first) |
-| `--inbox` | Specify inbox |
-| `-o json` | Output in JSON format |
+| `--inbox`      | Specify inbox                         |
+| `-o json`      | Output in JSON format                 |
 
 ### Examples
 
@@ -241,19 +241,19 @@ vsb email attachment [email-id] [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                                      |
+| ---------- | ------------------------------------------------ |
 | `email-id` | Email ID (optional, uses most recent if omitted) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
-| `-s, --save N` | Download the Nth attachment (1=first) |
-| `-a, --all` | Download all attachments |
-| `-d, --dir` | Directory to save attachments (default: current directory) |
-| `--inbox` | Specify inbox |
-| `-o json` | Output in JSON format |
+| Flag           | Description                                                |
+| -------------- | ---------------------------------------------------------- |
+| `-s, --save N` | Download the Nth attachment (1=first)                      |
+| `-a, --all`    | Download all attachments                                   |
+| `-d, --dir`    | Directory to save attachments (default: current directory) |
+| `--inbox`      | Specify inbox                                              |
+| `-o json`      | Output in JSON format                                      |
 
 ### Examples
 
@@ -306,14 +306,14 @@ vsb email rm <email-id> [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument   | Description                   |
+| ---------- | ----------------------------- |
 | `email-id` | Email ID to delete (required) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag      | Description   |
+| --------- | ------------- |
 | `--inbox` | Specify inbox |
 
 ### Examples
@@ -341,18 +341,18 @@ Returns exit code 0 when a matching email is found, 1 on timeout.
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
-| `--subject` | Exact subject match |
-| `--subject-regex` | Subject regex pattern |
-| `--from` | Exact sender match |
-| `--from-regex` | Sender regex pattern |
-| `--timeout` | Maximum time to wait (default: 60s) |
-| `--count` | Number of matching emails to wait for (default: 1) |
-| `-q, --quiet` | No output, exit code only |
-| `--extract-link` | Output first link from email |
-| `--inbox` | Specify inbox |
-| `-o json` | Output in JSON format |
+| Flag              | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| `--subject`       | Exact subject match                                |
+| `--subject-regex` | Subject regex pattern                              |
+| `--from`          | Exact sender match                                 |
+| `--from-regex`    | Sender regex pattern                               |
+| `--timeout`       | Maximum time to wait (default: 60s)                |
+| `--count`         | Number of matching emails to wait for (default: 1) |
+| `-q, --quiet`     | No output, exit code only                          |
+| `--extract-link`  | Output first link from email                       |
+| `--inbox`         | Specify inbox                                      |
+| `-o json`         | Output in JSON format                              |
 
 ### Examples
 

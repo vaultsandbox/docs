@@ -8,6 +8,7 @@ This guide covers testing password reset email flows, including triggering reset
 ## Overview
 
 Password reset is a critical user flow that must work reliably. Testing it requires:
+
 - Triggering reset requests
 - Receiving reset emails
 - Extracting reset links and tokens
@@ -486,20 +487,20 @@ Don't just test email receipt—test the entire workflow:
 
 ## Checklist
 
-| Test Case | Description |
-|-----------|-------------|
-| Email received | Reset email arrives after request |
-| Valid sender | From address matches expected |
-| Valid subject | Subject contains "reset" or "password" |
-| Contains link | Email has a clickable reset link |
-| Valid token | Token can be extracted from link |
-| Token works | Password can be reset with token |
-| Token expires | Expired tokens are rejected |
-| Token single-use | Used tokens are rejected |
+| Test Case                 | Description                                  |
+| ------------------------- | -------------------------------------------- |
+| Email received            | Reset email arrives after request            |
+| Valid sender              | From address matches expected                |
+| Valid subject             | Subject contains "reset" or "password"       |
+| Contains link             | Email has a clickable reset link             |
+| Valid token               | Token can be extracted from link             |
+| Token works               | Password can be reset with token             |
+| Token expires             | Expired tokens are rejected                  |
+| Token single-use          | Used tokens are rejected                     |
 | New token invalidates old | Multiple requests invalidate previous tokens |
-| Old password rejected | Original password fails after reset |
-| New password works | New password authenticates successfully |
-| Authentication passes | SPF/DKIM verify correctly |
+| Old password rejected     | Original password fails after reset          |
+| New password works        | New password authenticates successfully      |
+| Authentication passes     | SPF/DKIM verify correctly                    |
 
 ## Related Pages
 

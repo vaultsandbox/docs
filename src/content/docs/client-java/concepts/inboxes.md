@@ -140,8 +140,6 @@ for (Email email : emails) {
 }
 ```
 
-**Note**: `listEmails()` returns emails with metadata only. Use `getEmail(id)` for full content.
-
 ### Getting a Specific Email
 
 ```java

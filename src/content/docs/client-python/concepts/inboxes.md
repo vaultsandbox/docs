@@ -137,11 +137,25 @@ print(inbox.server_sig_pk)
 ### Listing Emails
 
 ```python
+# Get all emails with full content
 emails = await inbox.list_emails()
 
 print(f"{len(emails)} emails in inbox")
 for email in emails:
     print(f"{email.from_address}: {email.subject}")
+```
+
+For better performance when you only need basic info, use metadata-only listing:
+
+```python
+# Get only metadata (more efficient)
+metadata_list = await inbox.list_emails_metadata_only()
+
+for meta in metadata_list:
+    print(f"{meta.from_address}: {meta.subject}")
+    # Fetch full content only if needed
+    if "important" in meta.subject.lower():
+        full_email = await inbox.get_email(meta.id)
 ```
 
 ### Getting a Specific Email

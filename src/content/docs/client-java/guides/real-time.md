@@ -331,12 +331,12 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 
 ### Configuration Options
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `strategy` | `AUTO` | Delivery strategy (SSE, POLLING, AUTO) |
-| `sseReconnectInterval` | 5 seconds | Time between reconnection attempts |
-| `sseMaxReconnectAttempts` | 10 | Maximum reconnection attempts |
-| `pollInterval` | 2 seconds | Polling interval (for POLLING strategy) |
+| Option                    | Default   | Description                             |
+| ------------------------- | --------- | --------------------------------------- |
+| `strategy`                | `AUTO`    | Delivery strategy (SSE, POLLING, AUTO)  |
+| `sseReconnectInterval`    | 5 seconds | Time between reconnection attempts      |
+| `sseMaxReconnectAttempts` | 10        | Maximum reconnection attempts           |
+| `pollInterval`            | 2 seconds | Polling interval (for POLLING strategy) |
 
 ### Force SSE Strategy
 
@@ -361,14 +361,14 @@ ClientConfig config = ClientConfig.builder()
 
 ## SSE vs Polling Comparison
 
-| Aspect | SSE | Polling |
-|--------|-----|---------|
-| Latency | Instant delivery | Poll interval delay |
-| Connection | Persistent | Per request |
-| Resource usage | Lower (single connection) | Higher (repeated requests) |
-| Firewall friendly | Usually works | Always works |
-| Recovery | Auto-reconnect | Natural retry |
-| Best for | Real-time requirements | Firewall-restricted environments |
+| Aspect            | SSE                       | Polling                          |
+| ----------------- | ------------------------- | -------------------------------- |
+| Latency           | Instant delivery          | Poll interval delay              |
+| Connection        | Persistent                | Per request                      |
+| Resource usage    | Lower (single connection) | Higher (repeated requests)       |
+| Firewall friendly | Usually works             | Always works                     |
+| Recovery          | Auto-reconnect            | Natural retry                    |
+| Best for          | Real-time requirements    | Firewall-restricted environments |
 
 ## Advanced Patterns
 

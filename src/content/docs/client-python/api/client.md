@@ -28,19 +28,19 @@ Creates a new VaultSandbox client instance.
 
 ### Parameters
 
-| Parameter                   | Type                      | Required | Default                          | Description                                         |
-| --------------------------- | ------------------------- | -------- | -------------------------------- | --------------------------------------------------- |
-| `api_key`                   | `str`                     | Yes      | -                                | Your API authentication key                         |
-| `base_url`                  | `str`                     | No       | `https://smtp.vaultsandbox.com`  | Gateway URL                                         |
-| `timeout`                   | `int`                     | No       | `30000`                          | HTTP request timeout in milliseconds                |
-| `max_retries`               | `int`                     | No       | `3`                              | Maximum retry attempts for HTTP requests            |
-| `retry_delay`               | `int`                     | No       | `1000`                           | Base delay in milliseconds between retries          |
-| `retry_on_status_codes`     | `tuple[int, ...]`         | No       | `(408, 429, 500, 502, 503, 504)` | HTTP status codes that trigger a retry              |
-| `strategy`                  | `DeliveryStrategyType`    | No       | `AUTO`                           | Email delivery strategy                             |
-| `polling_interval`          | `int`                     | No       | `2000`                           | Polling interval in milliseconds                    |
-| `polling_max_backoff`       | `int`                     | No       | `30000`                          | Maximum backoff delay in milliseconds               |
-| `sse_reconnect_interval`    | `int`                     | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
-| `sse_max_reconnect_attempts`| `int`                     | No       | `10`                             | Maximum SSE reconnection attempts                   |
+| Parameter                    | Type                   | Required | Default                          | Description                                |
+| ---------------------------- | ---------------------- | -------- | -------------------------------- | ------------------------------------------ |
+| `api_key`                    | `str`                  | Yes      | -                                | Your API authentication key                |
+| `base_url`                   | `str`                  | No       | `https://smtp.vaultsandbox.com`  | Gateway URL                                |
+| `timeout`                    | `int`                  | No       | `30000`                          | HTTP request timeout in milliseconds       |
+| `max_retries`                | `int`                  | No       | `3`                              | Maximum retry attempts for HTTP requests   |
+| `retry_delay`                | `int`                  | No       | `1000`                           | Base delay in milliseconds between retries |
+| `retry_on_status_codes`      | `tuple[int, ...]`      | No       | `(408, 429, 500, 502, 503, 504)` | HTTP status codes that trigger a retry     |
+| `strategy`                   | `DeliveryStrategyType` | No       | `AUTO`                           | Email delivery strategy                    |
+| `polling_interval`           | `int`                  | No       | `2000`                           | Polling interval in milliseconds           |
+| `polling_max_backoff`        | `int`                  | No       | `30000`                          | Maximum backoff delay in milliseconds      |
+| `sse_reconnect_interval`     | `int`                  | No       | `5000`                           | Initial delay before SSE reconnection (ms) |
+| `sse_max_reconnect_attempts` | `int`                  | No       | `10`                             | Maximum SSE reconnection attempts          |
 
 ### Example
 
@@ -93,10 +93,10 @@ class CreateInboxOptions:
     email_address: str | None = None
 ```
 
-| Property       | Type          | Description                                                                                |
-| -------------- | ------------- | ------------------------------------------------------------------------------------------ |
-| `ttl`          | `int \| None` | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
-| `email_address`| `str \| None` | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| Property        | Type          | Description                                                                                |
+| --------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| `ttl`           | `int \| None` | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
+| `email_address` | `str \| None` | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
 
 #### Returns
 
@@ -188,15 +188,15 @@ class ServerInfo:
     allowed_domains: list[str]
 ```
 
-| Property         | Type            | Description                                               |
-| ---------------- | --------------- | --------------------------------------------------------- |
-| `server_sig_pk`  | `str`           | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`           | `dict[str, str]`| Cryptographic algorithms supported by the server          |
-| `context`        | `str`           | Context string for the encryption scheme                  |
-| `max_ttl`        | `int`           | Maximum time-to-live for inboxes in seconds               |
-| `default_ttl`    | `int`           | Default time-to-live for inboxes in seconds               |
-| `sse_console`    | `bool`          | Whether the server SSE console is enabled                 |
-| `allowed_domains`| `list[str]`     | List of domains allowed for inbox creation                |
+| Property          | Type             | Description                                               |
+| ----------------- | ---------------- | --------------------------------------------------------- |
+| `server_sig_pk`   | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`            | `dict[str, str]` | Cryptographic algorithms supported by the server          |
+| `context`         | `str`            | Context string for the encryption scheme                  |
+| `max_ttl`         | `int`            | Maximum time-to-live for inboxes in seconds               |
+| `default_ttl`     | `int`            | Default time-to-live for inboxes in seconds               |
+| `sse_console`     | `bool`           | Whether the server SSE console is enabled                 |
+| `allowed_domains` | `list[str]`      | List of domains allowed for inbox creation                |
 
 #### Example
 
@@ -308,14 +308,16 @@ def export_inbox(self, inbox_or_email: Inbox | str) -> ExportedInbox
 ```python
 @dataclass
 class ExportedInbox:
+    version: int            # Export format version (always 1)
     email_address: str
     expires_at: str
     inbox_hash: str
-    server_sig_pk: str
-    public_key_b64: str
-    secret_key_b64: str
+    server_sig_pk: str      # Base64url-encoded
+    secret_key: str         # Base64url-encoded (SENSITIVE!)
     exported_at: str
 ```
+
+Note: The public key is derived from the secret key during import.
 
 #### Example
 
@@ -362,12 +364,12 @@ with open("inbox-backup.json") as f:
     data = json.load(f)
 
 exported = ExportedInbox(
+    version=data["version"],
     email_address=data["emailAddress"],
     expires_at=data["expiresAt"],
     inbox_hash=data["inboxHash"],
     server_sig_pk=data["serverSigPk"],
-    public_key_b64=data["publicKeyB64"],
-    secret_key_b64=data["secretKeyB64"],
+    secret_key=data["secretKey"],
     exported_at=data.get("exportedAt", ""),
 )
 
@@ -380,6 +382,7 @@ emails = await inbox.list_emails()
 
 #### Errors
 
+- `UnsupportedVersionError` - Export version is not supported
 - `InboxAlreadyExistsError` - Inbox is already imported in this client
 - `InvalidImportDataError` - Import data is invalid or corrupted
 - `ApiError` - Server rejected the import (inbox may not exist)

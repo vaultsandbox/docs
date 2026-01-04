@@ -52,22 +52,22 @@ default_output: pretty
 
 ### Config File Options
 
-| Key | Description | Default |
-|-----|-------------|---------|
-| `api_key` | Your VaultSandbox API key | - |
-| `base_url` | Gateway server URL | - |
+| Key              | Description                        | Default  |
+| ---------------- | ---------------------------------- | -------- |
+| `api_key`        | Your VaultSandbox API key          | -        |
+| `base_url`       | Gateway server URL                 | -        |
 | `default_output` | Output format (`pretty` or `json`) | `pretty` |
 
 Note: `default_output` can only be set by editing the config file directly. The `vsb config set` command only supports `api-key` and `base-url`.
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `VSB_API_KEY` | Your VaultSandbox API key |
-| `VSB_BASE_URL` | Gateway URL |
+| Variable         | Description               |
+| ---------------- | ------------------------- |
+| `VSB_API_KEY`    | Your VaultSandbox API key |
+| `VSB_BASE_URL`   | Gateway URL               |
 | `VSB_CONFIG_DIR` | Override config directory |
-| `VSB_OUTPUT` | Default output format |
+| `VSB_OUTPUT`     | Default output format     |
 
 Example:
 
@@ -81,9 +81,9 @@ vsb inbox create
 
 These flags work with any command:
 
-| Flag | Description |
-|------|-------------|
-| `--config` | Specify config file path |
+| Flag           | Description                       |
+| -------------- | --------------------------------- |
+| `--config`     | Specify config file path          |
 | `-o, --output` | Output format: `pretty` or `json` |
 
 Example:
@@ -96,9 +96,9 @@ vsb inbox list --output json
 
 The CLI stores data in `~/.config/vsb/`:
 
-| File | Description |
-|------|-------------|
-| `config.yaml` | Configuration settings |
+| File            | Description                         |
+| --------------- | ----------------------------------- |
+| `config.yaml`   | Configuration settings              |
 | `keystore.json` | Inbox private keys (base64-encoded) |
 
 :::caution

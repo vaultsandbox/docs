@@ -9,10 +9,10 @@ This guide covers deploying VaultSandbox using Docker Compose, from basic develo
 
 Choose your setup method:
 
-| Method | Variables | DNS Setup | Best For |
-|--------|-----------|-----------|----------|
-| **VSX DNS** | 1 | Automatic | Quick testing, CI/CD, getting started |
-| **Custom Domain** | 2 | Manual | Production, compliance, branding |
+| Method            | Variables | DNS Setup | Best For                              |
+| ----------------- | --------- | --------- | ------------------------------------- |
+| **VSX DNS**       | 1         | Automatic | Quick testing, CI/CD, getting started |
+| **Custom Domain** | 2         | Manual    | Production, compliance, branding      |
 
 ### Option 1: VSX DNS (Simplest)
 
@@ -77,8 +77,8 @@ VaultSandbox runs as a single unified gateway service that includes the SMTP ser
 
 ### VSX DNS Mode
 
-| Variable | Description |
-|----------|-------------|
+| Variable              | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
 | `VSB_VSX_DNS_ENABLED` | Set to `true` to enable automatic DNS via [vsx.email](https://vsx.email) |
 
 ### Custom Domain Mode

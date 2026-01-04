@@ -15,14 +15,14 @@ vsb export [email-address] [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
+| Argument        | Description                                    |
+| --------------- | ---------------------------------------------- |
 | `email-address` | Inbox to export (uses active inbox if omitted) |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag    | Description                                |
+| ------- | ------------------------------------------ |
 | `--out` | Output file path (default: `<email>.json`) |
 
 ### Examples
@@ -52,25 +52,26 @@ The export file is a JSON document containing:
 
 ```json
 {
-  "version": 1,
-  "emailAddress": "test@abc123.vsx.email",
-  "inboxHash": "abc123",
-  "expiresAt": "2024-01-16T14:30:00Z",
-  "exportedAt": "2024-01-15T14:30:00Z",
-  "keys": {
-    "kemPrivate": "...",
-    "kemPublic": "...",
-    "serverSigPk": "..."
-  }
+	"version": 1,
+	"emailAddress": "test@abc123.vsx.email",
+	"inboxHash": "abc123",
+	"expiresAt": "2024-01-16T14:30:00Z",
+	"exportedAt": "2024-01-15T14:30:00Z",
+	"keys": {
+		"kemPrivate": "...",
+		"kemPublic": "...",
+		"serverSigPk": "..."
+	}
 }
 ```
 
 :::caution
 Export files contain private encryption keys. Handle them as sensitive data:
+
 - Do not commit to version control
 - Do not share over insecure channels
 - Delete after use if no longer needed
-:::
+  :::
 
 ---
 
@@ -84,15 +85,15 @@ vsb import <file> [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `file` | Path to export file |
+| Argument | Description         |
+| -------- | ------------------- |
+| `file`   | Path to export file |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
-| `-l, --local` | Skip server verification |
+| Flag          | Description                       |
+| ------------- | --------------------------------- |
+| `-l, --local` | Skip server verification          |
 | `-f, --force` | Overwrite if inbox already exists |
 
 ### Examples

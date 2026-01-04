@@ -178,10 +178,10 @@ async with VaultSandboxClient(
 
 ### Polling Configuration Options
 
-| Option                | Type  | Default | Description                        |
-| --------------------- | ----- | ------- | ---------------------------------- |
-| `polling_interval`    | `int` | `2000`  | How often to poll for emails (ms)  |
-| `polling_max_backoff` | `int` | `30000` | Maximum backoff delay (ms)         |
+| Option                | Type  | Default | Description                       |
+| --------------------- | ----- | ------- | --------------------------------- |
+| `polling_interval`    | `int` | `2000`  | How often to poll for emails (ms) |
+| `polling_max_backoff` | `int` | `30000` | Maximum backoff delay (ms)        |
 
 ### Backoff Behavior
 

@@ -293,7 +293,14 @@ try {
 
 ### InvalidImportDataError
 
-Thrown when imported inbox data fails validation (missing fields, invalid keys, server mismatch, etc.).
+Thrown when imported inbox data fails validation. The SDK validates:
+
+- **Version**: Export format version must be supported (currently version 1)
+- **Required fields**: All fields must be present and non-empty
+- **Email format**: Must contain exactly one `@` character
+- **Key encoding**: Keys must be valid base64url
+- **Key sizes**: `secretKey` must decode to 2400 bytes, `serverSigPk` must decode to 1952 bytes
+- **Server match**: Server public key must match the connected server
 
 ```typescript
 class InvalidImportDataError extends VaultSandboxError {
@@ -312,7 +319,12 @@ try {
 } catch (error) {
 	if (error instanceof InvalidImportDataError) {
 		console.error('Invalid import data:', error.message);
-		console.error('The exported data may be corrupted or from a different server');
+		// Common causes:
+		// - "Unsupported version: X, expected 1"
+		// - "Missing or invalid field: secretKey"
+		// - "Invalid email address: must contain exactly one @ character"
+		// - "Invalid base64url encoding in secret key"
+		// - "Invalid server public key size: expected 1952, got X"
 	}
 }
 ```
@@ -321,7 +333,11 @@ try {
 
 ### DecryptionError
 
-Thrown if the client fails to decrypt an email. This is rare and may indicate data corruption or a bug.
+Thrown if the client fails to decrypt an email. The SDK validates the encrypted payload before decryption:
+
+- **Protocol version**: Must match expected version (currently 1)
+- **Algorithm suite**: Must use ML-KEM-768, ML-DSA-65, AES-256-GCM, HKDF-SHA-512
+- **Component sizes**: ct_kem (1088 bytes), nonce (12 bytes), signature (3309 bytes), server_sig_pk (1952 bytes)
 
 ```typescript
 class DecryptionError extends VaultSandboxError {
@@ -339,7 +355,11 @@ try {
 } catch (error) {
 	if (error instanceof DecryptionError) {
 		console.error('Failed to decrypt email:', error.message);
-		console.error('This is a critical error - please report it');
+		// Common causes:
+		// - "Unsupported protocol version: X, expected 1"
+		// - "Unsupported KEM algorithm: X"
+		// - "Invalid ct_kem size: expected 1088, got X"
+		// - Actual decryption failures (rare)
 
 		// Log for investigation
 		console.error('Inbox:', inbox.emailAddress);
@@ -352,6 +372,8 @@ try {
 
 Decryption errors should **always** be logged and investigated as they may indicate:
 
+- Unsupported protocol version or algorithms
+- Invalid cryptographic component sizes
 - Data corruption
 - SDK bug
 - MITM attack (rare)

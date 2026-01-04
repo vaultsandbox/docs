@@ -9,11 +9,11 @@ VaultSandbox allows you to export and import inboxes, including their encryption
 
 When you export an inbox, you get an `InboxExport` record containing:
 
+- Version (always 1)
 - Email address
 - Inbox identifier (hash)
 - Expiration time
-- **Public encryption key** (base64-encoded)
-- **Secret encryption key** (sensitive!)
+- **Secret encryption key** (sensitive! public key is derived from this)
 - **Server public signing key**
 - Export timestamp
 
@@ -31,7 +31,7 @@ This exported data can be imported into another client instance, allowing you to
 - Commit exported data to version control
 - Share exported data over insecure channels
 - Store exported data in plaintext in production
-- Log exported data (contains `SecretKeyB64`)
+- Log exported data (contains `SecretKey`)
 
 **Always:**
 
@@ -40,7 +40,7 @@ This exported data can be imported into another client instance, allowing you to
 - Use secure channels for sharing
 - Rotate/delete inboxes after use
 - Add `*.inbox.json` to your `.gitignore`
-:::
+  :::
 
 ## Use Cases
 
@@ -220,12 +220,12 @@ var inbox = await client.CreateInboxAsync();
 var data = await inbox.ExportAsync();
 
 // InboxExport contains:
+// - Version: 1
 // - EmailAddress: "test123@inbox.vaultsandbox.com"
 // - InboxHash: "abc123..."
 // - ExpiresAt: DateTimeOffset (when inbox expires)
-// - ServerSigPk: "base64-encoded-server-signing-key"
-// - PublicKeyB64: "base64-encoded-public-key"
-// - SecretKeyB64: "base64-encoded-secret-key"
+// - ServerSigPk: "base64url-encoded-server-signing-key"
+// - SecretKey: "base64url-encoded-secret-key" (public key derived from this)
 // - ExportedAt: DateTimeOffset (when export was created)
 
 // Save to file
@@ -251,15 +251,15 @@ await client.ExportInboxToFileAsync(inbox, "./backups/inbox.json");
 
 ### InboxExport Record
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `EmailAddress` | `string` | Inbox email address |
-| `InboxHash` | `string` | Unique inbox identifier |
-| `ExpiresAt` | `DateTimeOffset` | When the inbox expires |
-| `ServerSigPk` | `string` | Server signing public key (base64) |
-| `PublicKeyB64` | `string` | ML-KEM public key (base64) |
-| `SecretKeyB64` | `string` | ML-KEM secret key (base64, **sensitive!**) |
-| `ExportedAt` | `DateTimeOffset` | When this export was created |
+| Property       | Type             | Description                                                                                    |
+| -------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
+| `Version`      | `int`            | Export format version (always 1)                                                               |
+| `EmailAddress` | `string`         | Inbox email address                                                                            |
+| `InboxHash`    | `string`         | Unique inbox identifier                                                                        |
+| `ExpiresAt`    | `DateTimeOffset` | When the inbox expires (ISO 8601)                                                              |
+| `ServerSigPk`  | `string`         | Server ML-DSA-65 signing public key (base64url)                                                |
+| `SecretKey`    | `string`         | ML-KEM-768 secret key (base64url, **sensitive!**). Public key is derived from bytes 1152-2400. |
+| `ExportedAt`   | `DateTimeOffset` | When this export was created (ISO 8601)                                                        |
 
 ## Import Methods
 
@@ -401,7 +401,16 @@ using (var stream = File.OpenRead("backup.json"))
 
 ## Import Validation
 
-The SDK validates imported data and throws exceptions for invalid imports:
+The SDK performs comprehensive validation when importing inbox data:
+
+1. **Version validation** - Must be version 1
+2. **Required fields** - `EmailAddress`, `InboxHash`, `SecretKey`, and `ServerSigPk` must be present
+3. **Email format** - Must contain exactly one `@` character
+4. **Expiration check** - Inbox must not be expired
+5. **Base64URL encoding** - Keys must be valid base64url (rejects standard Base64 with `+`, `/`, `=`)
+6. **Key sizes** - Secret key must be 2400 bytes (ML-KEM-768), server signing key must be 1952 bytes (ML-DSA-65)
+
+The SDK throws exceptions for invalid imports:
 
 ```csharp
 using VaultSandbox.Client.Exceptions;
@@ -414,10 +423,12 @@ catch (InvalidImportDataException ex)
 {
     Console.WriteLine($"Invalid import data: {ex.Message}");
     // Possible causes:
+    // - Unsupported export version
     // - Missing required fields
-    // - Invalid encryption keys
-    // - Server URL mismatch
-    // - Corrupted JSON
+    // - Invalid email address format
+    // - Invalid Base64URL encoding
+    // - Invalid key sizes
+    // - Inbox has expired
 }
 catch (InboxAlreadyExistsException)
 {

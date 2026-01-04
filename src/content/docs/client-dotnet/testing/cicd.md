@@ -414,7 +414,7 @@ stages:
   - test
 
 variables:
-  DOTNET_VERSION: "9.0"
+  DOTNET_VERSION: '9.0'
 
 email-tests:
   stage: test
@@ -510,11 +510,11 @@ Set these environment variables in your CI platform:
 
 ### Optional Variables
 
-| Variable                  | Description                 | Default  |
-| ------------------------- | --------------------------- | -------- |
-| `VAULTSANDBOX_STRATEGY`   | Delivery strategy           | `Auto`   |
-| `VAULTSANDBOX_TIMEOUT_MS` | Default timeout (ms)        | `30000`  |
-| `VAULTSANDBOX_POLL_MS`    | Polling interval (ms)       | `2000`   |
+| Variable                  | Description           | Default |
+| ------------------------- | --------------------- | ------- |
+| `VAULTSANDBOX_STRATEGY`   | Delivery strategy     | `Auto`  |
+| `VAULTSANDBOX_TIMEOUT_MS` | Default timeout (ms)  | `30000` |
+| `VAULTSANDBOX_POLL_MS`    | Polling interval (ms) | `2000`  |
 
 ### Configuration Helper
 

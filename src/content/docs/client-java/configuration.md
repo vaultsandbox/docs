@@ -31,32 +31,32 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `apiKey` | `String` | required | API key for authentication |
-| `baseUrl` | `String` | required | Gateway API endpoint URL |
-| `strategy` | `StrategyType` | `AUTO` | Email delivery strategy |
-| `httpTimeout` | `Duration` | 30s | HTTP request timeout |
-| `waitTimeout` | `Duration` | 30s | Default email wait timeout |
-| `maxRetries` | `int` | 3 | Maximum retry attempts |
-| `retryDelay` | `Duration` | 1s | Initial retry delay |
-| `retryOn` | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry |
-| `sseReconnectInterval` | `Duration` | 5s | SSE reconnection interval |
-| `sseMaxReconnectAttempts` | `int` | 10 | Max SSE reconnection attempts |
-| `pollInterval` | `Duration` | 2s | Polling check frequency |
-| `maxBackoff` | `Duration` | 30s | Maximum backoff duration |
-| `backoffMultiplier` | `double` | 1.5 | Exponential backoff factor |
-| `jitterFactor` | `double` | 0.3 | Random jitter factor (0-1) |
+| Option                    | Type           | Default           | Description                   |
+| ------------------------- | -------------- | ----------------- | ----------------------------- |
+| `apiKey`                  | `String`       | required          | API key for authentication    |
+| `baseUrl`                 | `String`       | required          | Gateway API endpoint URL      |
+| `strategy`                | `StrategyType` | `AUTO`            | Email delivery strategy       |
+| `httpTimeout`             | `Duration`     | 30s               | HTTP request timeout          |
+| `waitTimeout`             | `Duration`     | 30s               | Default email wait timeout    |
+| `maxRetries`              | `int`          | 3                 | Maximum retry attempts        |
+| `retryDelay`              | `Duration`     | 1s                | Initial retry delay           |
+| `retryOn`                 | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry    |
+| `sseReconnectInterval`    | `Duration`     | 5s                | SSE reconnection interval     |
+| `sseMaxReconnectAttempts` | `int`          | 10                | Max SSE reconnection attempts |
+| `pollInterval`            | `Duration`     | 2s                | Polling check frequency       |
+| `maxBackoff`              | `Duration`     | 30s               | Maximum backoff duration      |
+| `backoffMultiplier`       | `double`       | 1.5               | Exponential backoff factor    |
+| `jitterFactor`            | `double`       | 0.3               | Random jitter factor (0-1)    |
 
 ## Delivery Strategies
 
 The `strategy` option controls how the client receives emails:
 
-| Strategy | Description | Best For |
-|----------|-------------|----------|
-| `AUTO` | Tries SSE first, falls back to polling | Most use cases (recommended) |
-| `SSE` | Server-Sent Events for real-time delivery | Low-latency requirements |
-| `POLLING` | Periodic HTTP requests | CI/CD, firewalled environments |
+| Strategy  | Description                               | Best For                       |
+| --------- | ----------------------------------------- | ------------------------------ |
+| `AUTO`    | Tries SSE first, falls back to polling    | Most use cases (recommended)   |
+| `SSE`     | Server-Sent Events for real-time delivery | Low-latency requirements       |
+| `POLLING` | Periodic HTTP requests                    | CI/CD, firewalled environments |
 
 ```java
 import com.vaultsandbox.client.StrategyType;

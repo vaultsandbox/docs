@@ -2,11 +2,11 @@
 // Update these values when releasing new versions
 
 export const versions = {
-  dotnet: "0.5.1",
-  java: "0.5.2",
-  go: "0.5.1",
-  node: "0.5.1",
-  python: "0.5.1",
+	dotnet: '0.6.0',
+	java: '0.6.0',
+	go: '0.6.0',
+	node: '0.6.0',
+	python: '0.6.0',
 } as const;
 
 export type ClientName = keyof typeof versions;

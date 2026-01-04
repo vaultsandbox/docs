@@ -445,6 +445,67 @@ See the [Authentication Guide](/client-go/guides/authentication/) for more detai
 
 ---
 
+## EmailMetadata
+
+The `EmailMetadata` type represents email metadata without the full content. Use this for efficient email list displays when you don't need the body or attachments.
+
+```go
+type EmailMetadata struct {
+    ID         string
+    From       string
+    Subject    string
+    ReceivedAt time.Time
+    IsRead     bool
+}
+```
+
+### Fields
+
+| Field        | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| `ID`         | `string`    | Unique identifier for the email           |
+| `From`       | `string`    | Sender's email address                    |
+| `Subject`    | `string`    | Email subject line                        |
+| `ReceivedAt` | `time.Time` | When the email was received               |
+| `IsRead`     | `bool`      | Whether the email has been marked as read |
+
+### Example
+
+```go
+// Get metadata only for efficient listing
+emails, err := inbox.GetEmailsMetadataOnly(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Display summary
+for _, meta := range emails {
+    fmt.Printf("%s: %s (from %s)\n", meta.ReceivedAt.Format(time.RFC822), meta.Subject, meta.From)
+}
+
+// Fetch full content when user selects an email
+if len(emails) > 0 {
+    fullEmail, err := inbox.GetEmail(ctx, emails[0].ID)
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf("Body: %s\n", fullEmail.Text)
+}
+```
+
+### When to Use EmailMetadata vs Email
+
+| Use Case                         | Type            |
+| -------------------------------- | --------------- |
+| Displaying email list/inbox view | `EmailMetadata` |
+| Reading email content            | `Email`         |
+| Checking unread count            | `EmailMetadata` |
+| Processing attachments           | `Email`         |
+| Extracting links                 | `Email`         |
+| Quick subject/sender check       | `EmailMetadata` |
+
+---
+
 ## Operations on Emails
 
 `Email` is a pure data struct with no methods. Use `Inbox` methods to perform operations on emails:

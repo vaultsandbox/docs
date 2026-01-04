@@ -9,13 +9,15 @@ VaultSandbox allows you to export and import inboxes, including their encryption
 
 When you export an inbox, you get a data structure containing:
 
+- **Version** (export format version, always 1)
 - Email address
 - Inbox identifier
 - Expiration time
-- **Public encryption key** (base64-encoded)
-- **Secret encryption key** (sensitive!)
-- **Server public signing key**
+- **Secret encryption key** (base64url-encoded, sensitive!)
+- **Server public signing key** (base64url-encoded)
 - Export timestamp
+
+Note: The public key is derived from the secret key during import, so it is not stored in the export.
 
 This exported data can be imported into another client instance, allowing you to access the same inbox from different environments or at different times.
 
@@ -142,12 +144,12 @@ async def export_from_dev():
         # Save to shared location
         Path("./shared/staging-inbox.json").write_text(
             json.dumps({
+                "version": exported.version,
                 "emailAddress": exported.email_address,
                 "expiresAt": exported.expires_at,
                 "inboxHash": exported.inbox_hash,
                 "serverSigPk": exported.server_sig_pk,
-                "publicKeyB64": exported.public_key_b64,
-                "secretKeyB64": exported.secret_key_b64,
+                "secretKey": exported.secret_key,
                 "exportedAt": exported.exported_at,
             }, indent=2)
         )
@@ -214,12 +216,12 @@ Returns an `ExportedInbox` dataclass with the inbox data:
 inbox = await client.create_inbox()
 exported = inbox.export()
 
+print(exported.version)          # 1
 print(exported.email_address)    # test123@inbox.vaultsandbox.com
 print(exported.inbox_hash)       # abc123...
 print(exported.expires_at)       # 2024-12-01T12:00:00.000Z
-print(exported.server_sig_pk)    # base64-encoded-server-signing-key
-print(exported.public_key_b64)   # base64-encoded-public-key
-print(exported.secret_key_b64)   # base64-encoded-secret-key
+print(exported.server_sig_pk)    # base64url-encoded-server-signing-key
+print(exported.secret_key)       # base64url-encoded-secret-key
 print(exported.exported_at)      # 2024-11-30T08:00:00.000Z
 ```
 
@@ -230,12 +232,12 @@ import json
 from pathlib import Path
 
 data = {
+    "version": exported.version,
     "emailAddress": exported.email_address,
     "expiresAt": exported.expires_at,
     "inboxHash": exported.inbox_hash,
     "serverSigPk": exported.server_sig_pk,
-    "publicKeyB64": exported.public_key_b64,
-    "secretKeyB64": exported.secret_key_b64,
+    "secretKey": exported.secret_key,
     "exportedAt": exported.exported_at,
 }
 Path("inbox.json").write_text(json.dumps(data, indent=2))
@@ -295,12 +297,12 @@ from pathlib import Path
 data = json.loads(Path("./backup.json").read_text())
 
 exported = ExportedInbox(
+    version=data["version"],
     email_address=data["emailAddress"],
     expires_at=data["expiresAt"],
     inbox_hash=data["inboxHash"],
     server_sig_pk=data["serverSigPk"],
-    public_key_b64=data["publicKeyB64"],
-    secret_key_b64=data["secretKeyB64"],
+    secret_key=data["secretKey"],
     exported_at=data.get("exportedAt", ""),
 )
 
@@ -338,16 +340,21 @@ The SDK validates imported data and raises errors for invalid imports:
 from vaultsandbox import (
     InvalidImportDataError,
     InboxAlreadyExistsError,
+    UnsupportedVersionError,
 )
 
 try:
     inbox = await client.import_inbox(exported)
+except UnsupportedVersionError as e:
+    print(f"Unsupported export version: {e}")
+    # The export file was created with an incompatible version
 except InvalidImportDataError as e:
     print(f"Invalid import data: {e}")
     # Possible causes:
-    # - Missing required fields
-    # - Invalid encryption keys
-    # - Server URL mismatch
+    # - Missing required fields (version, emailAddress, secretKey, etc.)
+    # - Invalid encryption keys (wrong size or encoding)
+    # - Server signing key mismatch
+    # - Invalid email address format
     # - Corrupted JSON
 except InboxAlreadyExistsError as e:
     print(f"Inbox already imported in this client: {e}")
@@ -361,14 +368,16 @@ The `ExportedInbox` dataclass contains all data needed to reconstruct an inbox:
 ```python
 @dataclass
 class ExportedInbox:
+    version: int            # Export format version (always 1)
     email_address: str      # The email address assigned to the inbox
     expires_at: str         # ISO 8601 timestamp when the inbox expires
     inbox_hash: str         # SHA-256 hash of the client KEM public key
-    server_sig_pk: str      # Server signing public key for verification
-    public_key_b64: str     # Base64-encoded client public key
-    secret_key_b64: str     # Base64-encoded client secret key (SENSITIVE!)
+    server_sig_pk: str      # Server signing public key (base64url-encoded)
+    secret_key: str         # ML-KEM-768 secret key (base64url-encoded, SENSITIVE!)
     exported_at: str        # ISO 8601 timestamp when the inbox was exported
 ```
+
+Note: The public key is not stored because it can be derived from the secret key during import.
 
 ## Complete Examples
 
@@ -500,12 +509,12 @@ def export_inbox_securely(inbox, password: str) -> bytes:
     """Export inbox with password encryption."""
     exported = inbox.export()
     data = json.dumps({
+        "version": exported.version,
         "emailAddress": exported.email_address,
         "expiresAt": exported.expires_at,
         "inboxHash": exported.inbox_hash,
         "serverSigPk": exported.server_sig_pk,
-        "publicKeyB64": exported.public_key_b64,
-        "secretKeyB64": exported.secret_key_b64,
+        "secretKey": exported.secret_key,
         "exportedAt": exported.exported_at,
     })
 
@@ -598,17 +607,17 @@ def export_with_metadata(inbox) -> dict:
     exported = inbox.export()
 
     return {
-        "version": "1.0",
+        "wrapperVersion": "1.0",
         "exportedAt": datetime.utcnow().isoformat() + "Z",
         "exportedBy": getpass.getuser(),
         "environment": os.environ.get("ENV", "unknown"),
         "inbox": {
+            "version": exported.version,
             "emailAddress": exported.email_address,
             "expiresAt": exported.expires_at,
             "inboxHash": exported.inbox_hash,
             "serverSigPk": exported.server_sig_pk,
-            "publicKeyB64": exported.public_key_b64,
-            "secretKeyB64": exported.secret_key_b64,
+            "secretKey": exported.secret_key,
             "exportedAt": exported.exported_at,
         },
     }
@@ -623,12 +632,12 @@ async def import_with_metadata(client, data: dict):
 
     inbox_data = data["inbox"]
     exported = ExportedInbox(
+        version=inbox_data["version"],
         email_address=inbox_data["emailAddress"],
         expires_at=inbox_data["expiresAt"],
         inbox_hash=inbox_data["inboxHash"],
         server_sig_pk=inbox_data["serverSigPk"],
-        public_key_b64=inbox_data["publicKeyB64"],
-        secret_key_b64=inbox_data["secretKeyB64"],
+        secret_key=inbox_data["secretKey"],
         exported_at=inbox_data.get("exportedAt", ""),
     )
 

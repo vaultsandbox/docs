@@ -64,12 +64,12 @@ public static class VaultSandboxTelemetry
 }
 ```
 
-| Member | Type | Description |
-|--------|------|-------------|
-| `ServiceName` | `string` | Constant service name: `"VaultSandbox.Client"` |
-| `ServiceVersion` | `string` | Assembly version for telemetry |
+| Member           | Type             | Description                                     |
+| ---------------- | ---------------- | ----------------------------------------------- |
+| `ServiceName`    | `string`         | Constant service name: `"VaultSandbox.Client"`  |
+| `ServiceVersion` | `string`         | Assembly version for telemetry                  |
 | `ActivitySource` | `ActivitySource` | Source for distributed tracing activities/spans |
-| `Meter` | `Meter` | Meter for metrics collection |
+| `Meter`          | `Meter`          | Meter for metrics collection                    |
 
 ## Distributed Tracing
 
@@ -109,13 +109,13 @@ The following operations create spans:
 
 Spans include relevant attributes:
 
-| Attribute | Description |
-|-----------|-------------|
-| `vaultsandbox.inbox.address` | Email address of the inbox |
-| `vaultsandbox.inbox.hash` | Unique inbox identifier |
-| `vaultsandbox.email.id` | Email identifier (when applicable) |
-| `vaultsandbox.email.count` | Number of emails (when applicable) |
-| `vaultsandbox.operation` | Operation name |
+| Attribute                    | Description                        |
+| ---------------------------- | ---------------------------------- |
+| `vaultsandbox.inbox.address` | Email address of the inbox         |
+| `vaultsandbox.inbox.hash`    | Unique inbox identifier            |
+| `vaultsandbox.email.id`      | Email identifier (when applicable) |
+| `vaultsandbox.email.count`   | Number of emails (when applicable) |
+| `vaultsandbox.operation`     | Operation name                     |
 
 ### Example Trace Output
 
@@ -140,24 +140,24 @@ The SDK collects metrics for monitoring email testing performance and usage.
 
 Track the count of specific events:
 
-| Metric Name | Description | Unit |
-|-------------|-------------|------|
-| `vaultsandbox.inboxes.created` | Number of inboxes created | `{inbox}` |
-| `vaultsandbox.inboxes.deleted` | Number of inboxes deleted | `{inbox}` |
-| `vaultsandbox.emails.received` | Number of emails received | `{email}` |
-| `vaultsandbox.emails.deleted` | Number of emails deleted | `{email}` |
-| `vaultsandbox.api.calls` | Total API calls made | `{call}` |
-| `vaultsandbox.api.errors` | Total API errors encountered | `{error}` |
+| Metric Name                    | Description                  | Unit      |
+| ------------------------------ | ---------------------------- | --------- |
+| `vaultsandbox.inboxes.created` | Number of inboxes created    | `{inbox}` |
+| `vaultsandbox.inboxes.deleted` | Number of inboxes deleted    | `{inbox}` |
+| `vaultsandbox.emails.received` | Number of emails received    | `{email}` |
+| `vaultsandbox.emails.deleted`  | Number of emails deleted     | `{email}` |
+| `vaultsandbox.api.calls`       | Total API calls made         | `{call}`  |
+| `vaultsandbox.api.errors`      | Total API errors encountered | `{error}` |
 
 ### Histograms
 
 Track distributions of durations:
 
-| Metric Name | Description | Unit |
-|-------------|-------------|------|
+| Metric Name                        | Description                   | Unit |
+| ---------------------------------- | ----------------------------- | ---- |
 | `vaultsandbox.email.wait.duration` | Time spent waiting for emails | `ms` |
-| `vaultsandbox.decryption.duration` | Time spent decrypting emails | `ms` |
-| `vaultsandbox.api.call.duration` | Duration of API calls | `ms` |
+| `vaultsandbox.decryption.duration` | Time spent decrypting emails  | `ms` |
+| `vaultsandbox.api.call.duration`   | Duration of API calls         | `ms` |
 
 ### Metrics Configuration
 
@@ -482,6 +482,7 @@ public async Task ProcessUserRegistrationAsync(string email)
 ### No Traces Appearing
 
 1. Verify the ActivitySource is registered:
+
 ```csharp
 .AddSource(VaultSandboxTelemetry.ActivitySource.Name)
 ```
@@ -492,6 +493,7 @@ public async Task ProcessUserRegistrationAsync(string email)
 ### No Metrics Appearing
 
 1. Verify the Meter is registered:
+
 ```csharp
 .AddMeter(VaultSandboxTelemetry.Meter.Name)
 ```

@@ -17,23 +17,29 @@ This guide covers installing the VaultSandbox Java SDK and verifying your setup.
 ## Add the Dependency
 
 <Tabs>
-  <TabItem label="Gradle (Groovy)">
-<pre><code class="language-groovy">{`dependencies {
+	<TabItem label="Gradle (Groovy)">
+		<pre>
+			<code class="language-groovy">{`dependencies {
     implementation 'com.vaultsandbox:client:${versions.java}'
-}`}</code></pre>
-  </TabItem>
-  <TabItem label="Gradle (Kotlin)">
-<pre><code class="language-kotlin">{`dependencies {
+}`}</code>
+		</pre>
+	</TabItem>
+	<TabItem label="Gradle (Kotlin)">
+		<pre>
+			<code class="language-kotlin">{`dependencies {
     implementation("com.vaultsandbox:client:${versions.java}")
-}`}</code></pre>
-  </TabItem>
-  <TabItem label="Maven">
-<pre><code class="language-xml">{`<dependency>
+}`}</code>
+		</pre>
+	</TabItem>
+	<TabItem label="Maven">
+		<pre>
+			<code class="language-xml">{`<dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
     <version>${versions.java}</version>
-</dependency>`}</code></pre>
-  </TabItem>
+</dependency>`}</code>
+		</pre>
+	</TabItem>
 </Tabs>
 
 ## Test Dependency
@@ -41,36 +47,42 @@ This guide covers installing the VaultSandbox Java SDK and verifying your setup.
 If you only need the SDK for testing, add it as a test dependency:
 
 <Tabs>
-  <TabItem label="Gradle (Groovy)">
-<pre><code class="language-groovy">{`dependencies {
+	<TabItem label="Gradle (Groovy)">
+		<pre>
+			<code class="language-groovy">{`dependencies {
     testImplementation 'com.vaultsandbox:client:${versions.java}'
-}`}</code></pre>
-  </TabItem>
-  <TabItem label="Gradle (Kotlin)">
-<pre><code class="language-kotlin">{`dependencies {
+}`}</code>
+		</pre>
+	</TabItem>
+	<TabItem label="Gradle (Kotlin)">
+		<pre>
+			<code class="language-kotlin">{`dependencies {
     testImplementation("com.vaultsandbox:client:${versions.java}")
-}`}</code></pre>
-  </TabItem>
-  <TabItem label="Maven">
-<pre><code class="language-xml">{`<dependency>
+}`}</code>
+		</pre>
+	</TabItem>
+	<TabItem label="Maven">
+		<pre>
+			<code class="language-xml">{`<dependency>
     <groupId>com.vaultsandbox</groupId>
     <artifactId>client</artifactId>
     <version>${versions.java}</version>
     <scope>test</scope>
-</dependency>`}</code></pre>
-  </TabItem>
+</dependency>`}</code>
+		</pre>
+	</TabItem>
 </Tabs>
 
 ## Transitive Dependencies
 
 The SDK includes these dependencies automatically:
 
-| Dependency | Version | Purpose |
-|------------|---------|---------|
-| Bouncy Castle | 1.79 | ML-KEM-768 post-quantum cryptography |
-| OkHttp | 4.12.0 | HTTP client and SSE support |
-| Gson | 2.11.0 | JSON serialization |
-| SLF4J API | 2.0.16 | Logging facade |
+| Dependency    | Version | Purpose                              |
+| ------------- | ------- | ------------------------------------ |
+| Bouncy Castle | 1.79    | ML-KEM-768 post-quantum cryptography |
+| OkHttp        | 4.12.0  | HTTP client and SSE support          |
+| Gson          | 2.11.0  | JSON serialization                   |
+| SLF4J API     | 2.0.16  | Logging facade                       |
 
 The SDK automatically registers the Bouncy Castle security provider - no manual setup required.
 
@@ -168,12 +180,12 @@ If the output shows the success message, the SDK is correctly installed.
 
 ## Platform Compatibility
 
-| Platform | Supported |
-|----------|-----------|
-| Linux | Yes |
-| macOS | Yes |
-| Windows | Yes |
-| Android | No (different crypto requirements) |
+| Platform | Supported                          |
+| -------- | ---------------------------------- |
+| Linux    | Yes                                |
+| macOS    | Yes                                |
+| Windows  | Yes                                |
+| Android  | No (different crypto requirements) |
 
 The SDK is designed for server-side JVM applications and testing frameworks.
 
@@ -216,6 +228,7 @@ mvn dependency:tree | grep bouncy
 ### Network/Proxy Issues
 
 If dependencies fail to download, check:
+
 - Network connectivity to Maven Central
 - Corporate proxy settings in `~/.gradle/gradle.properties` or `~/.m2/settings.xml`
 

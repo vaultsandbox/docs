@@ -12,6 +12,7 @@ Exported data contains private keys for email decryption. Handle with care - nev
 ## Overview
 
 Export/Import enables you to:
+
 - Persist inbox credentials to disk
 - Resume inbox access in later test runs
 - Debug email issues by replaying scenarios
@@ -23,15 +24,17 @@ Exported inbox data is stored as JSON:
 
 ```json
 {
-  "emailAddress": "abc123@vaultsandbox.com",
-  "expiresAt": "2024-01-15T10:30:00Z",
-  "inboxHash": "hash123...",
-  "serverSigPk": "base64url...",
-  "publicKeyB64": "base64url...",
-  "secretKeyB64": "base64url...",
-  "exportedAt": "2024-01-14T10:30:00Z"
+	"version": 1,
+	"emailAddress": "abc123@vaultsandbox.com",
+	"expiresAt": "2024-01-15T10:30:00Z",
+	"inboxHash": "hash123...",
+	"serverSigPk": "base64url...",
+	"secretKey": "base64url...",
+	"exportedAt": "2024-01-14T10:30:00Z"
 }
 ```
+
+The public key is not included in exports as it can be derived from the secret key during import.
 
 ## Basic Export
 
@@ -84,29 +87,30 @@ List<Email> emails = restored.listEmails();
 
 ## ExportedInbox Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `emailAddress` | `String` | Inbox email address |
-| `expiresAt` | `String` | ISO 8601 expiration timestamp |
-| `inboxHash` | `String` | Unique inbox identifier |
-| `serverSigPk` | `String` | Server signature public key |
-| `publicKeyB64` | `String` | ML-KEM-768 public key (base64url) |
-| `secretKeyB64` | `String` | ML-KEM-768 secret key (base64url) |
-| `exportedAt` | `String` | ISO 8601 export timestamp |
+| Property       | Type     | Description                                        |
+| -------------- | -------- | -------------------------------------------------- |
+| `version`      | `int`    | Export format version (currently 1)                |
+| `emailAddress` | `String` | Inbox email address                                |
+| `expiresAt`    | `String` | ISO 8601 expiration timestamp                      |
+| `inboxHash`    | `String` | Unique inbox identifier                            |
+| `serverSigPk`  | `String` | Server signature public key (ML-DSA-65, base64url) |
+| `secretKey`    | `String` | ML-KEM-768 secret key (base64url)                  |
+| `exportedAt`   | `String` | ISO 8601 export timestamp                          |
 
 ### Validation
 
 The `validate()` method performs comprehensive integrity checks:
 
-| Check | Description |
-|-------|-------------|
-| Required fields | All fields must be present and non-empty |
-| Timestamp format | `expiresAt` and `exportedAt` must be valid ISO 8601 |
-| Base64url encoding | Keys must be valid base64url-encoded strings |
-| Public key size | Must be exactly 1184 bytes (raw ML-KEM-768) |
-| Secret key size | Must be exactly 2400 bytes (raw ML-KEM-768) |
-| Key derivation | Public key must match bytes 1152-2336 of secret key |
-| Expiration | Inbox must not have expired |
+| Check                     | Description                                         |
+| ------------------------- | --------------------------------------------------- |
+| Version                   | Must be 1 (current format version)                  |
+| Required fields           | All fields must be present and non-empty            |
+| Email format              | Must contain exactly one `@` character              |
+| Timestamp format          | `expiresAt` and `exportedAt` must be valid ISO 8601 |
+| Base64url encoding        | Keys must be valid base64url-encoded strings        |
+| Secret key size           | Must be exactly 2400 bytes (raw ML-KEM-768)         |
+| Server signature key size | Must be exactly 1952 bytes (raw ML-DSA-65)          |
+| Expiration                | Inbox must not have expired                         |
 
 ```java
 ExportedInbox exported = client.exportInbox(inbox);
@@ -208,10 +212,7 @@ Inbox inbox = client.importInboxFromFile(
 for (Email email : inbox.listEmails()) {
     System.out.println("Subject: " + email.getSubject());
     System.out.println("From: " + email.getFrom());
-
-    // Get full content
-    Email full = inbox.getEmail(email.getId());
-    System.out.println("Text: " + full.getText());
+    System.out.println("Text: " + email.getText());
     System.out.println("---");
 }
 ```
@@ -368,12 +369,12 @@ class TestInboxes {
 
 ## Limitations
 
-| Limitation | Description |
-|------------|-------------|
-| Inboxes expire | Export doesn't extend TTL - inbox still expires at original time |
-| Same API key required | Import must use the same API key that created the inbox |
-| Contains private keys | Security risk if export files are leaked |
-| Metadata only | Export contains credentials, not the emails themselves |
+| Limitation            | Description                                                      |
+| --------------------- | ---------------------------------------------------------------- |
+| Inboxes expire        | Export doesn't extend TTL - inbox still expires at original time |
+| Same API key required | Import must use the same API key that created the inbox          |
+| Contains private keys | Security risk if export files are leaked                         |
+| Metadata only         | Export contains credentials, not the emails themselves           |
 
 ## Best Practices
 

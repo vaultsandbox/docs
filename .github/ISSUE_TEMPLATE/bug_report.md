@@ -4,7 +4,6 @@ about: Report an issue with the documentation
 title: ''
 labels: bug
 assignees: ''
-
 ---
 
 **Describe the issue**

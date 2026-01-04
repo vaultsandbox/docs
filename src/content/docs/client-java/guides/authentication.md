@@ -28,12 +28,12 @@ assertThat(validation.isFullyAuthenticated())
 
 VaultSandbox validates four authentication mechanisms:
 
-| Mechanism | Purpose | Result Values |
-|-----------|---------|---------------|
-| **SPF** | Validates sender IP is authorized | pass, fail, softfail, neutral, none, temperror, permerror |
-| **DKIM** | Validates email signature | pass, fail, none |
-| **DMARC** | Policy enforcement for SPF/DKIM | pass, fail, none |
-| **Reverse DNS** | Validates PTR record | pass, fail, none |
+| Mechanism       | Purpose                           | Result Values                                             |
+| --------------- | --------------------------------- | --------------------------------------------------------- |
+| **SPF**         | Validates sender IP is authorized | pass, fail, softfail, neutral, none, temperror, permerror |
+| **DKIM**        | Validates email signature         | pass, fail, none                                          |
+| **DMARC**       | Policy enforcement for SPF/DKIM   | pass, fail, none                                          |
+| **Reverse DNS** | Validates PTR record              | pass, fail, none                                          |
 
 ## Testing Individual Mechanisms
 
@@ -53,6 +53,7 @@ void shouldPassSpf() {
 ```
 
 SPF result values:
+
 - `pass` - IP is authorized
 - `fail` - IP is explicitly not authorized
 - `softfail` - IP is probably not authorized
@@ -102,6 +103,7 @@ void shouldPassDmarc() {
 ```
 
 DMARC policies:
+
 - `none` - No action, monitoring only
 - `quarantine` - Treat suspicious emails as spam
 - `reject` - Reject emails that fail authentication

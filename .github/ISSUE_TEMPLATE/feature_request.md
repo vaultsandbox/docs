@@ -4,7 +4,6 @@ about: Suggest new documentation or improvements
 title: ''
 labels: enhancement
 assignees: ''
-
 ---
 
 **What documentation is missing or could be improved?**

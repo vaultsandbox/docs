@@ -134,11 +134,13 @@ VaultSandbox automatically provisions and renews TLS certificates using Let's En
 1. Configure your mode:
 
    **VSX DNS:**
+
    ```bash
    VSB_VSX_DNS_ENABLED=true
    ```
 
    **Custom Domain:**
+
    ```bash
    VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS=qa.example.com
    VSB_CERT_ENABLED=true

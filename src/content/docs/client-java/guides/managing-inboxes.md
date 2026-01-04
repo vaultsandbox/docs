@@ -62,10 +62,10 @@ Inbox inbox = client.createInbox(
 
 ## Inbox Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `emailAddress` | `String` | The inbox email address |
-| `expiresAt` | `Instant` | When the inbox expires |
+| Property       | Type      | Description             |
+| -------------- | --------- | ----------------------- |
+| `emailAddress` | `String`  | The inbox email address |
+| `expiresAt`    | `Instant` | When the inbox expires  |
 
 ```java
 Inbox inbox = client.createInbox();
@@ -87,10 +87,6 @@ for (Email email : emails) {
     System.out.println("Received: " + email.getReceivedAt());
 }
 ```
-
-:::note
-`listEmails()` returns emails with metadata only (from, to, subject, receivedAt). Use `inbox.getEmail(id)` to fetch full content including body and attachments.
-:::
 
 ### With Stream API
 

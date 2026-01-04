@@ -14,6 +14,7 @@ If you discover a security vulnerability within this documentation (such as expo
 Please send an email to `security@vaultsandbox.com`.
 
 In your report, please include:
+
 - A clear and concise description of the vulnerability.
 - The affected documentation page or file.
 - Any potential impact of the vulnerability.
@@ -22,6 +23,7 @@ In your report, please include:
 ## Our Commitment
 
 We are committed to:
+
 - Promptly acknowledging receipt of your vulnerability report.
 - Investigating all legitimate reports thoroughly.
 - Keeping you informed of our progress during the remediation process.

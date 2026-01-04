@@ -56,22 +56,22 @@ public class ApiException extends VaultSandboxException {
 
 ### Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property     | Type  | Description                   |
+| ------------ | ----- | ----------------------------- |
 | `statusCode` | `int` | HTTP status code from the API |
 
 ### Common Status Codes
 
-| Code | Meaning | Typical Cause |
-|------|---------|---------------|
-| 400 | Bad Request | Invalid parameters |
-| 401 | Unauthorized | Invalid API key |
-| 403 | Forbidden | Insufficient permissions |
-| 404 | Not Found | Inbox or email doesn't exist |
-| 429 | Too Many Requests | Rate limited |
-| 500 | Internal Server Error | Server-side issue |
-| 502 | Bad Gateway | Gateway issue |
-| 503 | Service Unavailable | Server overloaded |
+| Code | Meaning               | Typical Cause                |
+| ---- | --------------------- | ---------------------------- |
+| 400  | Bad Request           | Invalid parameters           |
+| 401  | Unauthorized          | Invalid API key              |
+| 403  | Forbidden             | Insufficient permissions     |
+| 404  | Not Found             | Inbox or email doesn't exist |
+| 429  | Too Many Requests     | Rate limited                 |
+| 500  | Internal Server Error | Server-side issue            |
+| 502  | Bad Gateway           | Gateway issue                |
+| 503  | Service Unavailable   | Server overloaded            |
 
 ### Example
 
@@ -175,8 +175,8 @@ public class InvalidImportDataException extends VaultSandboxException {
 
 ### Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
+| Method        | Return Type    | Description               |
+| ------------- | -------------- | ------------------------- |
 | `getErrors()` | `List<String>` | List of validation errors |
 
 ### Example

@@ -9,13 +9,15 @@ VaultSandbox allows you to export and import inboxes, including their encryption
 
 When you export an inbox, you get an `ExportedInbox` struct containing:
 
+- Export format version
 - Email address
 - Inbox identifier (hash)
 - Expiration time
-- **Public encryption key** (base64-encoded)
 - **Secret encryption key** (sensitive!)
 - **Server public signing key**
 - Export timestamp
+
+The public key is not included in the export as it can be derived from the secret key.
 
 This exported data can be imported into another client instance, allowing you to access the same inbox from different environments or at different times.
 
@@ -294,15 +296,17 @@ The `ExportedInbox` struct contains:
 
 ```go
 type ExportedInbox struct {
-    EmailAddress string    `json:"emailAddress"`
-    ExpiresAt    time.Time `json:"expiresAt"`
-    InboxHash    string    `json:"inboxHash"`
-    ServerSigPk  string    `json:"serverSigPk"`
-    PublicKeyB64 string    `json:"publicKeyB64"`
-    SecretKeyB64 string    `json:"secretKeyB64"`
-    ExportedAt   time.Time `json:"exportedAt"`
+    Version      int       `json:"version"`      // Export format version (must be 1)
+    EmailAddress string    `json:"emailAddress"` // Inbox email address
+    ExpiresAt    time.Time `json:"expiresAt"`    // Inbox expiration timestamp
+    InboxHash    string    `json:"inboxHash"`    // Unique inbox identifier
+    ServerSigPk  string    `json:"serverSigPk"`  // Server's ML-DSA-65 public key (base64url)
+    SecretKey    string    `json:"secretKey"`    // ML-KEM-768 secret key (base64url)
+    ExportedAt   time.Time `json:"exportedAt"`   // Export timestamp (informational)
 }
 ```
+
+The public key is derived from the secret key during import, so it is not included in the export format.
 
 ### Export to File
 
@@ -389,8 +393,9 @@ if err != nil {
     if errors.Is(err, vaultsandbox.ErrInvalidImportData) {
         fmt.Println("Invalid import data:", err)
         // Possible causes:
-        // - Missing required fields
-        // - Invalid encryption keys
+        // - Unsupported export format version
+        // - Missing or invalid required fields
+        // - Invalid encryption key size or encoding
         // - Corrupted JSON
     } else if errors.Is(err, vaultsandbox.ErrInboxAlreadyExists) {
         fmt.Println("Inbox already imported in this client")
@@ -813,33 +818,31 @@ func debugWithImportedInbox(ctx context.Context, client *vaultsandbox.Client, fi
 }
 ```
 
-### 4. Version Exported Data
+### 4. Add Export Metadata
 
-Include metadata in exports for tracking:
+The `ExportedInbox` struct includes a built-in `Version` field and `ExportedAt` timestamp. For additional tracking, wrap exports with custom metadata:
 
 ```go
-type VersionedExport struct {
-    Version     string                       `json:"version"`
-    ExportedAt  time.Time                    `json:"exportedAt"`
+type ExportWithMetadata struct {
     ExportedBy  string                       `json:"exportedBy"`
     Environment string                       `json:"environment"`
+    Notes       string                       `json:"notes,omitempty"`
     Inbox       *vaultsandbox.ExportedInbox  `json:"inbox"`
 }
 
-func exportWithMetadata(inbox *vaultsandbox.Inbox) *VersionedExport {
-    return &VersionedExport{
-        Version:     "1.0",
-        ExportedAt:  time.Now(),
+func exportWithMetadata(inbox *vaultsandbox.Inbox, notes string) *ExportWithMetadata {
+    return &ExportWithMetadata{
         ExportedBy:  os.Getenv("USER"),
         Environment: os.Getenv("GO_ENV"),
+        Notes:       notes,
         Inbox:       inbox.Export(),
     }
 }
 
-func importWithMetadata(ctx context.Context, client *vaultsandbox.Client, data *VersionedExport) (*vaultsandbox.Inbox, error) {
+func importWithMetadata(ctx context.Context, client *vaultsandbox.Client, data *ExportWithMetadata) (*vaultsandbox.Inbox, error) {
     fmt.Printf("Import from: %s\n", data.ExportedBy)
-    fmt.Printf("Exported at: %s\n", data.ExportedAt.Format(time.RFC3339))
     fmt.Printf("Environment: %s\n", data.Environment)
+    fmt.Printf("Exported at: %s\n", data.Inbox.ExportedAt.Format(time.RFC3339))
 
     return client.ImportInbox(ctx, data.Inbox)
 }

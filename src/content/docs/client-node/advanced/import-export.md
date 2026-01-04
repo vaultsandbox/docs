@@ -9,13 +9,15 @@ VaultSandbox allows you to export and import inboxes, including their encryption
 
 When you export an inbox, you get a JSON object containing:
 
+- Format version
 - Email address
 - Inbox identifier
 - Expiration time
-- **Public encryption key** (base64-encoded)
-- **Secret encryption key** (sensitive!)
-- **Server public signing key**
+- **Secret encryption key** (base64url-encoded, sensitive!)
+- **Server public signing key** (base64url-encoded)
 - Export timestamp
+
+The public key is derived from the secret key during import, so it's not included in the export.
 
 This exported data can be imported into another client instance, allowing you to access the same inbox from different environments or at different times.
 
@@ -189,12 +191,12 @@ const data = inbox.export();
 
 console.log(data);
 // {
+//   version: 1,
 //   emailAddress: 'test123@inbox.vaultsandbox.com',
 //   inboxHash: 'abc123...',
 //   expiresAt: '2024-12-01T12:00:00.000Z',
-//   serverSigPk: 'base64-encoded-server-signing-key',
-//   publicKeyB64: 'base64-encoded-public-key',
-//   secretKeyB64: 'base64-encoded-secret-key',
+//   serverSigPk: 'base64url-encoded-server-signing-key',
+//   secretKey: 'base64url-encoded-secret-key',
 //   exportedAt: '2024-11-30T08:00:00.000Z'
 // }
 
@@ -284,9 +286,12 @@ try {
 	if (error instanceof InvalidImportDataError) {
 		console.error('Invalid import data:', error.message);
 		// Possible causes:
+		// - Unsupported version (must be 1)
 		// - Missing required fields
-		// - Invalid encryption keys
-		// - Server URL mismatch
+		// - Invalid email address format (must contain exactly one @)
+		// - Invalid base64url encoding in keys
+		// - Invalid key sizes (secretKey: 2400 bytes, serverSigPk: 1952 bytes)
+		// - Server public key mismatch
 		// - Corrupted JSON
 	} else if (error instanceof InboxAlreadyExistsError) {
 		console.error('Inbox already imported in this client');

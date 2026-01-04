@@ -77,7 +77,7 @@ Base64-encoded server signing public key for ML-DSA-65 signature verification.
 
 ### list_emails()
 
-Lists all emails in the inbox. Emails are automatically decrypted.
+Lists all emails in the inbox with full content. Emails are automatically decrypted.
 
 ```python
 async def list_emails(self) -> list[Email]
@@ -85,7 +85,7 @@ async def list_emails(self) -> list[Email]
 
 #### Returns
 
-`list[Email]` - List of decrypted email objects
+`list[Email]` - List of decrypted email objects with full content
 
 #### Example
 
@@ -96,7 +96,66 @@ print(f"Inbox has {len(emails)} emails")
 
 for email in emails:
     print(f"- {email.subject} from {email.from_address}")
+    print(f"  Body: {email.text[:100]}...")
 ```
+
+---
+
+### list_emails_metadata_only()
+
+Lists all emails in the inbox with metadata only (no full content). This is more efficient than `list_emails()` when you only need basic information like subject and sender.
+
+```python
+async def list_emails_metadata_only(self) -> list[EmailMetadata]
+```
+
+#### Returns
+
+`list[EmailMetadata]` - List of email metadata objects
+
+```python
+@dataclass
+class EmailMetadata:
+    id: str              # Unique email identifier
+    from_address: str    # Sender email address
+    subject: str         # Email subject
+    received_at: datetime  # When the email was received
+    is_read: bool        # Whether the email has been read
+```
+
+#### Example
+
+```python
+from vaultsandbox import EmailMetadata
+
+# Get just metadata - faster than fetching full content
+metadata_list = await inbox.list_emails_metadata_only()
+
+print(f"Inbox has {len(metadata_list)} emails")
+
+for meta in metadata_list:
+    status = "read" if meta.is_read else "unread"
+    print(f"- [{status}] {meta.subject} from {meta.from_address}")
+
+# Fetch full content only for emails you need
+for meta in metadata_list:
+    if "important" in meta.subject.lower():
+        full_email = await inbox.get_email(meta.id)
+        print(f"Important email body: {full_email.text}")
+```
+
+#### When to Use
+
+Use `list_emails_metadata_only()` when:
+
+- You need to display a list of emails without their content
+- You want to filter emails before fetching full content
+- Performance is critical and you're dealing with many emails
+
+Use `list_emails()` when:
+
+- You need access to email body, attachments, or links
+- You're processing all emails and need their full content
 
 ---
 
@@ -155,13 +214,13 @@ class WaitForEmailOptions:
     poll_interval: int = 2000
 ```
 
-| Property       | Type                            | Default | Description                          |
-| -------------- | ------------------------------- | ------- | ------------------------------------ |
-| `timeout`      | `int`                           | `30000` | Maximum time to wait in milliseconds |
-| `poll_interval`| `int`                           | `2000`  | Polling interval in milliseconds     |
-| `subject`      | `str \| Pattern[str] \| None`   | `None`  | Filter by email subject              |
-| `from_address` | `str \| Pattern[str] \| None`   | `None`  | Filter by sender address             |
-| `predicate`    | `Callable[[Email], bool] \| None`| `None`  | Custom filter function               |
+| Property        | Type                              | Default | Description                          |
+| --------------- | --------------------------------- | ------- | ------------------------------------ |
+| `timeout`       | `int`                             | `30000` | Maximum time to wait in milliseconds |
+| `poll_interval` | `int`                             | `2000`  | Polling interval in milliseconds     |
+| `subject`       | `str \| Pattern[str] \| None`     | `None`  | Filter by email subject              |
+| `from_address`  | `str \| Pattern[str] \| None`     | `None`  | Filter by sender address             |
+| `predicate`     | `Callable[[Email], bool] \| None` | `None`  | Custom filter function               |
 
 #### Returns
 
@@ -523,14 +582,16 @@ def export(self) -> ExportedInbox
 ```python
 @dataclass
 class ExportedInbox:
+    version: int            # Export format version (always 1)
     email_address: str
     expires_at: str
     inbox_hash: str
-    server_sig_pk: str
-    public_key_b64: str
-    secret_key_b64: str
+    server_sig_pk: str      # Base64url-encoded
+    secret_key: str         # Base64url-encoded (SENSITIVE!)
     exported_at: str
 ```
+
+Note: The public key is derived from the secret key during import.
 
 #### Example
 

@@ -20,6 +20,11 @@ VaultSandboxError (base class)
 ├── InvalidImportDataError
 ├── DecryptionError
 ├── SignatureVerificationError
+├── UnsupportedVersionError
+├── InvalidPayloadError
+├── InvalidAlgorithmError
+├── InvalidSizeError
+├── ServerKeyMismatchError
 ├── SSEError
 └── StrategyError
 ```
@@ -390,6 +395,140 @@ Signature verification errors should **never** be ignored:
 2. **Alert security/operations team**
 3. **Stop processing** - do not continue with the operation
 4. **Investigate** - check for network issues, proxy problems, or actual attacks
+
+---
+
+### UnsupportedVersionError
+
+Thrown when the protocol version or export format version is not supported.
+
+```python
+class UnsupportedVersionError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import UnsupportedVersionError
+
+try:
+    inbox = await client.import_inbox_from_file("./old-export.json")
+except UnsupportedVersionError as e:
+    print(f"Unsupported version: {e}")
+    print("The export file was created with an incompatible SDK version")
+```
+
+---
+
+### InvalidPayloadError
+
+Thrown when an encrypted payload has malformed JSON or is missing required fields.
+
+```python
+class InvalidPayloadError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import InvalidPayloadError
+
+try:
+    emails = await inbox.list_emails()
+except InvalidPayloadError as e:
+    print(f"Invalid payload: {e}")
+    print("The server response was malformed")
+```
+
+---
+
+### InvalidAlgorithmError
+
+Thrown when an encrypted payload specifies an unrecognized or unsupported cryptographic algorithm.
+
+```python
+class InvalidAlgorithmError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import InvalidAlgorithmError
+
+try:
+    emails = await inbox.list_emails()
+except InvalidAlgorithmError as e:
+    print(f"Invalid algorithm: {e}")
+    print("The server is using an unsupported cryptographic algorithm")
+```
+
+---
+
+### InvalidSizeError
+
+Thrown when a decoded cryptographic field has an incorrect size (e.g., wrong key length).
+
+```python
+class InvalidSizeError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import InvalidSizeError
+
+try:
+    inbox = await client.import_inbox(exported)
+except InvalidSizeError as e:
+    print(f"Invalid size: {e}")
+    print("A cryptographic field has the wrong size - data may be corrupted")
+```
+
+---
+
+### ServerKeyMismatchError
+
+Thrown when the server's public key doesn't match the pinned key from inbox creation. This is a **critical security error** that may indicate a man-in-the-middle (MITM) attack or server misconfiguration.
+
+```python
+class ServerKeyMismatchError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+import logging
+from vaultsandbox import ServerKeyMismatchError
+
+logger = logging.getLogger(__name__)
+
+try:
+    emails = await inbox.list_emails()
+except ServerKeyMismatchError as e:
+    print("CRITICAL: Server key mismatch!")
+    print("This may indicate a MITM attack or server misconfiguration")
+
+    logger.critical(
+        "Server key mismatch detected",
+        extra={"error": str(e)}
+    )
+
+    raise  # Do not continue
+```
+
+#### Handling
+
+Server key mismatch errors should be treated similarly to signature verification errors:
+
+1. **Log immediately** with full context
+2. **Alert security/operations team**
+3. **Stop processing** - do not continue with the operation
+4. **Investigate** - verify server configuration and network integrity
 
 ---
 

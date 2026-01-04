@@ -7,6 +7,8 @@ description: Production-like email testing. Self-hosted and secure.
 
 ![Vaultsandbox](/images/vaultsandbox.png)
 
+> **VaultSandbox is in Public Beta.** Join the journey to 1.0. Share feedback on [GitHub](https://github.com/vaultsandbox/gateway/discussions).
+
 VaultSandbox is a self-hosted email testing platform that lets you validate your complete email stack—including SMTP, TLS, DNS, and authentication—inside your own infrastructure. It replaces fake SMTP servers and public testing services with real mail delivery that behaves exactly like production, without exposing customer data.
 
 Most email testing tools force you to disable TLS verification, skip DNS checks, or rely on mocks that hide authentication failures. VaultSandbox runs a real SMTP server with Let's Encrypt certificates, validates SPF/DKIM/DMARC on every message, and delivers emails in real-time via Server-Sent Events. All messages are encrypted immediately after parsing using the client's public key (ML-KEM-768) and stored only in encrypted form—the server cannot decrypt them because it never receives the private key.

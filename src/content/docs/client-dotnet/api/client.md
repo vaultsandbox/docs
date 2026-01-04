@@ -47,12 +47,12 @@ Configuration in `appsettings.json`:
 
 ```json
 {
-  "VaultSandbox": {
-    "BaseUrl": "https://smtp.vaultsandbox.com",
-    "ApiKey": "your-api-key",
-    "WaitTimeoutMs": 30000,
-    "PollIntervalMs": 2000
-  }
+	"VaultSandbox": {
+		"BaseUrl": "https://smtp.vaultsandbox.com",
+		"ApiKey": "your-api-key",
+		"WaitTimeoutMs": 30000,
+		"PollIntervalMs": 2000
+	}
 }
 ```
 
@@ -76,27 +76,27 @@ The builder provides fluent configuration methods for creating a client.
 
 ### Methods
 
-| Method | Description |
-|--------|-------------|
-| `Create()` | Static factory method to start building |
-| `WithBaseUrl(string)` | Set the gateway URL |
-| `WithApiKey(string)` | Set the API authentication key |
-| `WithHttpTimeout(TimeSpan)` | HTTP request timeout (default: 30s) |
-| `WithWaitTimeout(TimeSpan)` | Default wait timeout for email operations (default: 30s) |
-| `WithPollInterval(TimeSpan)` | Polling interval for email delivery (default: 2s) |
-| `WithMaxRetries(int)` | Maximum retry attempts for HTTP requests (default: 3) |
-| `WithRetryDelay(TimeSpan)` | Initial delay between retries (default: 1s) |
-| `WithSseReconnectInterval(TimeSpan)` | SSE reconnection delay (default: 5s) |
-| `WithSseMaxReconnectAttempts(int)` | Maximum SSE reconnection attempts (default: 10) |
-| `WithDeliveryStrategy(DeliveryStrategy)` | Set the delivery strategy directly |
-| `UseSseDelivery()` | Use Server-Sent Events for email delivery |
-| `UsePollingDelivery()` | Use polling for email delivery |
-| `UseAutoDelivery()` | Auto-select delivery strategy (default) |
-| `WithDefaultInboxTtl(TimeSpan)` | Default time-to-live for new inboxes |
-| `WithLogging(ILoggerFactory)` | Add logging support |
-| `WithHttpClient(HttpClient, bool)` | Use a custom HttpClient instance (optional: dispose client on cleanup) |
-| `Build()` | Build the client instance |
-| `BuildAndValidateAsync(CancellationToken)` | Build and validate the API key |
+| Method                                     | Description                                                            |
+| ------------------------------------------ | ---------------------------------------------------------------------- |
+| `Create()`                                 | Static factory method to start building                                |
+| `WithBaseUrl(string)`                      | Set the gateway URL                                                    |
+| `WithApiKey(string)`                       | Set the API authentication key                                         |
+| `WithHttpTimeout(TimeSpan)`                | HTTP request timeout (default: 30s)                                    |
+| `WithWaitTimeout(TimeSpan)`                | Default wait timeout for email operations (default: 30s)               |
+| `WithPollInterval(TimeSpan)`               | Polling interval for email delivery (default: 2s)                      |
+| `WithMaxRetries(int)`                      | Maximum retry attempts for HTTP requests (default: 3)                  |
+| `WithRetryDelay(TimeSpan)`                 | Initial delay between retries (default: 1s)                            |
+| `WithSseReconnectInterval(TimeSpan)`       | SSE reconnection delay (default: 5s)                                   |
+| `WithSseMaxReconnectAttempts(int)`         | Maximum SSE reconnection attempts (default: 10)                        |
+| `WithDeliveryStrategy(DeliveryStrategy)`   | Set the delivery strategy directly                                     |
+| `UseSseDelivery()`                         | Use Server-Sent Events for email delivery                              |
+| `UsePollingDelivery()`                     | Use polling for email delivery                                         |
+| `UseAutoDelivery()`                        | Auto-select delivery strategy (default)                                |
+| `WithDefaultInboxTtl(TimeSpan)`            | Default time-to-live for new inboxes                                   |
+| `WithLogging(ILoggerFactory)`              | Add logging support                                                    |
+| `WithHttpClient(HttpClient, bool)`         | Use a custom HttpClient instance (optional: dispose client on cleanup) |
+| `Build()`                                  | Build the client instance                                              |
+| `BuildAndValidateAsync(CancellationToken)` | Build and validate the API key                                         |
 
 ### Example
 
@@ -179,10 +179,10 @@ public sealed class CreateInboxOptions
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Ttl` | `TimeSpan?` | Time-to-live for the inbox (min: 60s, max: 7 days) |
-| `EmailAddress` | `string?` | Request a specific email address (max 254 chars) |
+| Property       | Type        | Description                                        |
+| -------------- | ----------- | -------------------------------------------------- |
+| `Ttl`          | `TimeSpan?` | Time-to-live for the inbox (min: 60s, max: 7 days) |
+| `EmailAddress` | `string?`   | Request a specific email address (max 254 chars)   |
 
 #### Returns
 
@@ -299,14 +299,14 @@ public sealed record ServerInfo
 }
 ```
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `ServerSigPk` | `string` | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `Context` | `string` | Context string for the encryption scheme |
-| `MaxTtl` | `int` | Maximum time-to-live for inboxes in seconds |
-| `DefaultTtl` | `int` | Default time-to-live for inboxes in seconds |
-| `SseConsole` | `bool` | Whether the server SSE console is enabled |
-| `AllowedDomains` | `IReadOnlyList<string>` | List of domains allowed for inbox creation |
+| Property         | Type                    | Description                                               |
+| ---------------- | ----------------------- | --------------------------------------------------------- |
+| `ServerSigPk`    | `string`                | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `Context`        | `string`                | Context string for the encryption scheme                  |
+| `MaxTtl`         | `int`                   | Maximum time-to-live for inboxes in seconds               |
+| `DefaultTtl`     | `int`                   | Default time-to-live for inboxes in seconds               |
+| `SseConsole`     | `bool`                  | Whether the server SSE console is enabled                 |
+| `AllowedDomains` | `IReadOnlyList<string>` | List of domains allowed for inbox creation                |
 
 #### Example
 

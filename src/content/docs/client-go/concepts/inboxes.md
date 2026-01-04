@@ -74,15 +74,15 @@ client, err := vaultsandbox.New(apiKey,
 
 ### Available Client Options
 
-| Option | Description |
-|--------|-------------|
-| `WithBaseURL(url string)` | Set a custom API base URL (default: `https://api.vaultsandbox.com`) |
-| `WithHTTPClient(client *http.Client)` | Use a custom HTTP client for requests |
-| `WithDeliveryStrategy(strategy DeliveryStrategy)` | Set how new emails are delivered (see below) |
-| `WithTimeout(timeout time.Duration)` | Set default request timeout (default: 60s) |
-| `WithRetries(count int)` | Set number of retry attempts for failed requests |
-| `WithRetryOn(statusCodes []int)` | Set HTTP status codes that trigger retries (default: 408, 429, 500, 502, 503, 504) |
-| `WithPollingConfig(cfg PollingConfig)` | Set polling configuration (see below) |
+| Option                                            | Description                                                                        |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `WithBaseURL(url string)`                         | Set a custom API base URL (default: `https://api.vaultsandbox.com`)                |
+| `WithHTTPClient(client *http.Client)`             | Use a custom HTTP client for requests                                              |
+| `WithDeliveryStrategy(strategy DeliveryStrategy)` | Set how new emails are delivered (see below)                                       |
+| `WithTimeout(timeout time.Duration)`              | Set default request timeout (default: 60s)                                         |
+| `WithRetries(count int)`                          | Set number of retry attempts for failed requests                                   |
+| `WithRetryOn(statusCodes []int)`                  | Set HTTP status codes that trigger retries (default: 408, 429, 500, 502, 503, 504) |
+| `WithPollingConfig(cfg PollingConfig)`            | Set polling configuration (see below)                                              |
 
 ### Delivery Strategies
 
@@ -281,34 +281,34 @@ fmt.Println(email.Text)
 
 The `Email` struct contains the following fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `ID` | `string` | Unique email identifier |
-| `From` | `string` | Sender email address |
-| `To` | `[]string` | Recipient email addresses |
-| `Subject` | `string` | Email subject line |
-| `Text` | `string` | Plain text body |
-| `HTML` | `string` | HTML body |
-| `ReceivedAt` | `time.Time` | When the email was received |
-| `Headers` | `map[string]string` | Email headers |
-| `Attachments` | `[]Attachment` | File attachments |
-| `Links` | `[]string` | Links extracted from the email body |
+| Field         | Type                       | Description                                     |
+| ------------- | -------------------------- | ----------------------------------------------- |
+| `ID`          | `string`                   | Unique email identifier                         |
+| `From`        | `string`                   | Sender email address                            |
+| `To`          | `[]string`                 | Recipient email addresses                       |
+| `Subject`     | `string`                   | Email subject line                              |
+| `Text`        | `string`                   | Plain text body                                 |
+| `HTML`        | `string`                   | HTML body                                       |
+| `ReceivedAt`  | `time.Time`                | When the email was received                     |
+| `Headers`     | `map[string]string`        | Email headers                                   |
+| `Attachments` | `[]Attachment`             | File attachments                                |
+| `Links`       | `[]string`                 | Links extracted from the email body             |
 | `AuthResults` | `*authresults.AuthResults` | Email authentication results (SPF, DKIM, DMARC) |
-| `IsRead` | `bool` | Whether the email has been marked as read |
+| `IsRead`      | `bool`                     | Whether the email has been marked as read       |
 
 ### Attachment Struct
 
 The `Attachment` struct contains the following fields:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `Filename` | `string` | Original filename of the attachment |
-| `ContentType` | `string` | MIME type (e.g., `application/pdf`, `image/png`) |
-| `Size` | `int` | Size in bytes |
-| `ContentID` | `string` | Content-ID for inline attachments |
-| `ContentDisposition` | `string` | Disposition type (`attachment` or `inline`) |
-| `Content` | `[]byte` | Raw attachment content |
-| `Checksum` | `string` | Checksum for integrity verification |
+| Field                | Type     | Description                                      |
+| -------------------- | -------- | ------------------------------------------------ |
+| `Filename`           | `string` | Original filename of the attachment              |
+| `ContentType`        | `string` | MIME type (e.g., `application/pdf`, `image/png`) |
+| `Size`               | `int`    | Size in bytes                                    |
+| `ContentID`          | `string` | Content-ID for inline attachments                |
+| `ContentDisposition` | `string` | Disposition type (`attachment` or `inline`)      |
+| `Content`            | `[]byte` | Raw attachment content                           |
+| `Checksum`           | `string` | Checksum for integrity verification              |
 
 ```go
 // Working with attachments
@@ -451,23 +451,23 @@ if err := authresults.ValidateReverseDNS(email.AuthResults); err != nil {
 
 **Available Validation Functions:**
 
-| Function | Description |
-|----------|-------------|
-| `Validate(results)` | Validates all authentication results, returns `ValidationError` with all failures |
-| `ValidateSPF(results)` | Validates only SPF, returns `ErrSPFFailed` on failure |
-| `ValidateDKIM(results)` | Validates DKIM (passes if at least one signature passes), returns `ErrDKIMFailed` on failure |
-| `ValidateDMARC(results)` | Validates only DMARC, returns `ErrDMARCFailed` on failure |
-| `ValidateReverseDNS(results)` | Validates only reverse DNS, returns `ErrReverseDNSFailed` on failure |
+| Function                      | Description                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `Validate(results)`           | Validates all authentication results, returns `ValidationError` with all failures            |
+| `ValidateSPF(results)`        | Validates only SPF, returns `ErrSPFFailed` on failure                                        |
+| `ValidateDKIM(results)`       | Validates DKIM (passes if at least one signature passes), returns `ErrDKIMFailed` on failure |
+| `ValidateDMARC(results)`      | Validates only DMARC, returns `ErrDMARCFailed` on failure                                    |
+| `ValidateReverseDNS(results)` | Validates only reverse DNS, returns `ErrReverseDNSFailed` on failure                         |
 
 **Sentinel Errors in authresults package:**
 
-| Error | Description |
-|-------|-------------|
-| `ErrSPFFailed` | SPF check failed |
-| `ErrDKIMFailed` | DKIM check failed |
-| `ErrDMARCFailed` | DMARC check failed |
-| `ErrReverseDNSFailed` | Reverse DNS check failed |
-| `ErrNoAuthResults` | No authentication results available |
+| Error                 | Description                         |
+| --------------------- | ----------------------------------- |
+| `ErrSPFFailed`        | SPF check failed                    |
+| `ErrDKIMFailed`       | DKIM check failed                   |
+| `ErrDMARCFailed`      | DMARC check failed                  |
+| `ErrReverseDNSFailed` | Reverse DNS check failed            |
+| `ErrNoAuthResults`    | No authentication results available |
 
 ### Waiting for Emails
 
@@ -487,13 +487,13 @@ email, err := inbox.WaitForEmail(ctx,
 
 **Available Wait Options:**
 
-| Option | Description |
-|--------|-------------|
-| `WithWaitTimeout(duration)` | Maximum time to wait for an email |
-| `WithSubject(string)` | Filter by exact subject match |
-| `WithSubjectRegex(regexp)` | Filter by subject regex pattern |
-| `WithFrom(string)` | Filter by exact sender match |
-| `WithFromRegex(regexp)` | Filter by sender regex pattern |
+| Option                             | Description                         |
+| ---------------------------------- | ----------------------------------- |
+| `WithWaitTimeout(duration)`        | Maximum time to wait for an email   |
+| `WithSubject(string)`              | Filter by exact subject match       |
+| `WithSubjectRegex(regexp)`         | Filter by subject regex pattern     |
+| `WithFrom(string)`                 | Filter by exact sender match        |
+| `WithFromRegex(regexp)`            | Filter by sender regex pattern      |
 | `WithPredicate(func(*Email) bool)` | Filter by custom predicate function |
 
 ```go
@@ -937,18 +937,18 @@ if err != nil {
 
 ### Available Sentinel Errors
 
-| Error | Description |
-|-------|-------------|
-| `ErrMissingAPIKey` | No API key was provided to `New()` |
-| `ErrClientClosed` | Operation attempted on a closed client |
-| `ErrUnauthorized` | API key is invalid or expired (HTTP 401) |
-| `ErrInboxNotFound` | Inbox does not exist or has expired (HTTP 404) |
-| `ErrEmailNotFound` | Email does not exist (HTTP 404) |
+| Error                   | Description                                            |
+| ----------------------- | ------------------------------------------------------ |
+| `ErrMissingAPIKey`      | No API key was provided to `New()`                     |
+| `ErrClientClosed`       | Operation attempted on a closed client                 |
+| `ErrUnauthorized`       | API key is invalid or expired (HTTP 401)               |
+| `ErrInboxNotFound`      | Inbox does not exist or has expired (HTTP 404)         |
+| `ErrEmailNotFound`      | Email does not exist (HTTP 404)                        |
 | `ErrInboxAlreadyExists` | Inbox with requested address already exists (HTTP 409) |
-| `ErrInvalidImportData` | Imported inbox data is malformed or invalid |
-| `ErrDecryptionFailed` | Email decryption failed |
-| `ErrSignatureInvalid` | Signature verification failed (potential tampering) |
-| `ErrRateLimited` | API rate limit exceeded (HTTP 429) |
+| `ErrInvalidImportData`  | Imported inbox data is malformed or invalid            |
+| `ErrDecryptionFailed`   | Email decryption failed                                |
+| `ErrSignatureInvalid`   | Signature verification failed (potential tampering)    |
+| `ErrRateLimited`        | API rate limit exceeded (HTTP 429)                     |
 
 ### Error Types
 

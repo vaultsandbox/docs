@@ -302,6 +302,33 @@ Console.WriteLine(raw);
 
 You can also use inbox methods to work with emails by ID:
 
+### GetEmailsAsync
+
+Get all emails with full content.
+
+```csharp
+var emails = await inbox.GetEmailsAsync();
+foreach (var email in emails)
+{
+    Console.WriteLine($"{email.Subject}: {email.Text}");
+}
+```
+
+### GetEmailsMetadataOnlyAsync
+
+Get all emails with metadata only (no body content). More efficient for listing.
+
+```csharp
+var metadataList = await inbox.GetEmailsMetadataOnlyAsync();
+foreach (var metadata in metadataList)
+{
+    Console.WriteLine($"[{(metadata.IsRead ? "Read" : "New")}] {metadata.Subject} from {metadata.From}");
+}
+
+// Fetch full content only when needed
+var email = await inbox.GetEmailAsync(metadataList[0].Id);
+```
+
 ### GetEmailAsync
 
 Get a specific email by ID.

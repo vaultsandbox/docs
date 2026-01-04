@@ -20,12 +20,12 @@ for (Attachment attachment : attachments) {
 
 ## Attachment Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `filename` | `String` | Original filename |
+| Property      | Type     | Description                         |
+| ------------- | -------- | ----------------------------------- |
+| `filename`    | `String` | Original filename                   |
 | `contentType` | `String` | MIME type (e.g., "application/pdf") |
-| `size` | `int` | Size in bytes |
-| `content` | `byte[]` | File content |
+| `size`        | `int`    | Size in bytes                       |
+| `content`     | `byte[]` | File content                        |
 
 ```java
 Attachment attachment = email.getAttachments().get(0);
@@ -241,7 +241,7 @@ for (Attachment attachment : email.getAttachments()) {
 ```
 
 :::note
-`saveTo()` throws `IllegalStateException` if the attachment content is not available. This happens when emails are retrieved via `inbox.listEmails()` which returns metadata only. Use `inbox.getEmail(id)` to fetch full content.
+`saveTo()` throws `IllegalStateException` if the attachment content is not available due to corrupted data or a server issue.
 :::
 
 ## Validating Attachments
@@ -467,19 +467,15 @@ if (email.getAttachments().isEmpty()) {
 
 ### Content Not Available
 
-If `attachment.getContent()` returns `null` or `saveTo()` throws `IllegalStateException`:
+If `attachment.getContent()` returns `null` or `saveTo()` throws `IllegalStateException`, this typically indicates corrupted data or a server issue:
 
 ```java
 try {
     attachment.saveTo(Path.of("/tmp/file.pdf"));
 } catch (IllegalStateException e) {
-    // Fetch full email content
-    Email fullEmail = inbox.getEmail(email.getId());
-    Attachment fullAttachment = fullEmail.getAttachments().stream()
-        .filter(a -> a.getFilename().equals(attachment.getFilename()))
-        .findFirst()
-        .orElseThrow();
-    fullAttachment.saveTo(Path.of("/tmp/file.pdf"));
+    System.err.println("Attachment content not available: " + e.getMessage());
+    // Check if the email was received correctly
+    System.err.println("This may indicate corrupted data or a server issue");
 }
 ```
 

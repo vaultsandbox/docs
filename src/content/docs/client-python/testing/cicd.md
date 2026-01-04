@@ -140,8 +140,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-          cache: "pip"
+          python-version: '3.12'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
@@ -186,7 +186,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -223,7 +223,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: '3.12'
 
       - run: pip install -e ".[test]"
 
@@ -250,7 +250,7 @@ email-tests:
     paths:
       - .cache/pip
   variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+    PIP_CACHE_DIR: '$CI_PROJECT_DIR/.cache/pip'
     VAULTSANDBOX_URL: $VAULTSANDBOX_URL
     VAULTSANDBOX_API_KEY: $VAULTSANDBOX_API_KEY
   before_script:

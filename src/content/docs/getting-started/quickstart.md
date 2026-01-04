@@ -65,7 +65,7 @@ With VSX DNS enabled, VaultSandbox automatically handles:
 - TLS certificate provisioning via Let's Encrypt
 - API key generation
 - Email retention (1 hour default, configurable up to 7 days)
-:::
+  :::
 
 ## Step 2: Start VaultSandbox
 
@@ -197,6 +197,7 @@ Now that VaultSandbox is running, explore more features:
    ```
 
 2. **Check logs**:
+
    ```bash
    docker compose logs gateway
    ```

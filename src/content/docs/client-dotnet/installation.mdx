@@ -35,7 +35,9 @@ Install-Package VaultSandbox.Client
 
 ### PackageReference
 
-<pre><code class="language-xml">{`<PackageReference Include="VaultSandbox.Client" Version="${versions.dotnet}" />`}</code></pre>
+<pre>
+	<code class="language-xml">{`<PackageReference Include="VaultSandbox.Client" Version="${versions.dotnet}" />`}</code>
+</pre>
 
 ## Quick Start
 
@@ -122,10 +124,10 @@ builder.Services.AddVaultSandboxClient(builder.Configuration);
 ```json
 // appsettings.json
 {
-  "VaultSandbox": {
-    "BaseUrl": "https://gateway.example.com",
-    "ApiKey": "your-api-key"
-  }
+	"VaultSandbox": {
+		"BaseUrl": "https://gateway.example.com",
+		"ApiKey": "your-api-key"
+	}
 }
 ```
 

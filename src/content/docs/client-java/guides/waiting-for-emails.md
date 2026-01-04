@@ -186,10 +186,10 @@ Email email = inbox.waitForEmail(options);
 
 ### Configuration Options
 
-| Option | Description |
-|--------|-------------|
-| `filter` | Email filter criteria |
-| `timeout` | Maximum wait time |
+| Option         | Description                        |
+| -------------- | ---------------------------------- |
+| `filter`       | Email filter criteria              |
+| `timeout`      | Maximum wait time                  |
 | `pollInterval` | Poll interval for polling strategy |
 
 ## Timeout Handling

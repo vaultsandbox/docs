@@ -20,19 +20,19 @@ var client = VaultSandboxClientBuilder.Create()
 
 ## Configuration Options
 
-| Property | Type | Required | Default | Description |
-|----------|------|----------|---------|-------------|
-| BaseUrl | string | Yes | - | Gateway server URL |
-| ApiKey | string | Yes | - | API key for authentication |
-| HttpTimeoutMs | int | No | 30000 | HTTP request timeout (ms) |
-| WaitTimeoutMs | int | No | 30000 | Default wait timeout (ms) |
-| PollIntervalMs | int | No | 2000 | Polling interval (ms) |
-| MaxRetries | int | No | 3 | Maximum retry attempts |
-| RetryDelayMs | int | No | 1000 | Initial retry delay (ms) |
-| SseReconnectIntervalMs | int | No | 5000 | SSE reconnect interval (ms) |
-| SseMaxReconnectAttempts | int | No | 10 | Maximum SSE reconnect attempts |
-| DefaultDeliveryStrategy | DeliveryStrategy | No | Auto | Delivery strategy |
-| DefaultInboxTtlSeconds | int | No | 3600 | Default inbox TTL (seconds) |
+| Property                | Type             | Required | Default | Description                    |
+| ----------------------- | ---------------- | -------- | ------- | ------------------------------ |
+| BaseUrl                 | string           | Yes      | -       | Gateway server URL             |
+| ApiKey                  | string           | Yes      | -       | API key for authentication     |
+| HttpTimeoutMs           | int              | No       | 30000   | HTTP request timeout (ms)      |
+| WaitTimeoutMs           | int              | No       | 30000   | Default wait timeout (ms)      |
+| PollIntervalMs          | int              | No       | 2000    | Polling interval (ms)          |
+| MaxRetries              | int              | No       | 3       | Maximum retry attempts         |
+| RetryDelayMs            | int              | No       | 1000    | Initial retry delay (ms)       |
+| SseReconnectIntervalMs  | int              | No       | 5000    | SSE reconnect interval (ms)    |
+| SseMaxReconnectAttempts | int              | No       | 10      | Maximum SSE reconnect attempts |
+| DefaultDeliveryStrategy | DeliveryStrategy | No       | Auto    | Delivery strategy              |
+| DefaultInboxTtlSeconds  | int              | No       | 3600    | Default inbox TTL (seconds)    |
 
 ### Required Options
 
@@ -254,16 +254,16 @@ builder.Services.AddVaultSandboxClient(builder.Configuration);
 ```json
 // appsettings.json
 {
-  "VaultSandbox": {
-    "BaseUrl": "https://gateway.example.com",
-    "ApiKey": "your-api-key",
-    "HttpTimeoutMs": 60000,
-    "WaitTimeoutMs": 120000,
-    "PollIntervalMs": 1000,
-    "MaxRetries": 5,
-    "DefaultDeliveryStrategy": "Auto",
-    "DefaultInboxTtlSeconds": 1800
-  }
+	"VaultSandbox": {
+		"BaseUrl": "https://gateway.example.com",
+		"ApiKey": "your-api-key",
+		"HttpTimeoutMs": 60000,
+		"WaitTimeoutMs": 120000,
+		"PollIntervalMs": 1000,
+		"MaxRetries": 5,
+		"DefaultDeliveryStrategy": "Auto",
+		"DefaultInboxTtlSeconds": 1800
+	}
 }
 ```
 

@@ -54,7 +54,7 @@ except InboxAlreadyExistsError:
 
 ## Listing Emails
 
-### List All Emails
+### List All Emails (Full Content)
 
 ```python
 emails = await inbox.list_emails()
@@ -62,6 +62,29 @@ emails = await inbox.list_emails()
 print(f"Inbox contains {len(emails)} emails")
 for email in emails:
     print(f"- {email.from_address}: {email.subject}")
+    print(f"  Body preview: {email.text[:100] if email.text else 'No text'}...")
+```
+
+### List Metadata Only (Efficient)
+
+When you only need basic information like subject and sender, use `list_emails_metadata_only()` for better performance:
+
+```python
+from vaultsandbox import EmailMetadata
+
+# Fetch only metadata - no email body content
+metadata_list = await inbox.list_emails_metadata_only()
+
+print(f"Inbox contains {len(metadata_list)} emails")
+for meta in metadata_list:
+    status = "✓" if meta.is_read else "•"
+    print(f"{status} {meta.from_address}: {meta.subject}")
+
+# Fetch full content only for specific emails
+for meta in metadata_list:
+    if "urgent" in meta.subject.lower():
+        full_email = await inbox.get_email(meta.id)
+        process_urgent_email(full_email)
 ```
 
 ### Filtering Emails

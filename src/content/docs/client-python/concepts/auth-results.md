@@ -51,15 +51,15 @@ if spf:
 
 ### SPF Status Values
 
-| Status       | Meaning                                    |
-| ------------ | ------------------------------------------ |
-| `PASS`       | Sending server is authorized               |
-| `FAIL`       | Sending server is NOT authorized           |
-| `SOFTFAIL`   | Probably not authorized (policy says ~all) |
-| `NEUTRAL`    | Domain makes no assertion                  |
-| `TEMPERROR`  | Temporary error during check               |
-| `PERMERROR`  | Permanent error in SPF record              |
-| `NONE`       | No SPF record found                        |
+| Status      | Meaning                                    |
+| ----------- | ------------------------------------------ |
+| `PASS`      | Sending server is authorized               |
+| `FAIL`      | Sending server is NOT authorized           |
+| `SOFTFAIL`  | Probably not authorized (policy says ~all) |
+| `NEUTRAL`   | Domain makes no assertion                  |
+| `TEMPERROR` | Temporary error during check               |
+| `PERMERROR` | Permanent error in SPF record              |
+| `NONE`      | No SPF record found                        |
 
 ### SPF Example
 

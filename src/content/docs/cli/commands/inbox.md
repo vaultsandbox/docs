@@ -9,10 +9,10 @@ Inbox commands let you create temporary email addresses, list existing inboxes, 
 
 All inbox commands support these global flags:
 
-| Flag | Description |
-|------|-------------|
-| `--config` | Config file (default is `$HOME/.config/vsb/config.yaml`) |
-| `-o, --output` | Output format: `pretty`, `json` |
+| Flag           | Description                                              |
+| -------------- | -------------------------------------------------------- |
+| `--config`     | Config file (default is `$HOME/.config/vsb/config.yaml`) |
+| `-o, --output` | Output format: `pretty`, `json`                          |
 
 ---
 
@@ -26,9 +26,9 @@ vsb inbox create [flags]
 
 ### Flags
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--ttl` | Time-to-live duration (e.g., `1h`, `24h`, `7d`) | `24h` |
+| Flag    | Description                                     | Default |
+| ------- | ----------------------------------------------- | ------- |
+| `--ttl` | Time-to-live duration (e.g., `1h`, `24h`, `7d`) | `24h`   |
 
 ### Examples
 
@@ -59,9 +59,9 @@ JSON output:
 
 ```json
 {
-  "email": "abc123@abc123.vsx.email",
-  "expiresAt": "2024-01-16T14:30:00Z",
-  "createdAt": "2024-01-15T14:30:00Z"
+	"email": "abc123@abc123.vsx.email",
+	"expiresAt": "2024-01-16T14:30:00Z",
+	"createdAt": "2024-01-15T14:30:00Z"
 }
 ```
 
@@ -78,8 +78,8 @@ vsb inbox ls [flags]
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag        | Description             |
+| ----------- | ----------------------- |
 | `-a, --all` | Include expired inboxes |
 
 ### Examples
@@ -110,12 +110,12 @@ JSON output:
 
 ```json
 [
-  {
-    "email": "abc123@abc123.vsx.email",
-    "expiresAt": "2024-01-16T14:30:00Z",
-    "isActive": true,
-    "isExpired": false
-  }
+	{
+		"email": "abc123@abc123.vsx.email",
+		"expiresAt": "2024-01-16T14:30:00Z",
+		"isActive": true,
+		"isExpired": false
+	}
 ]
 ```
 
@@ -133,9 +133,9 @@ If no email is specified, shows info for the active inbox.
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `email` | Email address (optional, uses active inbox if omitted) |
+| Argument | Description                                            |
+| -------- | ------------------------------------------------------ |
+| `email`  | Email address (optional, uses active inbox if omitted) |
 
 ### Examples
 
@@ -168,14 +168,14 @@ JSON output:
 
 ```json
 {
-  "email": "abc123@abc123.vsx.email",
-  "expiresAt": "2024-01-16T14:30:00Z",
-  "isActive": true,
-  "isExpired": false,
-  "id": "abc123",
-  "createdAt": "2024-01-15T14:30:00Z",
-  "emailCount": 3,
-  "syncError": "error message"
+	"email": "abc123@abc123.vsx.email",
+	"expiresAt": "2024-01-16T14:30:00Z",
+	"isActive": true,
+	"isExpired": false,
+	"id": "abc123",
+	"createdAt": "2024-01-15T14:30:00Z",
+	"emailCount": 3,
+	"syncError": "error message"
 }
 ```
 
@@ -193,9 +193,9 @@ vsb inbox use <email>
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `email` | Email address or partial match |
+| Argument | Description                    |
+| -------- | ------------------------------ |
+| `email`  | Email address or partial match |
 
 ### Examples
 
@@ -224,14 +224,14 @@ vsb inbox rm <email> [flags]
 
 ### Arguments
 
-| Argument | Description |
-|----------|-------------|
-| `email` | Email address or partial match |
+| Argument | Description                    |
+| -------- | ------------------------------ |
+| `email`  | Email address or partial match |
 
 ### Flags
 
-| Flag | Description |
-|------|-------------|
+| Flag          | Description                                              |
+| ------------- | -------------------------------------------------------- |
 | `-l, --local` | Only remove from local keystore (don't delete on server) |
 
 ### Examples

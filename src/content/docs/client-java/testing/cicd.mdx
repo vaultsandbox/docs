@@ -10,6 +10,7 @@ This guide covers integrating VaultSandbox email testing into your CI/CD pipelin
 ## Overview
 
 CI/CD integration requires:
+
 - Environment setup with API keys
 - Configuration optimized for CI environments
 - Test framework integration (JUnit 5 or TestNG)
@@ -253,7 +254,7 @@ stages:
   - test
 
 variables:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false'
 
 email-tests:
   stage: test
@@ -376,16 +377,16 @@ steps:
 
 ### Required Variables
 
-| Variable | Description |
-|----------|-------------|
+| Variable               | Description                |
+| ---------------------- | -------------------------- |
 | `VAULTSANDBOX_API_KEY` | API key for authentication |
-| `VAULTSANDBOX_URL` | Gateway API endpoint URL |
+| `VAULTSANDBOX_URL`     | Gateway API endpoint URL   |
 
 ### Optional Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VAULTSANDBOX_TIMEOUT` | `60` | Default timeout in seconds |
+| Variable               | Default | Description                |
+| ---------------------- | ------- | -------------------------- |
+| `VAULTSANDBOX_TIMEOUT` | `60`    | Default timeout in seconds |
 
 ### Configuration Helper
 
@@ -436,7 +437,8 @@ public class CIConfig {
 
 ### build.gradle
 
-<pre><code class="language-groovy">{`plugins {
+<pre>
+	<code class="language-groovy">{`plugins {
     id 'java'
 }
 
@@ -466,7 +468,8 @@ test {
 
     // Parallel execution
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-}`}</code></pre>
+}`}</code>
+</pre>
 
 ### Separate Integration Tests
 
@@ -502,7 +505,8 @@ task integrationTest(type: Test) {
 
 ### pom.xml
 
-<pre><code class="language-xml">{`<project>
+<pre>
+	<code class="language-xml">{`<project>
     <properties>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
@@ -538,7 +542,8 @@ task integrationTest(type: Test) {
             </plugin>
         </plugins>
     </build>
-</project>`}</code></pre>
+</project>`}</code>
+</pre>
 
 ## Best Practices
 
@@ -620,13 +625,13 @@ Keep unit tests fast by running integration tests separately:
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Timeouts | Increase `waitTimeout`, use POLLING strategy |
-| Connection refused | Check firewall, use POLLING |
-| API key not found | Verify secret configuration in CI platform |
-| Flaky tests | Use specific filters, longer timeouts |
-| Resource leaks | Ensure cleanup in @AfterAll |
+| Issue              | Solution                                     |
+| ------------------ | -------------------------------------------- |
+| Timeouts           | Increase `waitTimeout`, use POLLING strategy |
+| Connection refused | Check firewall, use POLLING                  |
+| API key not found  | Verify secret configuration in CI platform   |
+| Flaky tests        | Use specific filters, longer timeouts        |
+| Resource leaks     | Ensure cleanup in @AfterAll                  |
 
 ## Related Pages
 

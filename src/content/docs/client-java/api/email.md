@@ -14,19 +14,20 @@ public class Email
 An email contains standard properties (from, to, subject, body) plus additional metadata like authentication results (SPF, DKIM, DMARC) and extracted content (links, attachments).
 
 **Content availability:**
-- Emails from `inbox.listEmails()` have **metadata only** (from, to, subject, receivedAt)
-- Emails from `inbox.getEmail()` or `waitForEmail()` have **full content**
+
+- Emails from `inbox.listEmails()`, `inbox.getEmail()`, and `waitForEmail()` have **full content**
+- Use `inbox.listEmailsMetadataOnly()` if you only need metadata (returns `EmailMetadata` objects)
 
 ## Core Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | `String` | Unique email identifier |
-| `from` | `String` | Sender email address |
-| `to` | `List<String>` | Recipient addresses |
-| `subject` | `String` | Email subject line |
-| `receivedAt` | `Instant` | When email was received |
-| `isRead` | `boolean` | Read status |
+| Property     | Type           | Description             |
+| ------------ | -------------- | ----------------------- |
+| `id`         | `String`       | Unique email identifier |
+| `from`       | `String`       | Sender email address    |
+| `to`         | `List<String>` | Recipient addresses     |
+| `subject`    | `String`       | Email subject line      |
+| `receivedAt` | `Instant`      | When email was received |
+| `isRead`     | `boolean`      | Read status             |
 
 ### Getters
 
@@ -41,10 +42,10 @@ public boolean isRead()
 
 ## Content Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `text` | `String` | Plain text body (may be null) |
-| `html` | `String` | HTML body (may be null) |
+| Property | Type     | Description                   |
+| -------- | -------- | ----------------------------- |
+| `text`   | `String` | Plain text body (may be null) |
+| `html`   | `String` | HTML body (may be null)       |
 
 ### Getters
 
@@ -53,17 +54,17 @@ public String getText()    // May return null
 public String getHtml()    // May return null
 ```
 
-**Note:** Both may be `null` if the email was retrieved from `listEmails()` (metadata only) or if the email doesn't contain that content type.
+**Note:** Both may be `null` if the email doesn't contain that content type (e.g., plain text only or HTML only emails).
 
 ## Advanced Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `links` | `List<String>` | URLs extracted from content |
-| `attachments` | `List<Attachment>` | File attachments |
-| `authResults` | `AuthResults` | SPF/DKIM/DMARC results |
-| `headers` | `Map<String, String>` | Raw email headers |
-| `metadata` | `Map<String, Object>` | Additional metadata |
+| Property      | Type                  | Description                 |
+| ------------- | --------------------- | --------------------------- |
+| `links`       | `List<String>`        | URLs extracted from content |
+| `attachments` | `List<Attachment>`    | File attachments            |
+| `authResults` | `AuthResults`         | SPF/DKIM/DMARC results      |
+| `headers`     | `Map<String, String>` | Raw email headers           |
+| `metadata`    | `Map<String, Object>` | Additional metadata         |
 
 ### Getters
 
@@ -88,6 +89,7 @@ public void markAsRead()
 Updates both the server state and the local `isRead()` flag.
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
@@ -100,6 +102,7 @@ public void delete()
 ```
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
@@ -114,6 +117,7 @@ public String getRaw()
 **Returns:** Raw email string including all headers
 
 **Throws:**
+
 - `ApiException` - on API errors
 - `NetworkException` - on network connectivity issues
 
@@ -127,12 +131,12 @@ public class Attachment
 
 ### Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `filename` | `String` | Original filename |
-| `contentType` | `String` | MIME type |
-| `size` | `int` | Size in bytes |
-| `content` | `byte[]` | Decrypted content |
+| Property      | Type     | Description       |
+| ------------- | -------- | ----------------- |
+| `filename`    | `String` | Original filename |
+| `contentType` | `String` | MIME type         |
+| `size`        | `int`    | Size in bytes     |
+| `content`     | `byte[]` | Decrypted content |
 
 ### Getters
 
@@ -152,9 +156,11 @@ public void saveTo(Path path) throws IOException
 ```
 
 **Parameters:**
+
 - `path` - Destination file path
 
 **Throws:**
+
 - `IOException` - on write errors
 - `IllegalStateException` - if content is not available
 
@@ -203,6 +209,7 @@ public AuthValidation validate()
 **Returns:** `AuthValidation` with lists of passed and failed checks
 
 **Example:**
+
 ```java
 AuthResults auth = email.getAuthResults();
 if (auth != null) {
@@ -222,19 +229,20 @@ public class AuthValidation
 
 ### Methods
 
-| Method | Return Type | Description |
-|--------|-------------|-------------|
-| `getPassed()` | `List<String>` | List of passed checks (e.g., ["SPF", "DKIM"]) |
-| `getFailed()` | `List<String>` | List of failed checks with reasons |
-| `getFailures()` | `List<String>` | Alias for `getFailed()` |
-| `isFullyAuthenticated()` | `boolean` | True if all checks passed |
-| `isPassed()` | `boolean` | Alias for `isFullyAuthenticated()` |
-| `hasSpf()` | `boolean` | True if SPF passed |
-| `hasDkim()` | `boolean` | True if DKIM passed |
-| `hasDmarc()` | `boolean` | True if DMARC passed |
-| `hasReverseDns()` | `boolean` | True if reverse DNS passed |
+| Method                   | Return Type    | Description                                   |
+| ------------------------ | -------------- | --------------------------------------------- |
+| `getPassed()`            | `List<String>` | List of passed checks (e.g., ["SPF", "DKIM"]) |
+| `getFailed()`            | `List<String>` | List of failed checks with reasons            |
+| `getFailures()`          | `List<String>` | Alias for `getFailed()`                       |
+| `isFullyAuthenticated()` | `boolean`      | True if all checks passed                     |
+| `isPassed()`             | `boolean`      | Alias for `isFullyAuthenticated()`            |
+| `hasSpf()`               | `boolean`      | True if SPF passed                            |
+| `hasDkim()`              | `boolean`      | True if DKIM passed                           |
+| `hasDmarc()`             | `boolean`      | True if DMARC passed                          |
+| `hasReverseDns()`        | `boolean`      | True if reverse DNS passed                    |
 
 **Example:**
+
 ```java
 AuthValidation validation = auth.validate();
 
@@ -254,12 +262,12 @@ if (validation.hasSpf() && validation.hasDkim()) {
 
 SPF (Sender Policy Framework) validation result.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | pass, fail, softfail, neutral, none, temperror, permerror |
-| `domain` | `String` | Checked domain |
-| `ip` | `String` | IP address of the sending server |
-| `details` | `String` | Additional explanation about the result |
+| Property  | Type     | Description                                               |
+| --------- | -------- | --------------------------------------------------------- |
+| `result`  | `String` | pass, fail, softfail, neutral, none, temperror, permerror |
+| `domain`  | `String` | Checked domain                                            |
+| `ip`      | `String` | IP address of the sending server                          |
+| `details` | `String` | Additional explanation about the result                   |
 
 ### Getters
 
@@ -274,11 +282,11 @@ public String getDetails()
 
 DKIM (DomainKeys Identified Mail) signature result.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | pass, fail, none |
-| `domain` | `String` | Signing domain |
-| `selector` | `String` | DKIM selector used |
+| Property    | Type     | Description                |
+| ----------- | -------- | -------------------------- |
+| `result`    | `String` | pass, fail, none           |
+| `domain`    | `String` | Signing domain             |
+| `selector`  | `String` | DKIM selector used         |
 | `signature` | `String` | DKIM signature information |
 
 ### Getters
@@ -296,11 +304,11 @@ public String getSignature()
 
 DMARC (Domain-based Message Authentication) result.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `result` | `String` | pass, fail, none |
-| `domain` | `String` | From domain |
-| `policy` | `String` | none, quarantine, reject |
+| Property  | Type      | Description                                        |
+| --------- | --------- | -------------------------------------------------- |
+| `result`  | `String`  | pass, fail, none                                   |
+| `domain`  | `String`  | From domain                                        |
+| `policy`  | `String`  | none, quarantine, reject                           |
 | `aligned` | `Boolean` | Whether SPF/DKIM align with the From header domain |
 
 ### Getters
@@ -317,11 +325,11 @@ public boolean isAligned()   // Returns true if aligned, false otherwise
 
 Reverse DNS verification result.
 
-| Property | Type | Description |
-|----------|------|-------------|
+| Property   | Type      | Description                             |
+| ---------- | --------- | --------------------------------------- |
 | `verified` | `boolean` | Whether reverse DNS verification passed |
-| `ip` | `String` | IP address of the sending server |
-| `hostname` | `String` | Resolved hostname from PTR record |
+| `ip`       | `String`  | IP address of the sending server        |
+| `hostname` | `String`  | Resolved hostname from PTR record       |
 
 ### Getters
 

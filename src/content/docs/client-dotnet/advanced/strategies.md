@@ -98,10 +98,10 @@ var client = VaultSandboxClientBuilder.Create()
 
 ### SSE Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `SseReconnectInterval` | `TimeSpan` | `5 seconds` | Initial delay before reconnection |
-| `SseMaxReconnectAttempts` | `int` | `10` | Maximum reconnection attempts |
+| Option                    | Type       | Default     | Description                       |
+| ------------------------- | ---------- | ----------- | --------------------------------- |
+| `SseReconnectInterval`    | `TimeSpan` | `5 seconds` | Initial delay before reconnection |
+| `SseMaxReconnectAttempts` | `int`      | `10`        | Maximum reconnection attempts     |
 
 ### Reconnection Behavior
 
@@ -186,8 +186,8 @@ var client = VaultSandboxClientBuilder.Create()
 
 ### Polling Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
+| Option         | Type       | Default     | Description                  |
+| -------------- | ---------- | ----------- | ---------------------------- |
 | `PollInterval` | `TimeSpan` | `2 seconds` | How often to poll for emails |
 
 ### Example Usage

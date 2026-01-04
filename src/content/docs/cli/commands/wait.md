@@ -15,25 +15,25 @@ vsb email wait [flags]
 
 ### Flags
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `--inbox` | Inbox to watch (uses active inbox if omitted) | - |
-| `--timeout` | Maximum time to wait | `60s` |
-| `--subject` | Match exact subject | - |
-| `--subject-regex` | Match subject with regex | - |
-| `--from` | Match exact sender | - |
-| `--from-regex` | Match sender with regex | - |
-| `--count` | Number of emails to wait for | `1` |
-| `-q, --quiet` | Suppress output, only set exit code | - |
-| `--extract-link` | Output matching link from email | - |
-| `-o, --output` | Output format: `pretty` or `json` | `pretty` |
+| Flag              | Description                                   | Default  |
+| ----------------- | --------------------------------------------- | -------- |
+| `--inbox`         | Inbox to watch (uses active inbox if omitted) | -        |
+| `--timeout`       | Maximum time to wait                          | `60s`    |
+| `--subject`       | Match exact subject                           | -        |
+| `--subject-regex` | Match subject with regex                      | -        |
+| `--from`          | Match exact sender                            | -        |
+| `--from-regex`    | Match sender with regex                       | -        |
+| `--count`         | Number of emails to wait for                  | `1`      |
+| `-q, --quiet`     | Suppress output, only set exit code           | -        |
+| `--extract-link`  | Output matching link from email               | -        |
+| `-o, --output`    | Output format: `pretty` or `json`             | `pretty` |
 
 ### Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| `0` | Email(s) found successfully |
-| `1` | Timeout or error (connection, auth, etc.) |
+| Code | Meaning                                   |
+| ---- | ----------------------------------------- |
+| `0`  | Email(s) found successfully               |
+| `1`  | Timeout or error (connection, auth, etc.) |
 
 ## Examples
 
@@ -84,20 +84,18 @@ Output:
 
 ```json
 {
-  "id": "e1a2b3",
-  "subject": "Verify your email",
-  "from": "noreply@myapp.com",
-  "to": ["user@example.com"],
-  "text": "Click here to verify...",
-  "html": "<html>...",
-  "links": [
-    "https://myapp.com/verify?token=abc123"
-  ],
-  "headers": {
-    "Content-Type": "text/html; charset=utf-8",
-    "X-Mailer": "MyApp/1.0"
-  },
-  "receivedAt": "2024-01-15T14:35:00Z"
+	"id": "e1a2b3",
+	"subject": "Verify your email",
+	"from": "noreply@myapp.com",
+	"to": ["user@example.com"],
+	"text": "Click here to verify...",
+	"html": "<html>...",
+	"links": ["https://myapp.com/verify?token=abc123"],
+	"headers": {
+		"Content-Type": "text/html; charset=utf-8",
+		"X-Mailer": "MyApp/1.0"
+	},
+	"receivedAt": "2024-01-15T14:35:00Z"
 }
 ```
 

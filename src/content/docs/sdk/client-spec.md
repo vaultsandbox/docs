@@ -78,31 +78,31 @@ VaultSandbox is a secure, receive-only SMTP server designed for QA/testing envir
 
 SDKs should support these configuration options when creating a client:
 
-| Option                    | Type       | Default                   | Description                                    |
-| ------------------------- | ---------- | ------------------------- | ---------------------------------------------- |
-| `apiKey`                  | string     | (required)                | API key for authentication                     |
-| `baseUrl`                 | string     | Platform-specific         | VaultSandbox API base URL                      |
-| `strategy`                | enum       | `auto`                    | Delivery strategy: `auto`, `sse`, `polling`    |
-| `timeout`                 | number     | 30000                     | HTTP request timeout (ms)                      |
-| `maxRetries`              | number     | 3                         | Maximum retry attempts for failed requests     |
-| `retryDelay`              | number     | 1000                      | Base delay between retries (ms)                |
-| `retryOn`                 | number[]   | [408,429,500,502,503,504] | HTTP status codes that trigger retry           |
-| `pollingInterval`         | number     | 2000                      | Initial polling interval (ms)                  |
-| `pollingMaxBackoff`       | number     | 30000                     | Maximum polling interval (ms)                  |
-| `pollingBackoffMultiplier`| number     | 1.5                       | Polling backoff multiplier                     |
-| `pollingJitterFactor`     | number     | 0.3                       | Random jitter factor (0-1)                     |
-| `sseReconnectInterval`    | number     | 5000                      | SSE reconnection interval (ms)                 |
-| `sseMaxReconnectAttempts` | number     | 10                        | Max SSE reconnection attempts                  |
-| `sseConnectionTimeout`    | number     | 5000                      | SSE connection timeout for auto fallback (ms)  |
-| `httpClient`              | object     | Platform default          | Custom HTTP client (optional)                  |
-| `onSyncError`             | function   | null                      | Callback for background sync errors (optional) |
+| Option                     | Type     | Default                   | Description                                    |
+| -------------------------- | -------- | ------------------------- | ---------------------------------------------- |
+| `apiKey`                   | string   | (required)                | API key for authentication                     |
+| `baseUrl`                  | string   | Platform-specific         | VaultSandbox API base URL                      |
+| `strategy`                 | enum     | `auto`                    | Delivery strategy: `auto`, `sse`, `polling`    |
+| `timeout`                  | number   | 30000                     | HTTP request timeout (ms)                      |
+| `maxRetries`               | number   | 3                         | Maximum retry attempts for failed requests     |
+| `retryDelay`               | number   | 1000                      | Base delay between retries (ms)                |
+| `retryOn`                  | number[] | [408,429,500,502,503,504] | HTTP status codes that trigger retry           |
+| `pollingInterval`          | number   | 2000                      | Initial polling interval (ms)                  |
+| `pollingMaxBackoff`        | number   | 30000                     | Maximum polling interval (ms)                  |
+| `pollingBackoffMultiplier` | number   | 1.5                       | Polling backoff multiplier                     |
+| `pollingJitterFactor`      | number   | 0.3                       | Random jitter factor (0-1)                     |
+| `sseReconnectInterval`     | number   | 5000                      | SSE reconnection interval (ms)                 |
+| `sseMaxReconnectAttempts`  | number   | 10                        | Max SSE reconnection attempts                  |
+| `sseConnectionTimeout`     | number   | 5000                      | SSE connection timeout for auto fallback (ms)  |
+| `httpClient`               | object   | Platform default          | Custom HTTP client (optional)                  |
+| `onSyncError`              | function | null                      | Callback for background sync errors (optional) |
 
 ### Inbox Creation Options
 
-| Option          | Type   | Default  | Description                               |
-| --------------- | ------ | -------- | ----------------------------------------- |
-| `ttl`           | number | 3600     | Time-to-live in seconds (60-604800)       |
-| `emailAddress`  | string | null     | Desired email address or domain (optional)|
+| Option         | Type   | Default | Description                                |
+| -------------- | ------ | ------- | ------------------------------------------ |
+| `ttl`          | number | 3600    | Time-to-live in seconds (60-604800)        |
+| `emailAddress` | string | null    | Desired email address or domain (optional) |
 
 ---
 
@@ -110,15 +110,16 @@ SDKs should support these configuration options when creating a client:
 
 This specification uses **camelCase** for all identifiers in the wire format (JSON payloads, API responses). SDK implementations should adapt to their language's idiomatic conventions:
 
-| Language   | Public API Style | Example Method       | Example Field       |
-|------------|------------------|----------------------|---------------------|
-| JavaScript | camelCase        | `createInbox()`      | `email.authResults` |
-| Go         | PascalCase       | `CreateInbox()`      | `Email.AuthResults` |
-| Python     | snake_case       | `create_inbox()`     | `email.auth_results`|
-| Rust       | snake_case       | `create_inbox()`     | `email.auth_results`|
-| Java       | camelCase        | `createInbox()`      | `email.authResults` |
+| Language   | Public API Style | Example Method   | Example Field        |
+| ---------- | ---------------- | ---------------- | -------------------- |
+| JavaScript | camelCase        | `createInbox()`  | `email.authResults`  |
+| Go         | PascalCase       | `CreateInbox()`  | `Email.AuthResults`  |
+| Python     | snake_case       | `create_inbox()` | `email.auth_results` |
+| Rust       | snake_case       | `create_inbox()` | `email.auth_results` |
+| Java       | camelCase        | `createInbox()`  | `email.authResults`  |
 
 **Wire format remains camelCase regardless of SDK language.** For example, the JSON field `emailAddress` becomes:
+
 - Go: `EmailAddress` (struct field)
 - Python: `email_address` (attribute)
 - JavaScript: `emailAddress` (property)
@@ -168,17 +169,17 @@ X-API-Key: your-api-key
 
 ### Key Sizes
 
-| Key Type                  | Size (bytes) |
-| ------------------------- | ------------ |
-| ML-KEM-768 Public Key     | 1184         |
-| ML-KEM-768 Secret Key     | 2400         |
-| ML-KEM-768 Ciphertext     | 1088         |
-| ML-KEM-768 Shared Secret  | 32           |
-| ML-DSA-65 Public Key      | 1952         |
-| ML-DSA-65 Signature       | 3309         |
-| AES-256 Key               | 32           |
-| AES-GCM Nonce             | 12           |
-| AES-GCM Tag               | 16           |
+| Key Type                 | Size (bytes) |
+| ------------------------ | ------------ |
+| ML-KEM-768 Public Key    | 1184         |
+| ML-KEM-768 Secret Key    | 2400         |
+| ML-KEM-768 Ciphertext    | 1088         |
+| ML-KEM-768 Shared Secret | 32           |
+| ML-DSA-65 Public Key     | 1952         |
+| ML-DSA-65 Signature      | 3309         |
+| AES-256 Key              | 32           |
+| AES-GCM Nonce            | 12           |
+| AES-GCM Tag              | 16           |
 
 ### Constants
 
@@ -222,6 +223,21 @@ All encrypted data from the server follows this structure:
 	"server_sig_pk": "<base64url: server's signing public key>"
 }
 ```
+
+### Payload Validation
+
+Implementations MUST validate payloads before processing:
+
+1. **Version**: `v` MUST be `1`. Reject payloads with unknown versions.
+2. **Algorithms**: All algorithm fields MUST match expected values. Implementations MUST reject payloads specifying different algorithms.
+3. **Size validation**: Decoded binary fields MUST have correct sizes:
+
+| Field           | Expected size |
+| --------------- | ------------- |
+| `ct_kem`        | 1088 bytes    |
+| `nonce`         | 12 bytes      |
+| `sig`           | 3309 bytes    |
+| `server_sig_pk` | 1952 bytes    |
 
 ### Decryption Flow
 
@@ -284,10 +300,13 @@ def verify_with_pinning(encrypted_payload, pinned_server_pk):
 ### Deriving Public Key from Secret Key
 
 In ML-KEM-768, the secret key structure is:
+
 ```
 secretKey = cpaPrivateKey || cpaPublicKey || h || z
 ```
+
 Where:
+
 - `cpaPrivateKey`: 1152 bytes (12 × k × n / 8, k=3, n=256)
 - `cpaPublicKey`: 1184 bytes (the public key)
 - `h`: 32 bytes (hash of public key)
@@ -415,10 +434,10 @@ Returns inbox sync status for efficient polling.
 }
 ```
 
-| Field        | Type   | Description                                           |
-| ------------ | ------ | ----------------------------------------------------- |
-| `emailCount` | number | Number of emails currently in the inbox               |
-| `emailsHash` | string | Hash of email IDs; changes indicate new/deleted emails|
+| Field        | Type   | Description                                            |
+| ------------ | ------ | ------------------------------------------------------ |
+| `emailCount` | number | Number of emails currently in the inbox                |
+| `emailsHash` | string | Hash of email IDs; changes indicate new/deleted emails |
 
 **Usage:** Compare `emailsHash` to detect changes without fetching all emails. This enables efficient polling by skipping unchanged inboxes.
 
@@ -520,11 +539,11 @@ Accept: text/event-stream
 data: {"inboxId":"inbox-hash","emailId":"email-uuid","encryptedMetadata":{...}}
 ```
 
-| Field               | Type            | Description                                 |
-| ------------------- | --------------- | ------------------------------------------- |
-| `inboxId`           | string          | The inbox hash that received the email      |
-| `emailId`           | string          | Unique identifier for the new email         |
-| `encryptedMetadata` | EncryptedPayload| Encrypted email metadata (from, to, subject)|
+| Field               | Type             | Description                                  |
+| ------------------- | ---------------- | -------------------------------------------- |
+| `inboxId`           | string           | The inbox hash that received the email       |
+| `emailId`           | string           | Unique identifier for the new email          |
+| `encryptedMetadata` | EncryptedPayload | Encrypted email metadata (from, to, subject) |
 
 **Note:** SSE events only include metadata. To get full email content (body, attachments), fetch the email by ID after receiving the notification.
 
@@ -571,28 +590,32 @@ The fully decrypted Email object exposed to users:
 		"message-id": "<abc123@example.com>",
 		"date": "Mon, 15 Jan 2024 12:00:00 +0000"
 	},
-	"attachments": [/* AttachmentData[] */],
+	"attachments": [
+		/* AttachmentData[] */
+	],
 	"links": ["https://example.com/verify?token=abc123"],
-	"authResults": {/* AuthResults */},
+	"authResults": {
+		/* AuthResults */
+	},
 	"metadata": {}
 }
 ```
 
-| Field         | Type              | Description                                      |
-| ------------- | ----------------- | ------------------------------------------------ |
-| `id`          | string            | Unique email identifier                          |
-| `from`        | string            | Sender email address                             |
-| `to`          | string[]          | Recipient email addresses                        |
-| `subject`     | string            | Email subject line                               |
-| `text`        | string \| null    | Plain text body (null if not available)          |
-| `html`        | string \| null    | HTML body (null if not available)                |
-| `receivedAt`  | Date/string       | When email was received                          |
-| `isRead`      | boolean           | Read status                                      |
-| `headers`     | object            | Email headers as key-value pairs                 |
-| `attachments` | AttachmentData[]  | Email attachments                                |
-| `links`       | string[]          | URLs extracted from email body                   |
-| `authResults` | AuthResults       | SPF/DKIM/DMARC/ReverseDNS results                |
-| `metadata`    | object            | Additional metadata (reserved for extensions)    |
+| Field         | Type             | Description                                   |
+| ------------- | ---------------- | --------------------------------------------- |
+| `id`          | string           | Unique email identifier                       |
+| `from`        | string           | Sender email address                          |
+| `to`          | string[]         | Recipient email addresses                     |
+| `subject`     | string           | Email subject line                            |
+| `text`        | string \| null   | Plain text body (null if not available)       |
+| `html`        | string \| null   | HTML body (null if not available)             |
+| `receivedAt`  | Date/string      | When email was received                       |
+| `isRead`      | boolean          | Read status                                   |
+| `headers`     | object           | Email headers as key-value pairs              |
+| `attachments` | AttachmentData[] | Email attachments                             |
+| `links`       | string[]         | URLs extracted from email body                |
+| `authResults` | AuthResults      | SPF/DKIM/DMARC/ReverseDNS results             |
+| `metadata`    | object           | Additional metadata (reserved for extensions) |
 
 ### Decrypted Email Content
 
@@ -666,14 +689,14 @@ The `validate()` method returns a validation summary:
 }
 ```
 
-| Field              | Type       | Description                                              |
-| ------------------ | ---------- | -------------------------------------------------------- |
-| `passed`           | `boolean`  | True if SPF, DKIM, and DMARC all passed                  |
-| `spfPassed`        | `boolean`  | True if SPF result is `"pass"`                           |
-| `dkimPassed`       | `boolean`  | True if at least one DKIM signature passed               |
-| `dmarcPassed`      | `boolean`  | True if DMARC result is `"pass"`                         |
-| `reverseDnsPassed` | `boolean`  | True if reverse DNS `verified` is `true`                 |
-| `failures`         | `string[]` | Human-readable descriptions of failed checks             |
+| Field              | Type       | Description                                  |
+| ------------------ | ---------- | -------------------------------------------- |
+| `passed`           | `boolean`  | True if SPF, DKIM, and DMARC all passed      |
+| `spfPassed`        | `boolean`  | True if SPF result is `"pass"`               |
+| `dkimPassed`       | `boolean`  | True if at least one DKIM signature passed   |
+| `dmarcPassed`      | `boolean`  | True if DMARC result is `"pass"`             |
+| `reverseDnsPassed` | `boolean`  | True if reverse DNS `verified` is `true`     |
+| `failures`         | `string[]` | Human-readable descriptions of failed checks |
 
 SDKs may also provide a convenience method like `isPassing()` that returns the `passed` value directly.
 
@@ -688,12 +711,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 }
 ```
 
-| Field     | Type     | Description                      |
-| --------- | -------- | -------------------------------- |
-| `result`  | `string` | SPF check result (see values)    |
-| `domain`  | `string` | Domain checked (optional)        |
-| `ip`      | `string` | Sender IP address (optional)     |
-| `details` | `string` | Human-readable details (optional)|
+| Field     | Type     | Description                       |
+| --------- | -------- | --------------------------------- |
+| `result`  | `string` | SPF check result (see values)     |
+| `domain`  | `string` | Domain checked (optional)         |
+| `ip`      | `string` | Sender IP address (optional)      |
+| `details` | `string` | Human-readable details (optional) |
 
 | Result      | Meaning                 |
 | ----------- | ----------------------- |
@@ -716,12 +739,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 }
 ```
 
-| Field      | Type     | Description                       |
-| ---------- | -------- | --------------------------------- |
-| `result`   | `string` | DKIM check result (see values)    |
-| `domain`   | `string` | Signing domain (optional)         |
-| `selector` | `string` | DKIM selector (optional)          |
-| `signature`| `string` | DKIM signature info (optional)    |
+| Field       | Type     | Description                    |
+| ----------- | -------- | ------------------------------ |
+| `result`    | `string` | DKIM check result (see values) |
+| `domain`    | `string` | Signing domain (optional)      |
+| `selector`  | `string` | DKIM selector (optional)       |
+| `signature` | `string` | DKIM signature info (optional) |
 
 | Result | Meaning           |
 | ------ | ----------------- |
@@ -740,12 +763,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 }
 ```
 
-| Field     | Type      | Description                        |
-| --------- | --------- | ---------------------------------- |
-| `result`  | `string`  | DMARC check result (see values)    |
-| `policy`  | `string`  | Domain's DMARC policy (optional)   |
-| `aligned` | `boolean` | Whether SPF/DKIM aligned (optional)|
-| `domain`  | `string`  | Domain checked (optional)          |
+| Field     | Type      | Description                         |
+| --------- | --------- | ----------------------------------- |
+| `result`  | `string`  | DMARC check result (see values)     |
+| `policy`  | `string`  | Domain's DMARC policy (optional)    |
+| `aligned` | `boolean` | Whether SPF/DKIM aligned (optional) |
+| `domain`  | `string`  | Domain checked (optional)           |
 
 | Result | Meaning         |
 | ------ | --------------- |
@@ -769,11 +792,11 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 }
 ```
 
-| Field      | Type      | Description                        |
-| ---------- | --------- | ---------------------------------- |
-| `verified` | `boolean` | Whether reverse DNS verified       |
-| `ip`       | `string`  | Server IP address (optional)       |
-| `hostname` | `string`  | Resolved hostname (optional)       |
+| Field      | Type      | Description                  |
+| ---------- | --------- | ---------------------------- |
+| `verified` | `boolean` | Whether reverse DNS verified |
+| `ip`       | `string`  | Server IP address (optional) |
+| `hostname` | `string`  | Resolved hostname (optional) |
 
 **Note:** Unlike other auth results, ReverseDNS uses a `verified` boolean instead of a `result` string. SDKs may provide a convenience method like `isPassing()` that returns `verified`.
 
@@ -783,17 +806,102 @@ For persistence/sharing:
 
 ```json
 {
+	"version": 1,
 	"emailAddress": "abc123@mail.example.com",
 	"expiresAt": "2024-01-15T12:00:00.000Z",
 	"inboxHash": "sha256-hash",
 	"serverSigPk": "<base64url: server signing key>",
-	"publicKeyB64": "<base64url: client public key>",
-	"secretKeyB64": "<base64url: client secret key>",
+	"secretKey": "<base64url: client secret key>",
 	"exportedAt": "2024-01-14T12:00:00.000Z"
 }
 ```
 
+| Field          | Type    | Required | Description                                                    |
+| -------------- | ------- | -------- | -------------------------------------------------------------- |
+| `version`      | integer | Yes      | Export format version. MUST be `1`.                            |
+| `emailAddress` | string  | Yes      | The inbox email address. MUST contain `@`.                     |
+| `expiresAt`    | string  | Yes      | Inbox expiration timestamp (ISO 8601).                         |
+| `inboxHash`    | string  | Yes      | Unique inbox identifier. Non-empty.                            |
+| `serverSigPk`  | string  | Yes      | Server's ML-DSA-65 public key (base64url, 1952 bytes decoded). |
+| `secretKey`    | string  | Yes      | ML-KEM-768 secret key (base64url, 2400 bytes decoded).         |
+| `exportedAt`   | string  | Yes      | Export timestamp (ISO 8601).                                   |
+
+**Note:** The public key is NOT included in the export as it can be derived from the secret key (see [Deriving Public Key from Secret Key](#deriving-public-key-from-secret-key)).
+
 **Security Warning:** Exported data contains private keys. Handle securely.
+
+### Import Validation
+
+Implementations MUST validate imported data in the following order:
+
+1. **Parse JSON**: Verify the input is valid JSON.
+
+2. **Validate version**:
+
+   ```
+   if version != 1:
+       return ERROR_UNSUPPORTED_VERSION
+   ```
+
+3. **Validate required fields**: All fields from the export format MUST be present and non-null.
+
+4. **Validate emailAddress**:
+   - MUST be a non-empty string
+   - MUST contain exactly one `@` character
+
+   ```
+   if emailAddress == "" or count(emailAddress, "@") != 1:
+       return ERROR_INVALID_EMAIL
+   ```
+
+5. **Validate inboxHash**:
+   - MUST be a non-empty string
+
+   ```
+   if inboxHash == "":
+       return ERROR_INVALID_INBOX_HASH
+   ```
+
+6. **Validate and decode secretKey**:
+
+   ```
+   secretKeyBytes = base64url_decode(secretKey)
+   if decoding fails:
+       return ERROR_INVALID_SECRET_KEY
+   if len(secretKeyBytes) != 2400:
+       return ERROR_INVALID_SECRET_KEY_SIZE
+   ```
+
+7. **Validate and decode serverSigPk**:
+
+   ```
+   serverSigPkBytes = base64url_decode(serverSigPk)
+   if decoding fails:
+       return ERROR_INVALID_SERVER_KEY
+   if len(serverSigPkBytes) != 1952:
+       return ERROR_INVALID_SERVER_KEY_SIZE
+   ```
+
+8. **Validate timestamps**:
+   - `expiresAt` MUST be a valid ISO 8601 timestamp
+   - `exportedAt` MUST be a valid ISO 8601 timestamp
+
+### Keypair Reconstruction
+
+After validation, reconstruct the full keypair:
+
+```python
+secret_key = base64url_decode(export.secretKey)
+public_key = secret_key[1152:2336]  # Derive from secret key
+keypair = { secret_key, public_key }
+```
+
+### Duplicate Handling
+
+Implementations SHOULD check for existing inboxes with the same email address or inbox hash before import and either:
+
+- Reject the import with an error, or
+- Prompt the user to confirm replacement
 
 ---
 
@@ -803,10 +911,10 @@ For persistence/sharing:
 
 The `/api/events` SSE endpoint is always available on the server.
 
-| Strategy  | Use Case                                                          |
-| --------- | ----------------------------------------------------------------- |
-| `sse`     | Real-time updates, low latency                                    |
-| `polling` | Firewall restrictions, simpler implementation                     |
+| Strategy  | Use Case                                                                   |
+| --------- | -------------------------------------------------------------------------- |
+| `sse`     | Real-time updates, low latency                                             |
+| `polling` | Firewall restrictions, simpler implementation                              |
 | `auto`    | Recommended default; tries SSE first, falls back to polling if unavailable |
 
 ### SSE Strategy
@@ -939,41 +1047,72 @@ for attempt in range(max_retries + 1):
 3. Halt the operation
 4. Potentially trigger security alerts
 
+### Security Requirements
+
+#### Timing Attack Prevention
+
+Implementations MUST use constant-time operations for:
+
+- Server key comparison (pinned vs payload key)
+- Signature verification
+- Any comparison involving secret data
+
+#### Error Message Handling
+
+Implementations MUST NOT reveal whether a failure occurred during:
+
+- Signature verification vs. decryption
+- MAC verification vs. decryption
+
+Use generic error messages to prevent oracle attacks. For example, use a single "decryption failed" error rather than distinguishing between signature failure and AEAD failure.
+
+#### Memory Handling
+
+Implementations SHOULD:
+
+- Zero secret key material after use when possible
+- Avoid logging or serializing secret keys except for export
+- Use secure memory allocations where available
+
+#### Random Number Generation
+
+All random values (keypairs, nonces) MUST be generated using a cryptographically secure random number generator (CSPRNG).
+
 ---
 
 ## Behavioral Specifications
 
 ### Default Values
 
-| Configuration              | Default  | Description                                        |
-| -------------------------- | -------- | -------------------------------------------------- |
-| HTTP timeout               | 30000ms  | Maximum time for HTTP request completion           |
-| Wait timeout               | 30000ms  | Maximum time to wait for email arrival             |
-| Poll interval (initial)    | 2000ms   | Starting interval for polling strategy             |
-| Poll max backoff           | 30000ms  | Maximum polling interval after backoff             |
-| Poll backoff multiplier    | 1.5      | Multiplier for exponential backoff                 |
-| Poll jitter factor         | 0.3      | Random jitter (0-30%) to prevent thundering herd   |
-| Max retries                | 3        | Maximum HTTP retry attempts                        |
-| Retry delay                | 1000ms   | Base delay between retries (doubles each attempt)  |
-| SSE reconnect interval     | 5000ms   | Initial SSE reconnection delay                     |
-| SSE max reconnect attempts | 10       | Maximum SSE reconnection attempts before fallback  |
-| SSE backoff multiplier     | 2        | SSE reconnection backoff multiplier                |
-| SSE connection timeout     | 5000ms   | Time to wait for SSE before falling back (auto)    |
-| Default inbox TTL          | 3600s    | Default inbox time-to-live (1 hour)                |
-| Min inbox TTL              | 60s      | Minimum allowed inbox TTL                          |
-| Max inbox TTL              | 604800s  | Maximum allowed inbox TTL (7 days)                 |
+| Configuration              | Default | Description                                       |
+| -------------------------- | ------- | ------------------------------------------------- |
+| HTTP timeout               | 30000ms | Maximum time for HTTP request completion          |
+| Wait timeout               | 30000ms | Maximum time to wait for email arrival            |
+| Poll interval (initial)    | 2000ms  | Starting interval for polling strategy            |
+| Poll max backoff           | 30000ms | Maximum polling interval after backoff            |
+| Poll backoff multiplier    | 1.5     | Multiplier for exponential backoff                |
+| Poll jitter factor         | 0.3     | Random jitter (0-30%) to prevent thundering herd  |
+| Max retries                | 3       | Maximum HTTP retry attempts                       |
+| Retry delay                | 1000ms  | Base delay between retries (doubles each attempt) |
+| SSE reconnect interval     | 5000ms  | Initial SSE reconnection delay                    |
+| SSE max reconnect attempts | 10      | Maximum SSE reconnection attempts before fallback |
+| SSE backoff multiplier     | 2       | SSE reconnection backoff multiplier               |
+| SSE connection timeout     | 5000ms  | Time to wait for SSE before falling back (auto)   |
+| Default inbox TTL          | 3600s   | Default inbox time-to-live (1 hour)               |
+| Min inbox TTL              | 60s     | Minimum allowed inbox TTL                         |
+| Max inbox TTL              | 604800s | Maximum allowed inbox TTL (7 days)                |
 
 ### Email Filtering
 
 `waitForEmail` supports these filter options:
 
-| Filter         | Type            | Description            |
-| -------------- | --------------- | ---------------------- |
-| `subject`      | string \| regex | Match email subject    |
-| `from`         | string \| regex | Match sender address   |
-| `predicate`    | function        | Custom filter function |
-| `timeout`      | number          | Max wait time (ms), default 30000     |
-| `pollInterval` | number          | Polling interval (ms)  |
+| Filter         | Type            | Description                       |
+| -------------- | --------------- | --------------------------------- |
+| `subject`      | string \| regex | Match email subject               |
+| `from`         | string \| regex | Match sender address              |
+| `predicate`    | function        | Custom filter function            |
+| `timeout`      | number          | Max wait time (ms), default 30000 |
+| `pollInterval` | number          | Polling interval (ms)             |
 
 ### Inbox Lifecycle
 
@@ -984,48 +1123,48 @@ for attempt in range(max_retries + 1):
 
 ### Inbox Methods
 
-| Method               | Description                                          | Returns              |
-| -------------------- | ---------------------------------------------------- | -------------------- |
-| `getEmails()`        | Fetch and decrypt all emails                         | `Email[]`            |
-| `getEmail(id)`       | Fetch and decrypt specific email                     | `Email`              |
-| `getRawEmail(id)`    | Get decrypted raw RFC 5322 source                    | `string`             |
-| `waitForEmail(opts)` | Wait for email matching filters                      | `Email`              |
-| `waitForEmailCount(n, opts)` | Wait for at least N matching emails          | `Email[]`            |
-| `watch()`            | Subscribe to new emails (returns channel/observable) | `Channel<Email>`     |
-| `onNewEmail(cb)`     | Subscribe with callback                              | `Subscription`       |
-| `getSyncStatus()`    | Get email count and hash for change detection        | `SyncStatus`         |
-| `markEmailAsRead(id)`| Mark email as read                                   | `void`               |
-| `deleteEmail(id)`    | Delete specific email                                | `void`               |
-| `delete()`           | Delete inbox and all emails                          | `void`               |
-| `export()`           | Export inbox data including keys                     | `ExportedInboxData`  |
-| `isExpired()`        | Check if inbox TTL has passed                        | `boolean`            |
+| Method                       | Description                                          | Returns             |
+| ---------------------------- | ---------------------------------------------------- | ------------------- |
+| `getEmails()`                | Fetch and decrypt all emails                         | `Email[]`           |
+| `getEmail(id)`               | Fetch and decrypt specific email                     | `Email`             |
+| `getRawEmail(id)`            | Get decrypted raw RFC 5322 source                    | `string`            |
+| `waitForEmail(opts)`         | Wait for email matching filters                      | `Email`             |
+| `waitForEmailCount(n, opts)` | Wait for at least N matching emails                  | `Email[]`           |
+| `watch()`                    | Subscribe to new emails (returns channel/observable) | `Channel<Email>`    |
+| `onNewEmail(cb)`             | Subscribe with callback                              | `Subscription`      |
+| `getSyncStatus()`            | Get email count and hash for change detection        | `SyncStatus`        |
+| `markEmailAsRead(id)`        | Mark email as read                                   | `void`              |
+| `deleteEmail(id)`            | Delete specific email                                | `void`              |
+| `delete()`                   | Delete inbox and all emails                          | `void`              |
+| `export()`                   | Export inbox data including keys                     | `ExportedInboxData` |
+| `isExpired()`                | Check if inbox TTL has passed                        | `boolean`           |
 
 ### Email Methods
 
 Email objects may include convenience methods for common operations:
 
-| Method         | Description                       | Returns     |
-| -------------- | --------------------------------- | ----------- |
-| `markAsRead()` | Mark this email as read           | `void`      |
-| `delete()`     | Delete this email                 | `void`      |
-| `getRaw()`     | Fetch raw RFC 5322 source         | `RawEmail`  |
+| Method         | Description               | Returns    |
+| -------------- | ------------------------- | ---------- |
+| `markAsRead()` | Mark this email as read   | `void`     |
+| `delete()`     | Delete this email         | `void`     |
+| `getRaw()`     | Fetch raw RFC 5322 source | `RawEmail` |
 
 ### Client Methods
 
-| Method                    | Description                                  | Returns              |
-| ------------------------- | -------------------------------------------- | -------------------- |
-| `createInbox(opts)`       | Create new inbox with auto-generated keypair | `Inbox`              |
-| `importInbox(data)`       | Import inbox from exported data              | `Inbox`              |
-| `importInboxFromFile(path)` | Import inbox from JSON file                | `Inbox`              |
-| `exportInboxToFile(inbox, path)` | Export inbox to JSON file             | `void`               |
-| `deleteInbox(email)`      | Delete specific inbox                        | `void`               |
-| `deleteAllInboxes()`      | Delete all inboxes for API key               | `number` (count)     |
-| `getInbox(email)`         | Get tracked inbox by email address           | `Inbox?`             |
-| `getInboxes()`            | Get all tracked inboxes                      | `Inbox[]`            |
-| `watchInboxes(inboxes)`   | Monitor multiple inboxes simultaneously      | `InboxMonitor`       |
-| `getServerInfo()`         | Get server configuration                     | `ServerInfo`         |
-| `checkKey()`              | Validate API key                             | `boolean`            |
-| `close()`                 | Close client and release resources           | `void`               |
+| Method                           | Description                                  | Returns          |
+| -------------------------------- | -------------------------------------------- | ---------------- |
+| `createInbox(opts)`              | Create new inbox with auto-generated keypair | `Inbox`          |
+| `importInbox(data)`              | Import inbox from exported data              | `Inbox`          |
+| `importInboxFromFile(path)`      | Import inbox from JSON file                  | `Inbox`          |
+| `exportInboxToFile(inbox, path)` | Export inbox to JSON file                    | `void`           |
+| `deleteInbox(email)`             | Delete specific inbox                        | `void`           |
+| `deleteAllInboxes()`             | Delete all inboxes for API key               | `number` (count) |
+| `getInbox(email)`                | Get tracked inbox by email address           | `Inbox?`         |
+| `getInboxes()`                   | Get all tracked inboxes                      | `Inbox[]`        |
+| `watchInboxes(inboxes)`          | Monitor multiple inboxes simultaneously      | `InboxMonitor`   |
+| `getServerInfo()`                | Get server configuration                     | `ServerInfo`     |
+| `checkKey()`                     | Validate API key                             | `boolean`        |
+| `close()`                        | Close client and release resources           | `void`           |
 
 ### Subscription Pattern
 
@@ -1147,6 +1286,16 @@ monitor.unsubscribe()  # Stop all subscriptions
 - [ ] Error scenario coverage
 - [ ] Concurrent inbox handling
 - [ ] Import/export round-trip tests
+- [ ] Interoperability tests (see [client-interop](https://github.com/vaultsandbox/client-interop))
+
+### Interoperability Testing
+
+SDK implementations SHOULD pass the official interoperability test suite at [github.com/vaultsandbox/client-interop](https://github.com/vaultsandbox/client-interop). This suite validates:
+
+- Cryptographic operations (KEM, signatures, AEAD, HKDF)
+- Transcript construction for signature verification
+- Export/import format compatibility across implementations
+- Base64URL encoding/decoding
 
 ---
 
@@ -1159,9 +1308,12 @@ Standard Base64: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+
 URL-safe Base64: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_
 ```
 
-- Replace `+` with `-`
-- Replace `/` with `_`
-- No padding (`=`) required
+### Encoding Rules
+
+1. Use `-` instead of `+`
+2. Use `_` instead of `/`
+3. Do NOT include `=` padding characters
+4. Implementations MUST reject input containing `+`, `/`, or `=`
 
 ### Encoding
 
@@ -1244,6 +1396,15 @@ def derive_key(shared_secret, context, aad, ct_kem):
 
 | Version | Date       | Changes                                                        |
 | ------- | ---------- | -------------------------------------------------------------- |
+| 0.8.0   | 2026-01-04 | Aligned with VaultSandbox cryptographic protocol spec:         |
+|         |            | - Export format: added `version` field, renamed `secretKeyB64` |
+|         |            | to `secretKey`, removed `publicKeyB64`                         |
+|         |            | - Added import validation section with detailed steps          |
+|         |            | - Added payload validation (version, algorithms, sizes)        |
+|         |            | - Added security requirements (timing attacks, error messages, |
+|         |            | memory handling, CSPRNG)                                       |
+|         |            | - Added Base64URL rejection requirement for invalid chars      |
+|         |            | - Added interoperability testing reference                     |
 | 0.7.0   | 2025-12-30 | Simplified auth results: SDKs use wire format field names      |
 |         |            | (`result`, `details`, `signature`, `verified`) directly.       |
 |         |            | Removed JSON→SDK field mapping requirement.                    |

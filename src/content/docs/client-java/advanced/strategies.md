@@ -7,22 +7,22 @@ The Java SDK supports three delivery strategies for receiving emails. This guide
 
 ## Strategy Overview
 
-| Strategy | Description |
-|----------|-------------|
-| **AUTO** | Starts with SSE, falls back to polling (recommended) |
-| **SSE** | Real-time via Server-Sent Events |
-| **POLLING** | Periodic HTTP polling |
+| Strategy    | Description                                          |
+| ----------- | ---------------------------------------------------- |
+| **AUTO**    | Starts with SSE, falls back to polling (recommended) |
+| **SSE**     | Real-time via Server-Sent Events                     |
+| **POLLING** | Periodic HTTP polling                                |
 
 ## Strategy Comparison
 
-| Aspect | SSE | Polling |
-|--------|-----|---------|
-| Latency | Instant (~0ms) | Poll interval (1-30s) |
-| Connection | Persistent | Per request |
-| Resource usage | Lower | Higher |
-| Firewall friendly | Sometimes | Always |
-| Recovery | Auto-reconnect | Natural |
-| Best for | Real-time needs | CI/CD, firewalls |
+| Aspect            | SSE             | Polling               |
+| ----------------- | --------------- | --------------------- |
+| Latency           | Instant (~0ms)  | Poll interval (1-30s) |
+| Connection        | Persistent      | Per request           |
+| Resource usage    | Lower           | Higher                |
+| Firewall friendly | Sometimes       | Always                |
+| Recovery          | Auto-reconnect  | Natural               |
+| Best for          | Real-time needs | CI/CD, firewalls      |
 
 ## AUTO Strategy (Recommended)
 
@@ -101,10 +101,10 @@ ClientConfig config = ClientConfig.builder()
 
 ### Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `sseReconnectInterval` | `Duration` | 5s | Time between reconnection attempts |
-| `sseMaxReconnectAttempts` | `int` | 10 | Max reconnection attempts before failure |
+| Option                    | Type       | Default | Description                              |
+| ------------------------- | ---------- | ------- | ---------------------------------------- |
+| `sseReconnectInterval`    | `Duration` | 5s      | Time between reconnection attempts       |
+| `sseMaxReconnectAttempts` | `int`      | 10      | Max reconnection attempts before failure |
 
 ### When to Use
 
@@ -168,12 +168,12 @@ ClientConfig config = ClientConfig.builder()
 
 ### Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `pollInterval` | `Duration` | 2s | Base polling interval |
-| `maxBackoff` | `Duration` | 30s | Maximum backoff duration |
-| `backoffMultiplier` | `double` | 1.5 | Exponential backoff multiplier |
-| `jitterFactor` | `double` | 0.3 | Random jitter factor (0-1) |
+| Option              | Type       | Default | Description                    |
+| ------------------- | ---------- | ------- | ------------------------------ |
+| `pollInterval`      | `Duration` | 2s      | Base polling interval          |
+| `maxBackoff`        | `Duration` | 30s     | Maximum backoff duration       |
+| `backoffMultiplier` | `double`   | 1.5     | Exponential backoff multiplier |
+| `jitterFactor`      | `double`   | 0.3     | Random jitter factor (0-1)     |
 
 ### When to Use
 
@@ -197,14 +197,14 @@ nextInterval = min(
 **Example sequence (2s base, 1.5x multiplier, 30s max):**
 
 | Attempt | Interval |
-|---------|----------|
-| 1 | 2s |
-| 2 | 3s |
-| 3 | 4.5s |
-| 4 | 6.75s |
-| 5 | 10.1s |
-| ... | ... |
-| Max | 30s |
+| ------- | -------- |
+| 1       | 2s       |
+| 2       | 3s       |
+| 3       | 4.5s     |
+| 4       | 6.75s    |
+| 5       | 10.1s    |
+| ...     | ...      |
+| Max     | 30s      |
 
 Jitter adds randomness (±30% by default) to spread out requests.
 
@@ -240,13 +240,13 @@ Jitter adds randomness (±30% by default) to spread out requests.
 
 **Quick Decision:**
 
-| Environment | Recommended Strategy |
-|-------------|---------------------|
-| Development | AUTO or SSE |
-| CI/CD | POLLING |
-| Production tests | AUTO |
-| Behind firewall | POLLING |
-| Real-time requirements | SSE or AUTO |
+| Environment            | Recommended Strategy |
+| ---------------------- | -------------------- |
+| Development            | AUTO or SSE          |
+| CI/CD                  | POLLING              |
+| Production tests       | AUTO                 |
+| Behind firewall        | POLLING              |
+| Real-time requirements | SSE or AUTO          |
 
 ## Environment-Specific Configuration
 
@@ -342,15 +342,15 @@ try {
 
 ## Troubleshooting
 
-| Issue | Possible Cause | Solution |
-|-------|----------------|----------|
-| SSE not connecting | Firewall blocking | Use POLLING or AUTO |
-| High latency | Slow poll interval | Decrease `pollInterval` |
-| Missed emails | Backoff too aggressive | Reduce `maxBackoff` |
-| Too many requests | Poll interval too short | Increase `pollInterval` |
-| AUTO not falling back | Max attempts too high | Reduce `sseMaxReconnectAttempts` |
-| Frequent reconnects | Unstable network | Increase `sseReconnectInterval` |
-| Connection timeouts | Network issues | Increase `httpTimeout` |
+| Issue                 | Possible Cause          | Solution                         |
+| --------------------- | ----------------------- | -------------------------------- |
+| SSE not connecting    | Firewall blocking       | Use POLLING or AUTO              |
+| High latency          | Slow poll interval      | Decrease `pollInterval`          |
+| Missed emails         | Backoff too aggressive  | Reduce `maxBackoff`              |
+| Too many requests     | Poll interval too short | Increase `pollInterval`          |
+| AUTO not falling back | Max attempts too high   | Reduce `sseMaxReconnectAttempts` |
+| Frequent reconnects   | Unstable network        | Increase `sseReconnectInterval`  |
+| Connection timeouts   | Network issues          | Increase `httpTimeout`           |
 
 ## Best Practices
 

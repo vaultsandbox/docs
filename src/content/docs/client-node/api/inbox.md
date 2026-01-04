@@ -65,7 +65,7 @@ console.log(`Time remaining: ${Math.round(timeUntilExpiry / 1000)}s`);
 
 ### listEmails()
 
-Lists all emails in the inbox. Emails are automatically decrypted.
+Lists all emails in the inbox with full content. Emails are automatically decrypted. This method fetches all email content in a single efficient API call.
 
 ```typescript
 listEmails(): Promise<Email[]>
@@ -73,7 +73,7 @@ listEmails(): Promise<Email[]>
 
 #### Returns
 
-`Promise<Email[]>` - Array of decrypted email objects, sorted by received time (newest first)
+`Promise<Email[]>` - Array of decrypted email objects with full content (text, html, attachments, etc.)
 
 #### Example
 
@@ -84,8 +84,58 @@ console.log(`Inbox has ${emails.length} emails`);
 
 emails.forEach((email) => {
 	console.log(`- ${email.subject} from ${email.from}`);
+	console.log(`  Body: ${email.text?.substring(0, 100)}...`);
 });
 ```
+
+---
+
+### listEmailsMetadataOnly()
+
+Lists all emails in the inbox with metadata only (no content). Use this for efficient listing when you only need basic email information.
+
+```typescript
+listEmailsMetadataOnly(): Promise<EmailMetadata[]>
+```
+
+#### Returns
+
+`Promise<EmailMetadata[]>` - Array of email metadata objects
+
+```typescript
+interface EmailMetadata {
+	id: string;
+	from: string;
+	subject: string;
+	receivedAt: Date;
+	isRead: boolean;
+}
+```
+
+#### Example
+
+```javascript
+// Quickly list emails without fetching full content
+const emails = await inbox.listEmailsMetadataOnly();
+
+console.log(`Inbox has ${emails.length} emails`);
+
+emails.forEach((email) => {
+	console.log(`- ${email.subject} from ${email.from}`);
+	console.log(`  Received: ${email.receivedAt.toISOString()}`);
+	console.log(`  Read: ${email.isRead}`);
+});
+
+// Fetch full content for a specific email if needed
+const fullEmail = await inbox.getEmail(emails[0].id);
+console.log(`Body: ${fullEmail.text}`);
+```
+
+#### When to Use
+
+- Displaying email lists in a UI
+- Checking for new emails before fetching content
+- Reducing bandwidth when full content isn't needed
 
 ---
 
@@ -472,13 +522,13 @@ export(): ExportedInboxData
 
 ```typescript
 interface ExportedInboxData {
+	version: number; // Export format version (currently 1)
 	emailAddress: string;
 	inboxHash: string;
-	expiresAt: string;
-	serverSigPk: string;
-	publicKeyB64: string;
-	secretKeyB64: string;
-	exportedAt: string;
+	expiresAt: string; // ISO 8601 timestamp
+	serverSigPk: string; // ML-DSA-65 public key (base64url)
+	secretKey: string; // ML-KEM-768 secret key (base64url)
+	exportedAt: string; // ISO 8601 timestamp
 }
 ```
 

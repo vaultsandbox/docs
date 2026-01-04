@@ -522,6 +522,64 @@ await File.WriteAllTextAsync($"email-{email.Id}.eml", raw);
 
 ---
 
+## EmailMetadata Record
+
+Lightweight email metadata without body content. Returned by `GetEmailsMetadataOnlyAsync()`.
+
+```csharp
+public sealed record EmailMetadata(
+    string Id,
+    string From,
+    string Subject,
+    DateTimeOffset ReceivedAt,
+    bool IsRead);
+```
+
+### Properties
+
+| Property     | Type             | Description                               |
+| ------------ | ---------------- | ----------------------------------------- |
+| `Id`         | `string`         | Unique identifier for the email           |
+| `From`       | `string`         | Sender's email address                    |
+| `Subject`    | `string`         | Email subject line                        |
+| `ReceivedAt` | `DateTimeOffset` | When the email was received               |
+| `IsRead`     | `bool`           | Whether the email has been marked as read |
+
+### Example
+
+```csharp
+// Get metadata for all emails (more efficient than full content)
+var metadataList = await inbox.GetEmailsMetadataOnlyAsync();
+
+foreach (var metadata in metadataList)
+{
+    Console.WriteLine($"[{(metadata.IsRead ? "Read" : "New")}] {metadata.Subject}");
+    Console.WriteLine($"  From: {metadata.From}");
+    Console.WriteLine($"  Received: {metadata.ReceivedAt:g}");
+}
+
+// Fetch full email only when needed
+var unreadEmail = metadataList.FirstOrDefault(m => !m.IsRead);
+if (unreadEmail is not null)
+{
+    var fullEmail = await inbox.GetEmailAsync(unreadEmail.Id);
+    Console.WriteLine($"Body: {fullEmail.Text}");
+}
+```
+
+### When to Use EmailMetadata vs Email
+
+| Use Case                       | Recommended Type |
+| ------------------------------ | ---------------- |
+| Display email list/summary     | `EmailMetadata`  |
+| Filter before fetching content | `EmailMetadata`  |
+| Read email body/HTML           | `Email`          |
+| Access attachments             | `Email`          |
+| Extract links                  | `Email`          |
+| Check authentication results   | `Email`          |
+
+---
+
 ## EmailAttachment Record
 
 Represents an email attachment.
@@ -541,15 +599,15 @@ public sealed record EmailAttachment
 
 ### Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `Filename` | `string` | Original file name |
-| `ContentType` | `string` | MIME type (e.g., `application/pdf`) |
-| `Size` | `long` | Size in bytes |
-| `Content` | `byte[]` | Binary content |
-| `ContentId` | `string?` | Content-ID for inline attachments |
-| `ContentDisposition` | `string?` | `inline` or `attachment` |
-| `Checksum` | `string?` | SHA-256 hash of the content |
+| Property             | Type      | Description                         |
+| -------------------- | --------- | ----------------------------------- |
+| `Filename`           | `string`  | Original file name                  |
+| `ContentType`        | `string`  | MIME type (e.g., `application/pdf`) |
+| `Size`               | `long`    | Size in bytes                       |
+| `Content`            | `byte[]`  | Binary content                      |
+| `ContentId`          | `string?` | Content-ID for inline attachments   |
+| `ContentDisposition` | `string?` | `inline` or `attachment`            |
+| `Checksum`           | `string?` | SHA-256 hash of the content         |
 
 ### Example
 

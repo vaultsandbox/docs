@@ -177,11 +177,11 @@ public sealed record DmarcResult
 
 ### DmarcPolicy Enum
 
-| Policy       | Description                      |
-| ------------ | -------------------------------- |
-| `None`       | No action specified              |
-| `Quarantine` | Mark as suspicious/spam          |
-| `Reject`     | Reject the email                 |
+| Policy       | Description             |
+| ------------ | ----------------------- |
+| `None`       | No action specified     |
+| `Quarantine` | Mark as suspicious/spam |
+| `Reject`     | Reject the email        |
 
 ### DMARC Example
 

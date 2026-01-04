@@ -599,8 +599,6 @@ if (email.getText() == null && email.getHtml() == null) {
 }
 ```
 
-**Note**: Emails retrieved via `inbox.listEmails()` contain metadata only. Use `inbox.getEmail(id)` or wait methods to get full content.
-
 ### Links Not Extracted
 
 ```java
@@ -641,11 +639,7 @@ try {
     attachment.saveTo(Path.of("/tmp/file.pdf"));
 } catch (IllegalStateException e) {
     System.err.println("Attachment content is not available");
-    System.err.println("This happens when emails are listed without full content");
-
-    // Fetch full email to get attachment content
-    Email fullEmail = inbox.getEmail(email.getId());
-    // Now attachments have content
+    System.err.println("This may indicate corrupted data or a server issue");
 }
 ```
 

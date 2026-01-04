@@ -100,7 +100,7 @@ VaultSandbox automatically handles:
 - TLS certificate provisioning via Let's Encrypt
 - Email retention (1 hour default, configurable up to 7 days)
 - Security and rate limiting
-:::
+  :::
 
 ## Step 3: Start VaultSandbox
 

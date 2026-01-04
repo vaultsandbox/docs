@@ -41,15 +41,15 @@ WithOnSyncError(fn func(error)) Option
 
 #### Option Functions
 
-| Option                | Type                | Default                            | Description                                |
-| --------------------- | ------------------- | ---------------------------------- | ------------------------------------------ |
-| `WithBaseURL`         | `string`            | `https://api.vaultsandbox.com`     | Gateway URL                                |
-| `WithHTTPClient`      | `*http.Client`      | Default client                     | Custom HTTP client                         |
-| `WithDeliveryStrategy`| `DeliveryStrategy`  | `StrategyAuto`                     | Email delivery strategy                    |
-| `WithTimeout`         | `time.Duration`     | `60s`                              | Request timeout                            |
-| `WithRetries`         | `int`               | `3`                                | Maximum retry attempts for HTTP requests   |
-| `WithRetryOn`         | `[]int`             | `[408, 429, 500, 502, 503, 504]`   | HTTP status codes that trigger a retry     |
-| `WithOnSyncError`     | `func(error)`       | `nil`                              | Callback for background sync errors        |
+| Option                 | Type               | Default                          | Description                              |
+| ---------------------- | ------------------ | -------------------------------- | ---------------------------------------- |
+| `WithBaseURL`          | `string`           | `https://api.vaultsandbox.com`   | Gateway URL                              |
+| `WithHTTPClient`       | `*http.Client`     | Default client                   | Custom HTTP client                       |
+| `WithDeliveryStrategy` | `DeliveryStrategy` | `StrategyAuto`                   | Email delivery strategy                  |
+| `WithTimeout`          | `time.Duration`    | `60s`                            | Request timeout                          |
+| `WithRetries`          | `int`              | `3`                              | Maximum retry attempts for HTTP requests |
+| `WithRetryOn`          | `[]int`            | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry   |
+| `WithOnSyncError`      | `func(error)`      | `nil`                            | Callback for background sync errors      |
 
 #### Polling Configuration Options
 
@@ -68,13 +68,13 @@ type PollingConfig struct {
 WithPollingConfig(cfg PollingConfig) Option
 ```
 
-| Field                  | Type            | Default | Description                                              |
-| ---------------------- | --------------- | ------- | -------------------------------------------------------- |
-| `InitialInterval`      | `time.Duration` | `2s`    | Starting polling interval                                |
-| `MaxBackoff`           | `time.Duration` | `30s`   | Maximum polling interval after backoff                   |
-| `BackoffMultiplier`    | `float64`       | `1.5`   | Multiplier for interval after each poll with no changes  |
+| Field                  | Type            | Default | Description                                                |
+| ---------------------- | --------------- | ------- | ---------------------------------------------------------- |
+| `InitialInterval`      | `time.Duration` | `2s`    | Starting polling interval                                  |
+| `MaxBackoff`           | `time.Duration` | `30s`   | Maximum polling interval after backoff                     |
+| `BackoffMultiplier`    | `float64`       | `1.5`   | Multiplier for interval after each poll with no changes    |
 | `JitterFactor`         | `float64`       | `0.3`   | Random jitter factor (30%) to prevent synchronized polling |
-| `SSEConnectionTimeout` | `time.Duration` | `5s`    | Timeout for SSE connection in auto mode before fallback  |
+| `SSEConnectionTimeout` | `time.Duration` | `5s`    | Timeout for SSE connection in auto mode before fallback    |
 
 #### Delivery Strategies
 
@@ -134,10 +134,10 @@ WithTTL(ttl time.Duration) InboxOption
 WithEmailAddress(email string) InboxOption
 ```
 
-| Option             | Type            | Description                                                                    |
-| ------------------ | --------------- | ------------------------------------------------------------------------------ |
-| `WithTTL`          | `time.Duration` | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)            |
-| `WithEmailAddress` | `string`        | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`)         |
+| Option             | Type            | Description                                                            |
+| ------------------ | --------------- | ---------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration` | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)    |
+| `WithEmailAddress` | `string`        | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`) |
 
 #### Returns
 
@@ -241,11 +241,11 @@ type ServerInfo struct {
 }
 ```
 
-| Field            | Type            | Description                               |
-| ---------------- | --------------- | ----------------------------------------- |
-| `AllowedDomains` | `[]string`      | List of domains allowed for inbox creation|
-| `MaxTTL`         | `time.Duration` | Maximum time-to-live for inboxes          |
-| `DefaultTTL`     | `time.Duration` | Default time-to-live for inboxes          |
+| Field            | Type            | Description                                |
+| ---------------- | --------------- | ------------------------------------------ |
+| `AllowedDomains` | `[]string`      | List of domains allowed for inbox creation |
+| `MaxTTL`         | `time.Duration` | Maximum time-to-live for inboxes           |
+| `DefaultTTL`     | `time.Duration` | Default time-to-live for inboxes           |
 
 #### Example
 
@@ -391,6 +391,7 @@ client.WatchInboxesFunc(ctx, func(event *vaultsandbox.InboxEvent) {
 #### When to Use
 
 Use `WatchInboxesFunc` instead of `WatchInboxes` when:
+
 - You prefer callback-style processing over channel iteration
 - You want simpler code without channel select statements
 - You're processing events in a blocking manner
