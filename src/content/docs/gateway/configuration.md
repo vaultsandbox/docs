@@ -45,6 +45,7 @@ All environment variables at a glance. See sections below for details.
 | `VSB_LOCAL_INBOX_DEFAULT_TTL`        | `3600`            | Default inbox TTL (seconds)        |
 | `VSB_LOCAL_INBOX_MAX_TTL`            | `604800`          | Max inbox TTL (seconds)            |
 | `VSB_LOCAL_CLEANUP_INTERVAL`         | `300`             | Cleanup interval (seconds)         |
+| `VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES`  | `true`            | Allow DELETE /api/inboxes          |
 | **Rate Limiting**                    |                   |                                    |
 | `VSB_THROTTLE_TTL`                   | `60000`           | API rate limit window (ms)         |
 | `VSB_THROTTLE_LIMIT`                 | `500`             | API requests per window            |
@@ -320,6 +321,43 @@ VSB_LOCAL_API_KEY=your-secure-random-key-minimum-32-chars
 | `VSB_LOCAL_CLEANUP_INTERVAL`     | `300`    | Interval (seconds) for the background cleanup task (5 mins).                          |
 | `VSB_INBOX_ALIAS_RANDOM_BYTES`   | `4`      | Number of random bytes for inbox alias generation (4-32). Produces 2x hex characters. |
 | `VSB_SMTP_HARD_MODE_REJECT_CODE` | `421`    | SMTP code used when rejecting emails in "hard mode".                                  |
+| `VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES` | `true` | Allow DELETE /api/inboxes endpoint.                                                   |
+
+### VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES
+
+**Description**: Controls access to the `DELETE /api/inboxes` endpoint. When set to `false`, the endpoint returns `403 Forbidden`. Useful for shared testing environments to prevent accidental data loss.
+
+**Default**: `true`
+
+**Example**:
+
+```bash
+VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES=false
+```
+
+**Behavior**:
+
+- `true` (default): `DELETE /api/inboxes` works normally, clearing all inboxes
+- `false`: `DELETE /api/inboxes` returns 403 Forbidden with message: "Clear all inboxes is disabled (VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES=false)"
+
+**Server Info Response**: The current setting is exposed in `GET /api/server-info` as `allowClearAllInboxes`:
+
+```json
+{
+  "serverSigPk": "...",
+  "algs": { ... },
+  "context": "vaultsandbox:email:v1",
+  "maxTtl": 604800,
+  "defaultTtl": 3600,
+  "sseConsole": false,
+  "allowClearAllInboxes": true,
+  "allowedDomains": ["example.com"]
+}
+```
+
+:::tip[Use Case]
+Disable this in shared QA environments where multiple users or CI pipelines share the same server instance to prevent accidental deletion of all test inboxes.
+:::
 
 ## HTTP Server Configuration
 

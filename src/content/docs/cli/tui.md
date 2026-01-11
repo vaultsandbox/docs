@@ -12,7 +12,7 @@ The TUI (Terminal User Interface) dashboard provides real-time email monitoring 
 vsb
 ```
 
-The dashboard automatically watches all stored inboxes and displays incoming emails in real-time via SSE (Server-Sent Events).
+The dashboard automatically watches all stored inboxes and displays incoming emails in real-time using the configured [delivery strategy](/cli/configuration/#delivery-strategy) (SSE by default).
 
 ## Interface Layout
 

@@ -72,29 +72,26 @@ vaultsandbox.WithBaseURL("http://localhost:3000") // Local development
 
 **Signature**: `WithDeliveryStrategy(strategy DeliveryStrategy) Option`
 
-**Default**: `StrategyAuto`
+**Default**: `StrategySSE`
 
 **Description**: Email delivery strategy
 
 **Options**:
 
-- `StrategyAuto` - Automatically choose best strategy (tries SSE first, falls back to polling)
-- `StrategySSE` - Server-Sent Events for real-time delivery
+- `StrategySSE` - Server-Sent Events for real-time delivery (default)
 - `StrategyPolling` - Poll for new emails at intervals
 
 **Examples**:
 
 ```go
-vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto)    // Recommended
-vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE)     // Force SSE
-vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling) // Force polling
+vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE)     // Default, can be omitted
+vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling) // Use polling
 ```
 
 **When to use each**:
 
-- `StrategyAuto`: Most use cases (recommended)
-- `StrategySSE`: When you need real-time, low-latency delivery
-- `StrategyPolling`: When SSE is blocked by firewall/proxy
+- `StrategySSE`: Most use cases - provides real-time, low-latency delivery (default)
+- `StrategyPolling`: When SSE is blocked by firewall/proxy or in CI environments
 
 #### WithTimeout
 
@@ -198,11 +195,10 @@ client, err := vaultsandbox.New(apiKey,
 
 ```go
 type PollingConfig struct {
-	InitialInterval      time.Duration // Default: 2 * time.Second
-	MaxBackoff           time.Duration // Default: 30 * time.Second
-	BackoffMultiplier    float64       // Default: 1.5
-	JitterFactor         float64       // Default: 0.3 (30%)
-	SSEConnectionTimeout time.Duration // Default: 5 * time.Second
+	InitialInterval   time.Duration // Default: 2 * time.Second
+	MaxBackoff        time.Duration // Default: 30 * time.Second
+	BackoffMultiplier float64       // Default: 1.5
+	JitterFactor      float64       // Default: 0.3 (30%)
 }
 ```
 
@@ -365,7 +361,7 @@ email, err := inbox.WaitForEmail(ctx,
 ```go
 client, err := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"),
 	vaultsandbox.WithBaseURL(os.Getenv("VAULTSANDBOX_URL")),
-	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+	// SSE is the default strategy, no need to specify
 	vaultsandbox.WithRetries(5),
 	vaultsandbox.WithTimeout(60 * time.Second),
 )
@@ -376,7 +372,7 @@ client, err := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"),
 ```go
 client, err := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"),
 	vaultsandbox.WithBaseURL(os.Getenv("VAULTSANDBOX_URL")),
-	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling), // Use polling for CI compatibility
 	vaultsandbox.WithRetries(3),
 	vaultsandbox.WithTimeout(30 * time.Second),
 )
@@ -418,16 +414,15 @@ client, err := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"),
 )
 ```
 
-### Tuned Auto Mode Configuration
+### Custom Polling Intervals
 
 ```go
 client, err := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"),
 	vaultsandbox.WithBaseURL(os.Getenv("VAULTSANDBOX_URL")),
-	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling),
 	vaultsandbox.WithPollingConfig(vaultsandbox.PollingConfig{
-		SSEConnectionTimeout: 10 * time.Second, // More time for SSE
-		InitialInterval:      2 * time.Second,  // Fallback polling config
-		MaxBackoff:           30 * time.Second,
+		InitialInterval: 1 * time.Second,  // Start with faster polling
+		MaxBackoff:      20 * time.Second, // Lower max backoff
 	}),
 )
 ```
@@ -933,63 +928,44 @@ type InboxEvent struct {
 
 ## Strategy Selection Guide
 
-### Auto (Recommended)
+### SSE (Server-Sent Events) - Default
 
-**Use when**: You want optimal performance with automatic fallback
-
-**Behavior**:
-
-1. Tries SSE first
-2. Falls back to polling if SSE fails
-3. Automatically reconnects on errors
-
-**Pros**:
-
-- Best of both worlds
-- No manual configuration needed
-- Resilient to network issues
-
-**Cons**:
-
-- Slightly more complex internally
-
-### SSE (Server-Sent Events)
-
-**Use when**: You need real-time, low-latency delivery
+**Use when**: Most use cases - provides real-time, low-latency delivery
 
 **Behavior**:
 
 - Persistent connection to server
 - Push-based email notification
-- Instant delivery
+- Near-instant delivery
 
 **Pros**:
 
 - Real-time delivery (no polling delay)
 - Efficient (no repeated HTTP requests)
 - Deterministic tests
+- Lower server load
 
 **Cons**:
 
-- Requires persistent connection
-- May be blocked by some proxies/firewalls
-- More complex error handling
+- Requires persistent connection support
+- May be blocked by some corporate proxies/firewalls
 
 ### Polling
 
-**Use when**: SSE is blocked or unreliable
+**Use when**: SSE is blocked or unreliable (e.g., some CI environments)
 
 **Behavior**:
 
 - Periodic HTTP requests for new emails
 - Pull-based email retrieval
-- Configurable interval
+- Adaptive backoff intervals
 
 **Pros**:
 
 - Works in all network environments
 - No persistent connection required
 - Simple and predictable
+- Guaranteed compatibility
 
 **Cons**:
 

@@ -372,11 +372,11 @@ Set these environment variables in your CI platform:
 
 ### Optional Variables
 
-| Variable                        | Description           | Default |
-| ------------------------------- | --------------------- | ------- |
-| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `auto`  |
-| `VAULTSANDBOX_TIMEOUT`          | Default timeout (ms)  | `30000` |
-| `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval (ms) | `2000`  |
+| Variable                        | Description           | Default   |
+| ------------------------------- | --------------------- | --------- |
+| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `sse`     |
+| `VAULTSANDBOX_TIMEOUT`          | Default timeout (ms)  | `30000`   |
+| `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval (ms) | `2000`    |
 
 ### Configuration Helper
 
@@ -384,20 +384,19 @@ Set these environment variables in your CI platform:
 # config/vaultsandbox.py
 import os
 from dataclasses import dataclass
-from typing import Optional
 from vaultsandbox.types import DeliveryStrategyType
 
 @dataclass
 class VaultSandboxConfig:
     base_url: str
     api_key: str
-    strategy: DeliveryStrategyType = DeliveryStrategyType.AUTO
+    strategy: DeliveryStrategyType = DeliveryStrategyType.SSE
     timeout: int = 30000
     polling_interval: int = 2000
 
 def get_vaultsandbox_config() -> VaultSandboxConfig:
-    strategy_str = os.environ.get("VAULTSANDBOX_STRATEGY", "auto").upper()
-    strategy = getattr(DeliveryStrategyType, strategy_str, DeliveryStrategyType.AUTO)
+    strategy_str = os.environ.get("VAULTSANDBOX_STRATEGY", "sse").upper()
+    strategy = getattr(DeliveryStrategyType, strategy_str, DeliveryStrategyType.SSE)
 
     return VaultSandboxConfig(
         base_url=os.environ["VAULTSANDBOX_URL"],

@@ -45,7 +45,7 @@ WithOnSyncError(fn func(error)) Option
 | ---------------------- | ------------------ | -------------------------------- | ---------------------------------------- |
 | `WithBaseURL`          | `string`           | `https://api.vaultsandbox.com`   | Gateway URL                              |
 | `WithHTTPClient`       | `*http.Client`     | Default client                   | Custom HTTP client                       |
-| `WithDeliveryStrategy` | `DeliveryStrategy` | `StrategyAuto`                   | Email delivery strategy                  |
+| `WithDeliveryStrategy` | `DeliveryStrategy` | `StrategySSE`                    | Email delivery strategy                  |
 | `WithTimeout`          | `time.Duration`    | `60s`                            | Request timeout                          |
 | `WithRetries`          | `int`              | `3`                              | Maximum retry attempts for HTTP requests |
 | `WithRetryOn`          | `[]int`            | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry   |
@@ -58,31 +58,28 @@ For advanced control over polling behavior, use `WithPollingConfig`:
 ```go
 // Polling configuration struct
 type PollingConfig struct {
-    InitialInterval      time.Duration // Starting polling interval (default: 2s)
-    MaxBackoff           time.Duration // Maximum polling interval (default: 30s)
-    BackoffMultiplier    float64       // Interval multiplier after no changes (default: 1.5)
-    JitterFactor         float64       // Randomness factor to prevent synchronized polling (default: 0.3)
-    SSEConnectionTimeout time.Duration // Timeout for SSE before falling back to polling (default: 5s)
+    InitialInterval   time.Duration // Starting polling interval (default: 2s)
+    MaxBackoff        time.Duration // Maximum polling interval (default: 30s)
+    BackoffMultiplier float64       // Interval multiplier after no changes (default: 1.5)
+    JitterFactor      float64       // Randomness factor to prevent synchronized polling (default: 0.3)
 }
 
 WithPollingConfig(cfg PollingConfig) Option
 ```
 
-| Field                  | Type            | Default | Description                                                |
-| ---------------------- | --------------- | ------- | ---------------------------------------------------------- |
-| `InitialInterval`      | `time.Duration` | `2s`    | Starting polling interval                                  |
-| `MaxBackoff`           | `time.Duration` | `30s`   | Maximum polling interval after backoff                     |
-| `BackoffMultiplier`    | `float64`       | `1.5`   | Multiplier for interval after each poll with no changes    |
-| `JitterFactor`         | `float64`       | `0.3`   | Random jitter factor (30%) to prevent synchronized polling |
-| `SSEConnectionTimeout` | `time.Duration` | `5s`    | Timeout for SSE connection in auto mode before fallback    |
+| Field               | Type            | Default | Description                                                |
+| ------------------- | --------------- | ------- | ---------------------------------------------------------- |
+| `InitialInterval`   | `time.Duration` | `2s`    | Starting polling interval                                  |
+| `MaxBackoff`        | `time.Duration` | `30s`   | Maximum polling interval after backoff                     |
+| `BackoffMultiplier` | `float64`       | `1.5`   | Multiplier for interval after each poll with no changes    |
+| `JitterFactor`      | `float64`       | `0.3`   | Random jitter factor (30%) to prevent synchronized polling |
 
 #### Delivery Strategies
 
 ```go
 const (
-    StrategyAuto    DeliveryStrategy = "auto"    // SSE with fallback to polling
-    StrategySSE     DeliveryStrategy = "sse"     // Server-Sent Events only
-    StrategyPolling DeliveryStrategy = "polling" // Periodic polling only
+    StrategySSE     DeliveryStrategy = "sse"     // Server-Sent Events (default)
+    StrategyPolling DeliveryStrategy = "polling" // Periodic polling
 )
 ```
 
@@ -102,7 +99,7 @@ func main() {
     client, err := vaultsandbox.New(
         os.Getenv("VAULTSANDBOX_API_KEY"),
         vaultsandbox.WithBaseURL("https://api.vaultsandbox.com"),
-        vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+        // SSE is the default strategy, no need to specify
         vaultsandbox.WithRetries(5),
         vaultsandbox.WithTimeout(30*time.Second),
     )
@@ -789,7 +786,7 @@ func main() {
     client, err := vaultsandbox.New(
         os.Getenv("VAULTSANDBOX_API_KEY"),
         vaultsandbox.WithBaseURL(os.Getenv("VAULTSANDBOX_URL")),
-        vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+        // SSE is the default strategy
         vaultsandbox.WithRetries(5),
     )
     if err != nil {

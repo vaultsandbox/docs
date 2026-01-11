@@ -3,7 +3,7 @@ title: Delivery Strategies
 description: Learn about SSE and polling delivery strategies in VaultSandbox Python Client
 ---
 
-VaultSandbox Python Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. The SDK intelligently chooses the best strategy automatically or allows manual configuration.
+VaultSandbox Python Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. SSE is the default strategy, providing instant email notifications.
 
 ## Overview
 
@@ -23,42 +23,7 @@ When you wait for emails or subscribe to new email notifications, the SDK needs 
 | **Firewall/Proxy**  | May be blocked                  | Always works                |
 | **Resource Impact** | Lower (push-based)              | Higher (constant requests)  |
 
-## Auto Strategy (Recommended)
-
-The default `AUTO` strategy automatically selects the best delivery method:
-
-1. **Tries SSE first** - Attempts to establish an SSE connection
-2. **Falls back to polling** - If SSE fails or is unavailable, uses polling
-3. **Adapts to environment** - Works seamlessly in different network conditions
-
-```python
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
-
-# Auto strategy (default)
-async with VaultSandboxClient(
-    api_key=os.environ["VAULTSANDBOX_API_KEY"],
-    base_url="https://smtp.vaultsandbox.com",
-    strategy=DeliveryStrategyType.AUTO,  # Default, can be omitted
-) as client:
-    # SDK will automatically choose the best strategy
-    inbox = await client.create_inbox()
-    email = await inbox.wait_for_email(timeout=10000)
-```
-
-### When Auto Chooses SSE
-
-- Gateway supports SSE
-- Network allows persistent connections
-- No restrictive proxy/firewall
-
-### When Auto Falls Back to Polling
-
-- Gateway doesn't support SSE
-- SSE connection fails
-- Behind restrictive proxy/firewall
-- Network requires periodic reconnection
-
-## SSE Strategy
+## SSE Strategy (Default)
 
 Server-Sent Events provide real-time push notifications when emails arrive.
 
@@ -71,13 +36,15 @@ Server-Sent Events provide real-time push notifications when emails arrive.
 
 ### Configuration
 
-```python
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+SSE is the default strategy, so you don't need to specify it explicitly:
 
+```python
+from vaultsandbox import VaultSandboxClient
+
+# SSE is used by default
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url="https://smtp.vaultsandbox.com",
-    strategy=DeliveryStrategyType.SSE,
     sse_reconnect_interval=5000,      # Wait 5s before reconnecting
     sse_max_reconnect_attempts=10,    # Try up to 10 reconnections
 ) as client:
@@ -107,14 +74,15 @@ SSE uses **exponential backoff** for reconnections:
 
 ```python
 import asyncio
+import os
 import re
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
 async def main():
+    # SSE is used by default
     async with VaultSandboxClient(
         api_key=os.environ["VAULTSANDBOX_API_KEY"],
         base_url="https://smtp.vaultsandbox.com",
-        strategy=DeliveryStrategyType.SSE,
     ) as client:
         inbox = await client.create_inbox()
 
@@ -293,9 +261,9 @@ async with VaultSandboxClient(
 
 ## Choosing the Right Strategy
 
-### Use Auto (Default)
+### Use SSE (Default)
 
-For most use cases, let the SDK choose:
+SSE is the default strategy and is best for most use cases:
 
 ```python
 from vaultsandbox import VaultSandboxClient
@@ -303,7 +271,7 @@ from vaultsandbox import VaultSandboxClient
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
-    # strategy=DeliveryStrategyType.AUTO is implicit
+    # SSE is used by default
 ) as client:
     pass
 ```
@@ -311,35 +279,15 @@ async with VaultSandboxClient(
 **Best for:**
 
 - General testing
-- Unknown network conditions
-- Mixed environments (dev, staging, CI)
-- When you want it to "just work"
-
-### Force SSE
-
-When you need guaranteed real-time performance:
-
-```python
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
-
-async with VaultSandboxClient(
-    api_key=os.environ["VAULTSANDBOX_API_KEY"],
-    base_url=os.environ["VAULTSANDBOX_URL"],
-    strategy=DeliveryStrategyType.SSE,
-) as client:
-    pass
-```
-
-**Best for:**
-
-- Local development (known to support SSE)
 - Real-time monitoring dashboards
 - High-volume email testing
 - Latency-sensitive tests
+- Local development
+- When you want instant email notifications
 
-**Caveat:** Will raise `SSEError` if SSE is unavailable.
+**Caveat:** Requires persistent HTTP connection support. Will raise `SSEError` if SSE is unavailable.
 
-### Force Polling
+### Use Polling
 
 When compatibility is more important than speed:
 
@@ -369,28 +317,16 @@ async with VaultSandboxClient(
 
 ### Development
 
-Fast feedback with SSE:
+Fast feedback with SSE (default):
 
 ```python
-# .env.development
-# VAULTSANDBOX_URL=http://localhost:3000
-# VAULTSANDBOX_STRATEGY=sse
-
 import os
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
-def get_strategy():
-    strategy_str = os.environ.get("VAULTSANDBOX_STRATEGY", "auto")
-    return {
-        "sse": DeliveryStrategyType.SSE,
-        "polling": DeliveryStrategyType.POLLING,
-        "auto": DeliveryStrategyType.AUTO,
-    }.get(strategy_str, DeliveryStrategyType.AUTO)
-
+# SSE is the default, providing instant email notifications
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
-    base_url=os.environ["VAULTSANDBOX_URL"],
-    strategy=get_strategy(),
+    base_url=os.environ.get("VAULTSANDBOX_URL", "http://localhost:3000"),
 ) as client:
     pass
 ```
@@ -419,21 +355,18 @@ async with VaultSandboxClient(
 
 ### Production Testing
 
-Auto with tuned reconnection:
+SSE with tuned reconnection:
 
 ```python
 import os
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
-    strategy=DeliveryStrategyType.AUTO,
-    # SSE config (if available)
+    # SSE configuration
     sse_reconnect_interval=10000,
     sse_max_reconnect_attempts=5,
-    # Polling fallback config
-    polling_interval=5000,
 ) as client:
     pass
 ```
@@ -474,15 +407,15 @@ asyncio.run(measure_delivery_latency(send_test_email))
 
 ```python
 import asyncio
+import os
 import time
 from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
 
 async def compare_strategies(send_test_email):
-    # Test SSE
+    # Test SSE (default)
     async with VaultSandboxClient(
         api_key=os.environ["VAULTSANDBOX_API_KEY"],
         base_url=os.environ["VAULTSANDBOX_URL"],
-        strategy=DeliveryStrategyType.SSE,
     ) as sse_client:
         sse_inbox = await sse_client.create_inbox()
         sse_start = time.time()
@@ -520,10 +453,10 @@ asyncio.run(compare_strategies(send_test_email))
 from vaultsandbox import VaultSandboxClient, DeliveryStrategyType, SSEError
 
 try:
+    # SSE is the default strategy
     async with VaultSandboxClient(
         api_key=os.environ["VAULTSANDBOX_API_KEY"],
         base_url=os.environ["VAULTSANDBOX_URL"],
-        strategy=DeliveryStrategyType.SSE,
     ) as client:
         inbox = await client.create_inbox()
         # Use inbox...
@@ -559,11 +492,10 @@ async with VaultSandboxClient(
 ) as faster_client:
     pass
 
-# Solution 2: Use SSE if available
+# Solution 2: Use SSE (default) for real-time delivery
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
-    strategy=DeliveryStrategyType.SSE,  # Real-time delivery
 ) as sse_client:
     pass
 
@@ -583,21 +515,21 @@ async with VaultSandboxClient(
 
 ## Best Practices
 
-### 1. Use Auto Strategy by Default
+### 1. Use SSE Strategy by Default
 
-Let the SDK choose unless you have specific requirements:
+SSE is the default and recommended strategy for most use cases:
 
 ```python
 from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
 
-# Good: Let SDK choose
+# Good: Use SSE (default)
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
 ) as client:
     pass
 
-# Only specify when needed
+# Only specify polling when needed
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
@@ -626,37 +558,29 @@ def create_client():
             strategy=DeliveryStrategyType.POLLING,
             polling_interval=3000,
         )
-    elif os.environ.get("ENV") == "development":
-        # Dev: Fast SSE
-        return VaultSandboxClient(
-            api_key=api_key,
-            base_url=base_url,
-            strategy=DeliveryStrategyType.SSE,
-        )
     else:
-        # Production: Auto with tuning
+        # Default: SSE with tuning
         return VaultSandboxClient(
             api_key=api_key,
             base_url=base_url,
-            strategy=DeliveryStrategyType.AUTO,
             sse_reconnect_interval=5000,
-            polling_interval=2000,
+            sse_max_reconnect_attempts=10,
         )
 ```
 
-### 3. Handle SSE Gracefully
+### 3. Handle SSE Errors Gracefully
 
-Always have a fallback if forcing SSE:
+If SSE fails, you can fall back to polling:
 
 ```python
 from vaultsandbox import VaultSandboxClient, DeliveryStrategyType, SSEError
 
 async def create_client_with_fallback():
     try:
+        # SSE is default
         client = VaultSandboxClient(
             api_key=os.environ["VAULTSANDBOX_API_KEY"],
             base_url=os.environ["VAULTSANDBOX_URL"],
-            strategy=DeliveryStrategyType.SSE,
         )
         # Test connection
         await client.check_key()

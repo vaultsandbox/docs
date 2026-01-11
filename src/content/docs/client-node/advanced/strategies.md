@@ -3,7 +3,7 @@ title: Delivery Strategies
 description: Learn about SSE and polling delivery strategies in VaultSandbox Client
 ---
 
-VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. The SDK intelligently chooses the best strategy automatically or allows manual configuration.
+VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. SSE is the default strategy, providing instant email notifications.
 
 ## Overview
 
@@ -23,43 +23,7 @@ When you wait for emails or subscribe to new email notifications, the SDK needs 
 | **Firewall/Proxy**  | May be blocked                  | Always works                |
 | **Battery Impact**  | Lower (push-based)              | Higher (constant requests)  |
 
-## Auto Strategy (Recommended)
-
-The default `auto` strategy automatically selects the best delivery method:
-
-1. **Tries SSE first** - Attempts to establish an SSE connection
-2. **Falls back to polling** - If SSE fails or is unavailable, uses polling
-3. **Adapts to environment** - Works seamlessly in different network conditions
-
-```javascript
-import { VaultSandboxClient } from '@vaultsandbox/client';
-
-// Auto strategy (default)
-const client = new VaultSandboxClient({
-	url: 'https://smtp.vaultsandbox.com',
-	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'auto', // Default, can be omitted
-});
-
-// SDK will automatically choose the best strategy
-const inbox = await client.createInbox();
-const email = await inbox.waitForEmail({ timeout: 10000 });
-```
-
-### When Auto Chooses SSE
-
-- Gateway supports SSE
-- Network allows persistent connections
-- No restrictive proxy/firewall
-
-### When Auto Falls Back to Polling
-
-- Gateway doesn't support SSE
-- SSE connection fails
-- Behind restrictive proxy/firewall
-- Network requires periodic reconnection
-
-## SSE Strategy
+## SSE Strategy (Default)
 
 Server-Sent Events provide real-time push notifications when emails arrive.
 
@@ -73,10 +37,11 @@ Server-Sent Events provide real-time push notifications when emails arrive.
 ### Configuration
 
 ```javascript
+// SSE is the default strategy
 const client = new VaultSandboxClient({
 	url: 'https://smtp.vaultsandbox.com',
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'sse',
+	// strategy: 'sse' is the default, can be omitted
 	sseReconnectInterval: 5000, // Wait 5s before reconnecting
 	sseMaxReconnectAttempts: 10, // Try up to 10 reconnections
 });
@@ -103,10 +68,10 @@ SSE uses **exponential backoff** for reconnections:
 ### Example Usage
 
 ```javascript
+// SSE is used by default
 const client = new VaultSandboxClient({
 	url: 'https://smtp.vaultsandbox.com',
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'sse',
 });
 
 const inbox = await client.createInbox();
@@ -253,47 +218,29 @@ await inbox.waitForEmailCount(5, {
 
 ## Choosing the Right Strategy
 
-### Use Auto (Default)
+### Use SSE (Default)
 
-For most use cases, let the SDK choose:
+SSE is the default and recommended for most use cases:
 
 ```javascript
 const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	// strategy: 'auto' is implicit
+	// strategy: 'sse' is the default
 });
 ```
 
 **Best for:**
 
 - General testing
-- Unknown network conditions
-- Mixed environments (dev, staging, CI)
-- When you want it to "just work"
-
-### Force SSE
-
-When you need guaranteed real-time performance:
-
-```javascript
-const client = new VaultSandboxClient({
-	url: process.env.VAULTSANDBOX_URL,
-	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'sse',
-});
-```
-
-**Best for:**
-
-- Local development (known to support SSE)
 - Real-time monitoring dashboards
 - High-volume email testing
 - Latency-sensitive tests
+- Local development
 
-**Caveat:** Will throw `SSEError` if SSE is unavailable.
+**Note:** SSE requires persistent HTTP connections. If connections are blocked, use the polling strategy.
 
-### Force Polling
+### Use Polling
 
 When compatibility is more important than speed:
 
@@ -317,24 +264,23 @@ const client = new VaultSandboxClient({
 
 ### Development
 
-Fast feedback with SSE:
+Fast feedback with default SSE:
 
 ```javascript
 // .env.development
 VAULTSANDBOX_URL=http://localhost:3000
-VAULTSANDBOX_STRATEGY=sse
 
 // config.js
 const client = new VaultSandboxClient({
   url: process.env.VAULTSANDBOX_URL,
   apiKey: process.env.VAULTSANDBOX_API_KEY,
-  strategy: process.env.VAULTSANDBOX_STRATEGY || 'auto',
+  // SSE is used by default
 });
 ```
 
 ### CI/CD
 
-Reliable polling:
+Reliable polling for CI environments:
 
 ```javascript
 // .env.ci
@@ -346,25 +292,22 @@ VAULTSANDBOX_POLLING_INTERVAL=3000
 const client = new VaultSandboxClient({
   url: process.env.VAULTSANDBOX_URL,
   apiKey: process.env.VAULTSANDBOX_API_KEY,
-  strategy: process.env.VAULTSANDBOX_STRATEGY || 'auto',
+  strategy: process.env.VAULTSANDBOX_STRATEGY || 'sse',
   pollingInterval: parseInt(process.env.VAULTSANDBOX_POLLING_INTERVAL || '2000'),
 });
 ```
 
 ### Production Testing
 
-Auto with tuned reconnection:
+SSE with tuned reconnection:
 
 ```javascript
 const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'auto',
-	// SSE config (if available)
+	// SSE is default, configure reconnection
 	sseReconnectInterval: 10000,
 	sseMaxReconnectAttempts: 5,
-	// Polling fallback config
-	pollingInterval: 5000,
 });
 ```
 
@@ -376,7 +319,7 @@ const client = new VaultSandboxClient({
 const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'auto',
+	// SSE is used by default
 });
 
 const inbox = await client.createInbox();
@@ -521,15 +464,15 @@ await inbox.waitForEmail({
 
 ## Best Practices
 
-### 1. Use Auto Strategy by Default
+### 1. Use SSE Strategy (Default)
 
-Let the SDK choose unless you have specific requirements:
+SSE is the default strategy. Only specify polling when needed:
 
 ```javascript
-// Good: Let SDK choose
+// Good: Use default SSE
 const client = new VaultSandboxClient({ url, apiKey });
 
-// Only specify when needed
+// Only specify polling when needed
 const ciClient = new VaultSandboxClient({
 	url,
 	apiKey,
@@ -552,14 +495,9 @@ function createClient() {
 		// CI: Reliable polling
 		config.strategy = 'polling';
 		config.pollingInterval = 3000;
-	} else if (process.env.NODE_ENV === 'development') {
-		// Dev: Fast SSE
-		config.strategy = 'sse';
 	} else {
-		// Production: Auto with tuning
-		config.strategy = 'auto';
+		// Default: SSE with tuning
 		config.sseReconnectInterval = 5000;
-		config.pollingInterval = 2000;
 	}
 
 	return new VaultSandboxClient(config);

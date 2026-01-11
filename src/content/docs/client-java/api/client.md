@@ -52,14 +52,14 @@ Full configuration options using the builder pattern:
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey("your-api-key")           // Required
-    .baseUrl("https://...")           // Optional
-    .strategy(StrategyType.AUTO)      // Optional
+    .baseUrl("https://...")           // Required
+    .strategy(StrategyType.SSE)       // Optional (SSE is default)
     .httpTimeout(Duration.ofSeconds(30))
     .waitTimeout(Duration.ofSeconds(30))
     .maxRetries(3)
     .retryDelay(Duration.ofSeconds(1))
     .retryOn(Set.of(408, 429, 500, 502, 503, 504))
-    .sseReconnectInterval(Duration.ofSeconds(5))
+    .sseReconnectInterval(Duration.ofSeconds(2))
     .sseMaxReconnectAttempts(10)
     .pollInterval(Duration.ofSeconds(2))
     .maxBackoff(Duration.ofSeconds(30))
@@ -70,22 +70,22 @@ ClientConfig config = ClientConfig.builder()
 
 ### Configuration Properties
 
-| Property                  | Type           | Default           | Description                            |
-| ------------------------- | -------------- | ----------------- | -------------------------------------- |
-| `apiKey`                  | `String`       | required          | API authentication key                 |
-| `baseUrl`                 | `String`       | required          | API base URL                           |
-| `strategy`                | `StrategyType` | `AUTO`            | Delivery strategy (AUTO, SSE, POLLING) |
-| `httpTimeout`             | `Duration`     | 30s               | HTTP request timeout                   |
-| `waitTimeout`             | `Duration`     | 30s               | Default wait timeout for emails        |
-| `maxRetries`              | `int`          | 3                 | Max retry attempts for failed requests |
-| `retryDelay`              | `Duration`     | 1s                | Initial retry delay                    |
-| `retryOn`                 | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry             |
-| `sseReconnectInterval`    | `Duration`     | 5s                | SSE reconnect interval                 |
-| `sseMaxReconnectAttempts` | `int`          | 10                | Max SSE reconnection attempts          |
-| `pollInterval`            | `Duration`     | 2s                | Polling interval                       |
-| `maxBackoff`              | `Duration`     | 30s               | Max backoff duration                   |
-| `backoffMultiplier`       | `double`       | 1.5               | Backoff multiplier                     |
-| `jitterFactor`            | `double`       | 0.3               | Jitter factor (0-1)                    |
+| Property                  | Type           | Default           | Description                      |
+| ------------------------- | -------------- | ----------------- | -------------------------------- |
+| `apiKey`                  | `String`       | required          | API authentication key           |
+| `baseUrl`                 | `String`       | required          | API base URL                     |
+| `strategy`                | `StrategyType` | `SSE`             | Delivery strategy (SSE, POLLING) |
+| `httpTimeout`             | `Duration`     | 30s               | HTTP request timeout             |
+| `waitTimeout`             | `Duration`     | 30s               | Default wait timeout for emails  |
+| `maxRetries`              | `int`          | 3                 | Max retry attempts               |
+| `retryDelay`              | `Duration`     | 1s                | Initial retry delay              |
+| `retryOn`                 | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry       |
+| `sseReconnectInterval`    | `Duration`     | 2s                | SSE reconnect interval           |
+| `sseMaxReconnectAttempts` | `int`          | 10                | Max SSE reconnection attempts    |
+| `pollInterval`            | `Duration`     | 2s                | Polling interval                 |
+| `maxBackoff`              | `Duration`     | 30s               | Max backoff duration             |
+| `backoffMultiplier`       | `double`       | 1.5               | Backoff multiplier               |
+| `jitterFactor`            | `double`       | 0.3               | Jitter factor (0-1)              |
 
 ## Inbox Methods
 
@@ -574,7 +574,7 @@ try {
 ClientConfig config = ClientConfig.builder()
     .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
     .baseUrl(System.getenv("VAULTSANDBOX_URL"))
-    .strategy(StrategyType.AUTO)
+    .strategy(StrategyType.SSE)
     .waitTimeout(Duration.ofSeconds(60))
     .maxRetries(5)
     .build();

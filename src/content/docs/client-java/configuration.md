@@ -35,13 +35,13 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 | ------------------------- | -------------- | ----------------- | ----------------------------- |
 | `apiKey`                  | `String`       | required          | API key for authentication    |
 | `baseUrl`                 | `String`       | required          | Gateway API endpoint URL      |
-| `strategy`                | `StrategyType` | `AUTO`            | Email delivery strategy       |
+| `strategy`                | `StrategyType` | `SSE`             | Email delivery strategy       |
 | `httpTimeout`             | `Duration`     | 30s               | HTTP request timeout          |
 | `waitTimeout`             | `Duration`     | 30s               | Default email wait timeout    |
 | `maxRetries`              | `int`          | 3                 | Maximum retry attempts        |
 | `retryDelay`              | `Duration`     | 1s                | Initial retry delay           |
 | `retryOn`                 | `Set<Integer>` | 408, 429, 500-504 | HTTP status codes to retry    |
-| `sseReconnectInterval`    | `Duration`     | 5s                | SSE reconnection interval     |
+| `sseReconnectInterval`    | `Duration`     | 2s                | SSE reconnection interval     |
 | `sseMaxReconnectAttempts` | `int`          | 10                | Max SSE reconnection attempts |
 | `pollInterval`            | `Duration`     | 2s                | Polling check frequency       |
 | `maxBackoff`              | `Duration`     | 30s               | Maximum backoff duration      |
@@ -54,8 +54,7 @@ The `strategy` option controls how the client receives emails:
 
 | Strategy  | Description                               | Best For                       |
 | --------- | ----------------------------------------- | ------------------------------ |
-| `AUTO`    | Tries SSE first, falls back to polling    | Most use cases (recommended)   |
-| `SSE`     | Server-Sent Events for real-time delivery | Low-latency requirements       |
+| `SSE`     | Server-Sent Events for real-time delivery | Most use cases (default)       |
 | `POLLING` | Periodic HTTP requests                    | CI/CD, firewalled environments |
 
 ```java
@@ -82,7 +81,7 @@ ClientConfig.builder()
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(System.getenv("VAULTSANDBOX_API_KEY"))
-    .strategy(StrategyType.AUTO)
+    .strategy(StrategyType.SSE)
     .httpTimeout(Duration.ofSeconds(30))
     .maxRetries(3)
     .build();
@@ -114,7 +113,7 @@ ClientConfig config = ClientConfig.builder()
 ```java
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
-    .strategy(StrategyType.AUTO)
+    .strategy(StrategyType.SSE)
     .maxRetries(5)
     .retryDelay(Duration.ofMillis(500))
     .sseMaxReconnectAttempts(20)

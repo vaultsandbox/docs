@@ -3,13 +3,13 @@ title: Delivery Strategies
 description: Learn about SSE and polling delivery strategies in VaultSandbox Client for .NET
 ---
 
-VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. The SDK intelligently chooses the best strategy automatically or allows manual configuration.
+VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. SSE is the default strategy, providing near-instant email notifications.
 
 ## Overview
 
 When you wait for emails or watch for new email notifications, the SDK needs to know when emails arrive. It does this using one of two strategies:
 
-1. **SSE (Server-Sent Events)**: Real-time push notifications from the server
+1. **SSE (Server-Sent Events)**: Real-time push notifications from the server (default)
 2. **Polling**: Periodic checking for new emails
 
 ## Strategy Comparison
@@ -28,52 +28,12 @@ When you wait for emails or watch for new email notifications, the SDK needs to 
 ```csharp
 public enum DeliveryStrategy
 {
-    Auto,     // Try SSE, fallback to polling (default)
-    Sse,      // Server-Sent Events only
+    Sse,      // Server-Sent Events (default)
     Polling   // Polling only
 }
 ```
 
-## Auto Strategy (Recommended)
-
-The default `Auto` strategy automatically selects the best delivery method:
-
-1. **Tries SSE first** - Attempts to establish an SSE connection
-2. **Falls back to polling** - If SSE fails or is unavailable, uses polling
-3. **Adapts to environment** - Works seamlessly in different network conditions
-
-```csharp
-using VaultSandbox.Client;
-
-// Auto strategy (default)
-var client = VaultSandboxClientBuilder.Create()
-    .WithBaseUrl("https://smtp.vaultsandbox.com")
-    .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!)
-    .UseAutoDelivery() // Default, can be omitted
-    .Build();
-
-// SDK will automatically choose the best strategy
-var inbox = await client.CreateInboxAsync();
-var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
-{
-    Timeout = TimeSpan.FromSeconds(10)
-});
-```
-
-### When Auto Chooses SSE
-
-- Gateway supports SSE
-- Network allows persistent connections
-- No restrictive proxy/firewall
-
-### When Auto Falls Back to Polling
-
-- Gateway doesn't support SSE
-- SSE connection fails
-- Behind restrictive proxy/firewall
-- Network requires periodic reconnection
-
-## SSE Strategy
+## SSE Strategy (Default)
 
 Server-Sent Events provide real-time push notifications when emails arrive.
 
@@ -100,7 +60,7 @@ var client = VaultSandboxClientBuilder.Create()
 
 | Option                    | Type       | Default     | Description                       |
 | ------------------------- | ---------- | ----------- | --------------------------------- |
-| `SseReconnectInterval`    | `TimeSpan` | `5 seconds` | Initial delay before reconnection |
+| `SseReconnectInterval`    | `TimeSpan` | `2 seconds` | Initial delay before reconnection |
 | `SseMaxReconnectAttempts` | `int`      | `10`        | Maximum reconnection attempts     |
 
 ### Reconnection Behavior
@@ -108,9 +68,9 @@ var client = VaultSandboxClientBuilder.Create()
 SSE uses **exponential backoff** for reconnections:
 
 ```
-1st attempt: SseReconnectInterval (5s)
-2nd attempt: SseReconnectInterval * 2 (10s)
-3rd attempt: SseReconnectInterval * 4 (20s)
+1st attempt: SseReconnectInterval (2s)
+2nd attempt: SseReconnectInterval * 2 (4s)
+3rd attempt: SseReconnectInterval * 4 (8s)
 ...up to SseMaxReconnectAttempts
 ```
 
@@ -282,47 +242,29 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 ## Choosing the Right Strategy
 
-### Use Auto (Default)
+### Use SSE (Default)
 
-For most use cases, let the SDK choose:
+SSE is the default strategy and recommended for most use cases:
 
 ```csharp
 var client = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(Environment.GetEnvironmentVariable("VAULTSANDBOX_URL")!)
     .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!)
-    // UseAutoDelivery() is implicit
+    // UseSseDelivery() is the default, can be omitted
     .Build();
 ```
 
 **Best for:**
 
 - General testing
-- Unknown network conditions
-- Mixed environments (dev, staging, CI)
-- When you want it to "just work"
-
-### Force SSE
-
-When you need guaranteed real-time performance:
-
-```csharp
-var client = VaultSandboxClientBuilder.Create()
-    .WithBaseUrl(Environment.GetEnvironmentVariable("VAULTSANDBOX_URL")!)
-    .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!)
-    .UseSseDelivery()
-    .Build();
-```
-
-**Best for:**
-
-- Local development (known to support SSE)
+- Local development
 - Real-time monitoring dashboards
 - High-volume email testing
 - Latency-sensitive tests
 
-**Caveat:** Will throw `SseException` if SSE is unavailable.
+**Note:** If SSE fails to connect, an `SseException` will be thrown. Consider using polling if you're in an environment where SSE may be blocked.
 
-### Force Polling
+### Use Polling
 
 When compatibility is more important than speed:
 
@@ -354,9 +296,9 @@ var client = VaultSandboxClientBuilder.Create()
     "VaultSandbox": {
         "BaseUrl": "https://smtp.vaultsandbox.com",
         "ApiKey": "your-api-key",
-        "DefaultDeliveryStrategy": "Auto",
+        "DefaultDeliveryStrategy": "Sse",
         "PollIntervalMs": 2000,
-        "SseReconnectIntervalMs": 5000,
+        "SseReconnectIntervalMs": 2000,
         "SseMaxReconnectAttempts": 10
     }
 }
@@ -369,11 +311,11 @@ services.AddVaultSandboxClient(options =>
     options.BaseUrl = configuration["VaultSandbox:BaseUrl"]!;
     options.ApiKey = configuration["VaultSandbox:ApiKey"]!;
     options.DefaultDeliveryStrategy = Enum.Parse<DeliveryStrategy>(
-        configuration["VaultSandbox:DefaultDeliveryStrategy"] ?? "Auto");
+        configuration["VaultSandbox:DefaultDeliveryStrategy"] ?? "Sse");
     options.PollIntervalMs = int.Parse(
         configuration["VaultSandbox:PollIntervalMs"] ?? "2000");
     options.SseReconnectIntervalMs = int.Parse(
-        configuration["VaultSandbox:SseReconnectIntervalMs"] ?? "5000");
+        configuration["VaultSandbox:SseReconnectIntervalMs"] ?? "2000");
     options.SseMaxReconnectAttempts = int.Parse(
         configuration["VaultSandbox:SseMaxReconnectAttempts"] ?? "10");
 });
@@ -391,7 +333,7 @@ services.Configure<VaultSandboxClientOptions>(
 
 ### Development
 
-Fast feedback with SSE:
+Fast feedback with SSE (default):
 
 ```csharp
 // appsettings.Development.json
@@ -415,9 +357,8 @@ public static IVaultSandboxClient CreateClient(IConfiguration configuration)
 
     return strategy switch
     {
-        "Sse" => builder.UseSseDelivery().Build(),
         "Polling" => builder.UsePollingDelivery().Build(),
-        _ => builder.UseAutoDelivery().Build()
+        _ => builder.UseSseDelivery().Build() // SSE is default
     };
 }
 ```
@@ -439,18 +380,15 @@ Reliable polling:
 
 ### Production Testing
 
-Auto with tuned reconnection:
+SSE with tuned reconnection:
 
 ```csharp
 var client = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(Environment.GetEnvironmentVariable("VAULTSANDBOX_URL")!)
     .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")!)
-    .UseAutoDelivery()
-    // SSE config (if available)
-    .WithSseReconnectInterval(TimeSpan.FromSeconds(10))
+    .UseSseDelivery()
+    .WithSseReconnectInterval(TimeSpan.FromSeconds(5))
     .WithSseMaxReconnectAttempts(5)
-    // Polling fallback config
-    .WithPollInterval(TimeSpan.FromSeconds(5))
     .Build();
 ```
 
@@ -502,7 +440,7 @@ try
 catch (SseException ex)
 {
     Console.WriteLine($"SSE error: {ex.Message}");
-    // Strategy will automatically fallback if using Auto
+    // Consider recreating client with polling if SSE is blocked
 }
 catch (StrategyException ex)
 {
@@ -552,22 +490,22 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 ## Best Practices
 
-### 1. Use Auto Strategy by Default
+### 1. Use SSE Strategy by Default
 
-Let the SDK choose unless you have specific requirements:
+SSE is the default and provides the best performance:
 
 ```csharp
-// Good: Let SDK choose
+// Good: Use SSE (default)
 var client = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(url)
     .WithApiKey(apiKey)
     .Build();
 
-// Only specify when needed
+// Only specify polling when needed
 var ciClient = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(url)
     .WithApiKey(apiKey)
-    .UsePollingDelivery() // CI needs guaranteed compatibility
+    .UsePollingDelivery() // CI may need guaranteed compatibility
     .Build();
 ```
 
@@ -582,31 +520,23 @@ public static IVaultSandboxClient CreateClient(IConfiguration config)
         .WithBaseUrl(config["VaultSandbox:BaseUrl"]!)
         .WithApiKey(config["VaultSandbox:ApiKey"]!);
 
-    var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
     var isCI = Environment.GetEnvironmentVariable("CI") == "true";
 
     if (isCI)
     {
-        // CI: Reliable polling
+        // CI: Use polling if SSE may be blocked
         return builder
             .UsePollingDelivery()
             .WithPollInterval(TimeSpan.FromSeconds(3))
             .Build();
     }
-    else if (env == "Development")
-    {
-        // Dev: Fast SSE
-        return builder
-            .UseSseDelivery()
-            .Build();
-    }
     else
     {
-        // Production: Auto with tuning
+        // Default: SSE with tuned reconnection
         return builder
-            .UseAutoDelivery()
-            .WithSseReconnectInterval(TimeSpan.FromSeconds(5))
-            .WithPollInterval(TimeSpan.FromSeconds(2))
+            .UseSseDelivery()
+            .WithSseReconnectInterval(TimeSpan.FromSeconds(2))
+            .WithSseMaxReconnectAttempts(10)
             .Build();
     }
 }

@@ -64,9 +64,9 @@ client, err := vaultsandbox.New(apiKey,
 
 // Delivery strategy for real-time emails
 client, err := vaultsandbox.New(apiKey,
-	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE),      // Server-Sent Events
-	// or vaultsandbox.StrategyPolling for polling
-	// or vaultsandbox.StrategyAuto (default) to try SSE, fall back to polling
+	// SSE is the default strategy
+	// Use StrategyPolling for environments where SSE is blocked
+	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling), // Use polling instead
 )
 ```
 

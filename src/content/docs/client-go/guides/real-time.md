@@ -454,15 +454,14 @@ client, err := vaultsandbox.New(apiKey,
 )
 ```
 
-### Auto Strategy (Recommended)
+### SSE Strategy (Default)
 
 ```go
-client, err := vaultsandbox.New(apiKey,
-	vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
-)
+client, err := vaultsandbox.New(apiKey)
+// SSE is the default strategy, providing real-time delivery
 ```
 
-The auto strategy attempts SSE first and automatically falls back to polling if SSE is unavailable.
+SSE is the default strategy, providing near-instant email notifications through a persistent connection.
 
 ## Advanced Patterns
 

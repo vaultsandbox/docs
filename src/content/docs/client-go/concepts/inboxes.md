@@ -90,10 +90,7 @@ The `DeliveryStrategy` type controls how the client receives new email notificat
 
 ```go
 const (
-	// StrategyAuto tries SSE first, falls back to polling (default)
-	StrategyAuto DeliveryStrategy = "auto"
-
-	// StrategySSE uses Server-Sent Events for real-time push notifications
+	// StrategySSE uses Server-Sent Events for real-time push notifications (default)
 	StrategySSE DeliveryStrategy = "sse"
 
 	// StrategyPolling uses periodic API calls with exponential backoff

@@ -85,14 +85,13 @@ timeout=10000  # 10 seconds for fast networks
 
 **Type**: `DeliveryStrategyType`
 
-**Default**: `DeliveryStrategyType.AUTO`
+**Default**: `DeliveryStrategyType.SSE`
 
 **Description**: Email delivery strategy
 
 **Options**:
 
-- `DeliveryStrategyType.AUTO` - Automatically choose best strategy (tries SSE first, falls back to polling)
-- `DeliveryStrategyType.SSE` - Server-Sent Events for real-time delivery
+- `DeliveryStrategyType.SSE` - Server-Sent Events for real-time delivery (default)
 - `DeliveryStrategyType.POLLING` - Poll for new emails at intervals
 
 **Examples**:
@@ -100,16 +99,14 @@ timeout=10000  # 10 seconds for fast networks
 ```python
 from vaultsandbox import DeliveryStrategyType
 
-strategy=DeliveryStrategyType.AUTO     # Recommended
-strategy=DeliveryStrategyType.SSE      # Force SSE
-strategy=DeliveryStrategyType.POLLING  # Force polling
+# SSE is the default, no need to specify
+strategy=DeliveryStrategyType.POLLING  # Use polling instead
 ```
 
 **When to use each**:
 
-- `AUTO`: Most use cases (recommended)
-- `SSE`: When you need real-time, low-latency delivery
-- `POLLING`: When SSE is blocked by firewall/proxy
+- `SSE`: Most use cases (default) - real-time, low-latency delivery
+- `POLLING`: When SSE is blocked by firewall/proxy or in CI/CD environments
 
 #### max_retries
 
@@ -236,15 +233,14 @@ sse_max_reconnect_attempts=3    # Give up quickly
 
 ```python
 import os
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
 async with VaultSandboxClient(
     # Required
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
 
-    # Recommended production settings
-    strategy=DeliveryStrategyType.AUTO,
+    # Recommended production settings (SSE is default)
     max_retries=5,
     retry_delay=2000,
     sse_reconnect_interval=5000,
@@ -264,8 +260,8 @@ async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url=os.environ["VAULTSANDBOX_URL"],
 
-    # Faster polling for CI
-    strategy=DeliveryStrategyType.AUTO,
+    # Use polling for CI compatibility
+    strategy=DeliveryStrategyType.POLLING,
     polling_interval=1000,  # Poll every second
     max_retries=3,
     retry_delay=500,
@@ -390,35 +386,16 @@ finally:
 
 ## Strategy Selection Guide
 
-### Auto (Recommended)
+### SSE (Default)
 
-**Use when**: You want optimal performance with automatic fallback
-
-**Behavior**:
-
-1. Tries SSE first
-2. Falls back to polling if SSE fails
-3. Automatically reconnects on errors
-
-**Pros**:
-
-- Best of both worlds
-- No manual configuration needed
-- Resilient to network issues
-
-**Cons**:
-
-- Slightly more complex internally
-
-### SSE (Server-Sent Events)
-
-**Use when**: You need real-time, low-latency delivery
+**Use when**: You want real-time, low-latency delivery (most use cases)
 
 **Behavior**:
 
 - Persistent connection to server
 - Push-based email notification
 - Instant delivery
+- Automatic reconnection on connection loss
 
 **Pros**:
 
@@ -430,11 +407,10 @@ finally:
 
 - Requires persistent connection
 - May be blocked by some proxies/firewalls
-- More complex error handling
 
 ### Polling
 
-**Use when**: SSE is blocked or unreliable
+**Use when**: SSE is blocked or unreliable (e.g., CI/CD environments)
 
 **Behavior**:
 

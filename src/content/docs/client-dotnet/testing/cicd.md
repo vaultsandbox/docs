@@ -512,7 +512,7 @@ Set these environment variables in your CI platform:
 
 | Variable                  | Description           | Default |
 | ------------------------- | --------------------- | ------- |
-| `VAULTSANDBOX_STRATEGY`   | Delivery strategy     | `Auto`  |
+| `VAULTSANDBOX_STRATEGY`   | Delivery strategy     | `Sse`   |
 | `VAULTSANDBOX_TIMEOUT_MS` | Default timeout (ms)  | `30000` |
 | `VAULTSANDBOX_POLL_MS`    | Polling interval (ms) | `2000`  |
 
@@ -531,7 +531,7 @@ public static class VaultSandboxConfig
         var apiKey = Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY")
             ?? throw new InvalidOperationException("VAULTSANDBOX_API_KEY is required");
 
-        var strategy = Environment.GetEnvironmentVariable("VAULTSANDBOX_STRATEGY") ?? "Auto";
+        var strategy = Environment.GetEnvironmentVariable("VAULTSANDBOX_STRATEGY") ?? "Sse";
         var timeoutMs = int.Parse(Environment.GetEnvironmentVariable("VAULTSANDBOX_TIMEOUT_MS") ?? "30000");
         var pollMs = int.Parse(Environment.GetEnvironmentVariable("VAULTSANDBOX_POLL_MS") ?? "2000");
 
@@ -543,9 +543,8 @@ public static class VaultSandboxConfig
 
         return strategy.ToLower() switch
         {
-            "sse" => builder.UseSseDelivery().Build(),
             "polling" => builder.UsePollingDelivery().Build(),
-            _ => builder.UseAutoDelivery().Build()
+            _ => builder.UseSseDelivery().Build() // SSE is default
         };
     }
 }

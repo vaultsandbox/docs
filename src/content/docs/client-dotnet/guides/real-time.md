@@ -435,9 +435,9 @@ processor.Start(inbox);
 
 ## SSE vs Polling
 
-### When to Use SSE
+### When to Use SSE (Default)
 
-Use SSE (real-time) when:
+SSE is the default strategy and recommended for most cases:
 
 - You need instant notification of new emails
 - Processing emails as they arrive
@@ -448,7 +448,7 @@ Use SSE (real-time) when:
 var client = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(url)
     .WithApiKey(apiKey)
-    .WithDeliveryStrategy(DeliveryStrategy.Sse)
+    .UseSseDelivery()  // Default, can be omitted
     .Build();
 ```
 
@@ -464,18 +464,8 @@ Use polling when:
 var client = VaultSandboxClientBuilder.Create()
     .WithBaseUrl(url)
     .WithApiKey(apiKey)
-    .WithDeliveryStrategy(DeliveryStrategy.Polling)
+    .UsePollingDelivery()
     .WithPollInterval(TimeSpan.FromSeconds(2))
-    .Build();
-```
-
-### Auto Strategy (Recommended)
-
-```csharp
-var client = VaultSandboxClientBuilder.Create()
-    .WithBaseUrl(url)
-    .WithApiKey(apiKey)
-    .WithDeliveryStrategy(DeliveryStrategy.Auto)  // Tries SSE, falls back to polling
     .Build();
 ```
 

@@ -21,7 +21,7 @@ Configuration options for the client.
 interface ClientConfig {
 	url: string;
 	apiKey: string;
-	strategy?: 'sse' | 'polling' | 'auto';
+	strategy?: 'sse' | 'polling';
 	pollingInterval?: number;
 	maxRetries?: number;
 	retryDelay?: number;
@@ -33,27 +33,27 @@ interface ClientConfig {
 
 #### Properties
 
-| Property                  | Type                           | Required | Default                          | Description                                         |
-| ------------------------- | ------------------------------ | -------- | -------------------------------- | --------------------------------------------------- |
-| `url`                     | `string`                       | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`) |
-| `apiKey`                  | `string`                       | Yes      | -                                | Your API authentication key                         |
-| `strategy`                | `'sse' \| 'polling' \| 'auto'` | No       | `'auto'`                         | Email delivery strategy                             |
-| `pollingInterval`         | `number`                       | No       | `2000`                           | Polling interval in milliseconds                    |
-| `maxRetries`              | `number`                       | No       | `3`                              | Maximum retry attempts for HTTP requests            |
-| `retryDelay`              | `number`                       | No       | `1000`                           | Base delay in milliseconds between retries          |
-| `retryOn`                 | `number[]`                     | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry              |
-| `sseReconnectInterval`    | `number`                       | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
-| `sseMaxReconnectAttempts` | `number`                       | No       | `10`                             | Maximum SSE reconnection attempts                   |
+| Property                  | Type                    | Required | Default                          | Description                                         |
+| ------------------------- | ----------------------- | -------- | -------------------------------- | --------------------------------------------------- |
+| `url`                     | `string`                | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`) |
+| `apiKey`                  | `string`                | Yes      | -                                | Your API authentication key                         |
+| `strategy`                | `'sse' \| 'polling'`    | No       | `'sse'`                          | Email delivery strategy                             |
+| `pollingInterval`         | `number`                | No       | `2000`                           | Polling interval in milliseconds                    |
+| `maxRetries`              | `number`                | No       | `3`                              | Maximum retry attempts for HTTP requests            |
+| `retryDelay`              | `number`                | No       | `1000`                           | Base delay in milliseconds between retries          |
+| `retryOn`                 | `number[]`              | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry              |
+| `sseReconnectInterval`    | `number`                | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
+| `sseMaxReconnectAttempts` | `number`                | No       | `10`                             | Maximum SSE reconnection attempts                   |
 
 #### Example
 
 ```javascript
 import { VaultSandboxClient } from '@vaultsandbox/client';
 
+// SSE is the default strategy
 const client = new VaultSandboxClient({
 	url: 'https://smtp.vaultsandbox.com',
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'auto',
 	maxRetries: 5,
 	retryDelay: 2000,
 });
@@ -495,11 +495,10 @@ Here's a complete example showing typical client usage:
 import { VaultSandboxClient } from '@vaultsandbox/client';
 
 async function main() {
-	// Create client
+	// Create client (SSE is the default strategy)
 	const client = new VaultSandboxClient({
 		url: process.env.VAULTSANDBOX_URL,
 		apiKey: process.env.VAULTSANDBOX_API_KEY,
-		strategy: 'auto',
 		maxRetries: 5,
 	});
 

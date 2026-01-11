@@ -327,20 +327,20 @@ await gracefulShutdown(subs);
 
 ## SSE vs Polling
 
-### When to Use SSE
+### SSE (Default)
 
-Use SSE (real-time) when:
+SSE is the default strategy and provides real-time notifications:
 
-- You need instant notification of new emails
+- Instant notification of new emails
 - Processing emails as they arrive
 - Building real-time dashboards
 - Minimizing latency is critical
 
 ```javascript
+// SSE is used by default
 const client = new VaultSandboxClient({
 	url,
 	apiKey,
-	strategy: 'sse', // Force SSE
 });
 ```
 
@@ -358,16 +358,6 @@ const client = new VaultSandboxClient({
 	apiKey,
 	strategy: 'polling',
 	pollingInterval: 2000, // Poll every 2 seconds
-});
-```
-
-### Auto Strategy (Recommended)
-
-```javascript
-const client = new VaultSandboxClient({
-	url,
-	apiKey,
-	strategy: 'auto', // Tries SSE, falls back to polling
 });
 ```
 

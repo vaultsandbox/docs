@@ -10,7 +10,7 @@ The official command-line interface for VaultSandbox. Monitor incoming emails in
 ## Key Capabilities
 
 - **Real-Time TUI Dashboard**: Interactive terminal interface for monitoring emails across multiple inboxes
-- **Multi-Inbox Watching**: Monitor all your inboxes simultaneously via SSE streaming
+- **Multi-Inbox Watching**: Monitor all your inboxes simultaneously with configurable delivery (SSE or polling)
 - **Email Authentication**: View SPF, DKIM, and DMARC verification results
 - **Link & Attachment Inspection**: Extract URLs and preview attachments directly from the terminal
 - **CI/CD Ready**: Script email verification with the `wait` command for automated testing

@@ -322,7 +322,7 @@ ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
     .baseUrl(baseUrl)
     .strategy(StrategyType.SSE)
-    .sseReconnectInterval(Duration.ofSeconds(5))
+    .sseReconnectInterval(Duration.ofSeconds(2))
     .sseMaxReconnectAttempts(10)
     .build();
 
@@ -333,8 +333,8 @@ VaultSandboxClient client = VaultSandboxClient.create(config);
 
 | Option                    | Default   | Description                             |
 | ------------------------- | --------- | --------------------------------------- |
-| `strategy`                | `AUTO`    | Delivery strategy (SSE, POLLING, AUTO)  |
-| `sseReconnectInterval`    | 5 seconds | Time between reconnection attempts      |
+| `strategy`                | `SSE`     | Delivery strategy (SSE, POLLING)        |
+| `sseReconnectInterval`    | 2 seconds | Time between reconnection attempts      |
 | `sseMaxReconnectAttempts` | 10        | Maximum reconnection attempts           |
 | `pollInterval`            | 2 seconds | Polling interval (for POLLING strategy) |
 

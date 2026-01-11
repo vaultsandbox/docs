@@ -3,15 +3,14 @@ title: Delivery Strategies
 description: Deep dive into SSE vs Polling delivery strategies for receiving emails
 ---
 
-The Java SDK supports three delivery strategies for receiving emails. This guide covers when to use each strategy and how to configure them for optimal performance.
+The Java SDK supports two delivery strategies for receiving emails. This guide covers when to use each strategy and how to configure them for optimal performance.
 
 ## Strategy Overview
 
-| Strategy    | Description                                          |
-| ----------- | ---------------------------------------------------- |
-| **AUTO**    | Starts with SSE, falls back to polling (recommended) |
-| **SSE**     | Real-time via Server-Sent Events                     |
-| **POLLING** | Periodic HTTP polling                                |
+| Strategy    | Description                               |
+| ----------- | ----------------------------------------- |
+| **SSE**     | Real-time via Server-Sent Events (default) |
+| **POLLING** | Periodic HTTP polling                     |
 
 ## Strategy Comparison
 
@@ -24,55 +23,7 @@ The Java SDK supports three delivery strategies for receiving emails. This guide
 | Recovery          | Auto-reconnect  | Natural               |
 | Best for          | Real-time needs | CI/CD, firewalls      |
 
-## AUTO Strategy (Recommended)
-
-The default and recommended strategy. It provides the best of both worlds - real-time delivery when available, with automatic fallback to polling when needed.
-
-```java
-import com.vaultsandbox.client.ClientConfig;
-import com.vaultsandbox.client.StrategyType;
-
-ClientConfig config = ClientConfig.builder()
-    .apiKey(apiKey)
-    .strategy(StrategyType.AUTO)
-    .build();
-```
-
-### Behavior
-
-1. Checks if SSE is supported at initialization (connectivity check)
-2. If SSE is supported, uses SSE for real-time notifications
-3. If SSE fails permanently (after max reconnect attempts), falls back to polling
-4. Migrates active subscriptions during fallback
-5. Fallback is transparent to application code
-
-### Configuration
-
-```java
-ClientConfig.builder()
-    .apiKey(apiKey)
-    .strategy(StrategyType.AUTO)
-    // SSE settings (used first)
-    .sseReconnectInterval(Duration.ofSeconds(5))
-    .sseMaxReconnectAttempts(10)
-    // Polling settings (fallback)
-    .pollInterval(Duration.ofSeconds(2))
-    .maxBackoff(Duration.ofSeconds(30))
-    .build();
-```
-
-### Checking Active Strategy
-
-```java
-import com.vaultsandbox.client.strategy.AutoStrategy;
-
-// After client initialization, check which strategy is active
-AutoStrategy autoStrategy = ...;  // Retrieved from client internals
-boolean usingSse = autoStrategy.isUsingSse();
-System.out.println("Using SSE: " + usingSse);
-```
-
-## SSE Strategy
+## SSE Strategy (Default)
 
 Real-time email delivery via Server-Sent Events. Uses a persistent HTTP connection for instant notifications.
 
@@ -80,7 +31,7 @@ Real-time email delivery via Server-Sent Events. Uses a persistent HTTP connecti
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
     .strategy(StrategyType.SSE)
-    .sseReconnectInterval(Duration.ofSeconds(5))
+    .sseReconnectInterval(Duration.ofSeconds(2))
     .sseMaxReconnectAttempts(10)
     .build();
 ```
@@ -103,7 +54,7 @@ ClientConfig config = ClientConfig.builder()
 
 | Option                    | Type       | Default | Description                              |
 | ------------------------- | ---------- | ------- | ---------------------------------------- |
-| `sseReconnectInterval`    | `Duration` | 5s      | Time between reconnection attempts       |
+| `sseReconnectInterval`    | `Duration` | 2s      | Time between reconnection attempts       |
 | `sseMaxReconnectAttempts` | `int`      | 10      | Max reconnection attempts before failure |
 
 ### When to Use
@@ -122,7 +73,7 @@ SSE automatically reconnects on connection failures with exponential backoff:
 ClientConfig.builder()
     .apiKey(apiKey)
     .strategy(StrategyType.SSE)
-    .sseReconnectInterval(Duration.ofSeconds(5))  // Base interval
+    .sseReconnectInterval(Duration.ofSeconds(2))  // Base interval
     .sseMaxReconnectAttempts(10)  // Fails after 10 attempts
     .build();
 ```
@@ -225,28 +176,27 @@ Jitter adds randomness (±30% by default) to spread out requests.
         ▼               ▼
 ┌───────────────┐ ┌───────────────────┐
 │ Environment   │ │ Use POLLING       │
-│ supports SSE? │ │ or AUTO           │
+│ supports SSE? │ │                   │
 └───────────────┘ └───────────────────┘
     │       │
-   Yes      No/Unknown
+   Yes      No
     │       │
     ▼       ▼
 ┌───────┐ ┌───────────────────────────┐
-│ SSE   │ │ Use AUTO (will fallback)  │
-│ or    │ │ or POLLING                │
-│ AUTO  │ └───────────────────────────┘
-└───────┘
+│ SSE   │ │ Use POLLING               │
+│       │ │                           │
+└───────┘ └───────────────────────────┘
 ```
 
 **Quick Decision:**
 
 | Environment            | Recommended Strategy |
 | ---------------------- | -------------------- |
-| Development            | AUTO or SSE          |
+| Development            | SSE                  |
 | CI/CD                  | POLLING              |
-| Production tests       | AUTO                 |
+| Production tests       | SSE                  |
 | Behind firewall        | POLLING              |
-| Real-time requirements | SSE or AUTO          |
+| Real-time requirements | SSE                  |
 
 ## Environment-Specific Configuration
 
@@ -276,13 +226,12 @@ ClientConfig config = ClientConfig.builder()
 ### Production Integration Tests
 
 ```java
-// Best of both - tries SSE, falls back to polling if needed
+// SSE for real-time delivery
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
-    .strategy(StrategyType.AUTO)
-    .sseReconnectInterval(Duration.ofSeconds(5))
+    .strategy(StrategyType.SSE)
+    .sseReconnectInterval(Duration.ofSeconds(2))
     .sseMaxReconnectAttempts(5)
-    .pollInterval(Duration.ofSeconds(2))
     .build();
 ```
 
@@ -298,16 +247,15 @@ ClientConfig config = ClientConfig.builder()
     .build();
 ```
 
-### Quick Fallback Configuration
+### Low Latency Configuration
 
 ```java
-// Fast SSE failure detection and fallback
+// Fast reconnection for low-latency requirements
 ClientConfig config = ClientConfig.builder()
     .apiKey(apiKey)
-    .strategy(StrategyType.AUTO)
-    .sseReconnectInterval(Duration.ofSeconds(2))
-    .sseMaxReconnectAttempts(3)  // Fail fast
-    .pollInterval(Duration.ofSeconds(1))
+    .strategy(StrategyType.SSE)
+    .sseReconnectInterval(Duration.ofSeconds(1))
+    .sseMaxReconnectAttempts(5)
     .build();
 ```
 
@@ -342,25 +290,23 @@ try {
 
 ## Troubleshooting
 
-| Issue                 | Possible Cause          | Solution                         |
-| --------------------- | ----------------------- | -------------------------------- |
-| SSE not connecting    | Firewall blocking       | Use POLLING or AUTO              |
-| High latency          | Slow poll interval      | Decrease `pollInterval`          |
-| Missed emails         | Backoff too aggressive  | Reduce `maxBackoff`              |
-| Too many requests     | Poll interval too short | Increase `pollInterval`          |
-| AUTO not falling back | Max attempts too high   | Reduce `sseMaxReconnectAttempts` |
-| Frequent reconnects   | Unstable network        | Increase `sseReconnectInterval`  |
-| Connection timeouts   | Network issues          | Increase `httpTimeout`           |
+| Issue               | Possible Cause          | Solution                        |
+| ------------------- | ----------------------- | ------------------------------- |
+| SSE not connecting  | Firewall blocking       | Use POLLING                     |
+| High latency        | Slow poll interval      | Decrease `pollInterval`         |
+| Missed emails       | Backoff too aggressive  | Reduce `maxBackoff`             |
+| Too many requests   | Poll interval too short | Increase `pollInterval`         |
+| Frequent reconnects | Unstable network        | Increase `sseReconnectInterval` |
+| Connection timeouts | Network issues          | Increase `httpTimeout`          |
 
 ## Best Practices
 
-1. **Use AUTO by default** - Best balance of performance and reliability
+1. **Use SSE for real-time needs** - Default strategy with instant delivery
 2. **Use POLLING in CI/CD** - Most reliable in restricted environments
 3. **Configure timeouts appropriately** - Match your test requirements
-4. **Monitor fallback behavior** - Log when strategy changes occur
-5. **Test both strategies** - Ensure code works with either strategy
-6. **Set reasonable reconnect limits** - Balance retry vs fail-fast
-7. **Use jitter in polling** - Prevents thundering herd on server
+4. **Test both strategies** - Ensure code works with either strategy
+5. **Set reasonable reconnect limits** - Balance retry vs fail-fast
+6. **Use jitter in polling** - Prevents thundering herd on server
 
 ## Related Pages
 

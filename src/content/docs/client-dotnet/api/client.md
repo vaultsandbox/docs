@@ -86,12 +86,11 @@ The builder provides fluent configuration methods for creating a client.
 | `WithPollInterval(TimeSpan)`               | Polling interval for email delivery (default: 2s)                      |
 | `WithMaxRetries(int)`                      | Maximum retry attempts for HTTP requests (default: 3)                  |
 | `WithRetryDelay(TimeSpan)`                 | Initial delay between retries (default: 1s)                            |
-| `WithSseReconnectInterval(TimeSpan)`       | SSE reconnection delay (default: 5s)                                   |
+| `WithSseReconnectInterval(TimeSpan)`       | SSE reconnection delay (default: 2s)                                   |
 | `WithSseMaxReconnectAttempts(int)`         | Maximum SSE reconnection attempts (default: 10)                        |
 | `WithDeliveryStrategy(DeliveryStrategy)`   | Set the delivery strategy directly                                     |
-| `UseSseDelivery()`                         | Use Server-Sent Events for email delivery                              |
+| `UseSseDelivery()`                         | Use Server-Sent Events for email delivery (default)                    |
 | `UsePollingDelivery()`                     | Use polling for email delivery                                         |
-| `UseAutoDelivery()`                        | Auto-select delivery strategy (default)                                |
 | `WithDefaultInboxTtl(TimeSpan)`            | Default time-to-live for new inboxes                                   |
 | `WithLogging(ILoggerFactory)`              | Add logging support                                                    |
 | `WithHttpClient(HttpClient, bool)`         | Use a custom HttpClient instance (optional: dispose client on cleanup) |
@@ -145,9 +144,9 @@ public sealed class VaultSandboxClientOptions
     public int PollIntervalMs { get; set; } = 2_000;
     public int MaxRetries { get; set; } = 3;
     public int RetryDelayMs { get; set; } = 1_000;
-    public int SseReconnectIntervalMs { get; set; } = 5_000;
+    public int SseReconnectIntervalMs { get; set; } = 2_000;
     public int SseMaxReconnectAttempts { get; set; } = 10;
-    public DeliveryStrategy DefaultDeliveryStrategy { get; set; } = DeliveryStrategy.Auto;
+    public DeliveryStrategy DefaultDeliveryStrategy { get; set; } = DeliveryStrategy.Sse;
     public int DefaultInboxTtlSeconds { get; set; } = 3600;
 
     public void Validate();
@@ -614,7 +613,7 @@ async Task Main(CancellationToken cancellationToken)
     var client = VaultSandboxClientBuilder.Create()
         .WithBaseUrl(Environment.GetEnvironmentVariable("VAULTSANDBOX_URL"))
         .WithApiKey(Environment.GetEnvironmentVariable("VAULTSANDBOX_API_KEY"))
-        .UseAutoDelivery()
+        .UseSseDelivery()
         .WithMaxRetries(5)
         .Build();
 

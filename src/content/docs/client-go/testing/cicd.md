@@ -455,7 +455,7 @@ Set these environment variables in your CI platform:
 
 | Variable                        | Description       | Default |
 | ------------------------------- | ----------------- | ------- |
-| `VAULTSANDBOX_STRATEGY`         | Delivery strategy | `auto`  |
+| `VAULTSANDBOX_STRATEGY`         | Delivery strategy | `sse`   |
 | `VAULTSANDBOX_TIMEOUT`          | Default timeout   | `60s`   |
 | `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval  | `2s`    |
 
@@ -484,13 +484,9 @@ func GetVaultSandboxOptions() []vaultsandbox.Option {
 		}
 	}
 
-	switch os.Getenv("VAULTSANDBOX_STRATEGY") {
-	case "sse":
-		opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE))
-	case "polling":
+	// SSE is the default strategy; only override if explicitly set to polling
+	if os.Getenv("VAULTSANDBOX_STRATEGY") == "polling" {
 		opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling))
-	default:
-		opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto))
 	}
 
 	return opts

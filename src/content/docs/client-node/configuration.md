@@ -63,30 +63,27 @@ apiKey: 'vs_1234567890abcdef...';
 
 #### strategy
 
-**Type**: `'sse' | 'polling' | 'auto'`
+**Type**: `'sse' | 'polling'`
 
-**Default**: `'auto'`
+**Default**: `'sse'`
 
 **Description**: Email delivery strategy
 
 **Options**:
 
-- `'auto'` - Automatically choose best strategy (tries SSE first, falls back to polling)
-- `'sse'` - Server-Sent Events for real-time delivery
+- `'sse'` - Server-Sent Events for real-time delivery (default)
 - `'polling'` - Poll for new emails at intervals
 
 **Examples**:
 
 ```javascript
-strategy: 'auto'; // Recommended
-strategy: 'sse'; // Force SSE
-strategy: 'polling'; // Force polling
+// SSE is the default, no need to specify
+strategy: 'polling'; // Use polling instead
 ```
 
 **When to use each**:
 
-- `'auto'`: Most use cases (recommended)
-- `'sse'`: When you need real-time, low-latency delivery
+- `'sse'`: Most use cases (default) - real-time, low-latency delivery
 - `'polling'`: When SSE is blocked by firewall/proxy
 
 #### pollingInterval
@@ -203,8 +200,7 @@ const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
 
-	// Recommended production settings
-	strategy: 'auto',
+	// Recommended production settings (SSE is default)
 	maxRetries: 5,
 	retryDelay: 2000,
 	sseReconnectInterval: 5000,
@@ -219,8 +215,8 @@ const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
 
-	// Faster polling for CI
-	strategy: 'auto',
+	// Use polling for CI environments
+	strategy: 'polling',
 	pollingInterval: 1000, // Poll every second
 	maxRetries: 3,
 	retryDelay: 500,
@@ -234,9 +230,8 @@ const client = new VaultSandboxClient({
 	url: 'http://localhost:3000',
 	apiKey: 'dev-api-key',
 
-	// Aggressive settings for fast feedback
-	strategy: 'polling', // More reliable in dev
-	pollingInterval: 500, // Very responsive
+	// SSE is default for fast feedback
+	// Only specify polling if needed
 	maxRetries: 1, // Fail fast
 });
 ```
@@ -266,7 +261,7 @@ Store configuration in environment variables:
 ```bash
 VAULTSANDBOX_URL=https://mail.example.com
 VAULTSANDBOX_API_KEY=vs_1234567890abcdef...
-VAULTSANDBOX_STRATEGY=auto
+VAULTSANDBOX_STRATEGY=sse
 VAULTSANDBOX_POLLING_INTERVAL=2000
 ```
 
@@ -279,7 +274,7 @@ import 'dotenv/config'; // Load .env file
 const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: process.env.VAULTSANDBOX_STRATEGY || 'auto',
+	strategy: process.env.VAULTSANDBOX_STRATEGY || 'sse',
 	pollingInterval: parseInt(process.env.VAULTSANDBOX_POLLING_INTERVAL || '2000'),
 });
 ```
@@ -322,29 +317,9 @@ try {
 
 ## Strategy Selection Guide
 
-### Auto (Recommended)
+### SSE (Server-Sent Events) - Default
 
-**Use when**: You want optimal performance with automatic fallback
-
-**Behavior**:
-
-1. Tries SSE first
-2. Falls back to polling if SSE fails
-3. Automatically reconnects on errors
-
-**Pros**:
-
-- Best of both worlds
-- No manual configuration needed
-- Resilient to network issues
-
-**Cons**:
-
-- Slightly more complex internally
-
-### SSE (Server-Sent Events)
-
-**Use when**: You need real-time, low-latency delivery
+**Use when**: Most use cases - real-time, low-latency delivery
 
 **Behavior**:
 

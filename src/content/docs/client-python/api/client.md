@@ -16,7 +16,7 @@ VaultSandboxClient(
     max_retries: int = 3,
     retry_delay: int = 1000,
     retry_on_status_codes: tuple[int, ...] | None = None,
-    strategy: DeliveryStrategyType = DeliveryStrategyType.AUTO,
+    strategy: DeliveryStrategyType = DeliveryStrategyType.SSE,
     polling_interval: int = 2000,
     polling_max_backoff: int = 30000,
     sse_reconnect_interval: int = 5000,
@@ -36,7 +36,7 @@ Creates a new VaultSandbox client instance.
 | `max_retries`                | `int`                  | No       | `3`                              | Maximum retry attempts for HTTP requests   |
 | `retry_delay`                | `int`                  | No       | `1000`                           | Base delay in milliseconds between retries |
 | `retry_on_status_codes`      | `tuple[int, ...]`      | No       | `(408, 429, 500, 502, 503, 504)` | HTTP status codes that trigger a retry     |
-| `strategy`                   | `DeliveryStrategyType` | No       | `AUTO`                           | Email delivery strategy                    |
+| `strategy`                   | `DeliveryStrategyType` | No       | `SSE`                            | Email delivery strategy                    |
 | `polling_interval`           | `int`                  | No       | `2000`                           | Polling interval in milliseconds           |
 | `polling_max_backoff`        | `int`                  | No       | `30000`                          | Maximum backoff delay in milliseconds      |
 | `sse_reconnect_interval`     | `int`                  | No       | `5000`                           | Initial delay before SSE reconnection (ms) |
@@ -46,12 +46,11 @@ Creates a new VaultSandbox client instance.
 
 ```python
 import os
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
 async with VaultSandboxClient(
     api_key=os.environ["VAULTSANDBOX_API_KEY"],
     base_url="https://smtp.vaultsandbox.com",
-    strategy=DeliveryStrategyType.AUTO,
     max_retries=5,
     retry_delay=2000,
 ) as client:

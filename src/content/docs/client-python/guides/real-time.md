@@ -379,22 +379,22 @@ await graceful_shutdown(subscriptions, client)
 
 ## SSE vs Polling
 
-### When to Use SSE
+### SSE (Default)
 
-Use SSE (real-time) when:
+SSE is the default strategy and provides instant notification of new emails:
 
-- You need instant notification of new emails
+- Real-time push notifications
 - Processing emails as they arrive
 - Building real-time dashboards
-- Minimizing latency is critical
+- Minimal latency
 
 ```python
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
+from vaultsandbox import VaultSandboxClient
 
+# SSE is used by default
 async with VaultSandboxClient(
     base_url=url,
     api_key=api_key,
-    strategy=DeliveryStrategyType.SSE,  # Force SSE
 ) as client:
     # ...
 ```
@@ -404,8 +404,8 @@ async with VaultSandboxClient(
 Use polling when:
 
 - SSE is blocked by firewall/proxy
+- Running in CI/CD environments
 - Running in environments that don't support persistent connections
-- Batch processing is acceptable
 
 ```python
 from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
@@ -415,19 +415,6 @@ async with VaultSandboxClient(
     api_key=api_key,
     strategy=DeliveryStrategyType.POLLING,
     polling_interval=2000,  # Poll every 2 seconds
-) as client:
-    # ...
-```
-
-### Auto Strategy (Recommended)
-
-```python
-from vaultsandbox import VaultSandboxClient, DeliveryStrategyType
-
-async with VaultSandboxClient(
-    base_url=url,
-    api_key=api_key,
-    strategy=DeliveryStrategyType.AUTO,  # Tries SSE, falls back to polling
 ) as client:
     # ...
 ```

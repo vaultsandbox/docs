@@ -3,7 +3,7 @@ title: Delivery Strategies
 description: Learn about SSE and polling delivery strategies in VaultSandbox Client for Go
 ---
 
-VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. The SDK intelligently chooses the best strategy automatically or allows manual configuration.
+VaultSandbox Client supports two email delivery strategies: **Server-Sent Events (SSE)** for real-time updates and **Polling** for compatibility. SSE is the default strategy, providing near-instant email delivery with minimal latency.
 
 ## Overview
 
@@ -23,69 +23,7 @@ When you wait for emails or subscribe to new email notifications, the SDK needs 
 | **Firewall/Proxy**  | May be blocked                  | Always works                |
 | **Battery Impact**  | Lower (push-based)              | Higher (constant requests)  |
 
-## Auto Strategy (Recommended)
-
-The default `StrategyAuto` automatically selects the best delivery method:
-
-1. **Tries SSE first** - Attempts to establish an SSE connection
-2. **Falls back to polling** - If SSE fails within 5 seconds, uses polling
-3. **Adapts to environment** - Works seamlessly in different network conditions
-
-```go
-package main
-
-import (
-    "context"
-    "os"
-    "time"
-
-    vaultsandbox "github.com/vaultsandbox/client-go"
-)
-
-func main() {
-    ctx := context.Background()
-
-    // Auto strategy (default)
-    client, err := vaultsandbox.New(
-        os.Getenv("VAULTSANDBOX_API_KEY"),
-        // vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto), // Default, can be omitted
-    )
-    if err != nil {
-        panic(err)
-    }
-    defer client.Close()
-
-    // SDK will automatically choose the best strategy
-    inbox, err := client.CreateInbox(ctx)
-    if err != nil {
-        panic(err)
-    }
-
-    email, err := inbox.WaitForEmail(ctx,
-        vaultsandbox.WithWaitTimeout(10*time.Second),
-    )
-    if err != nil {
-        panic(err)
-    }
-}
-```
-
-### When Auto Chooses SSE
-
-- Gateway supports SSE
-- Network allows persistent connections
-- SSE connection established within 5 seconds
-- No restrictive proxy/firewall
-
-### When Auto Falls Back to Polling
-
-- Gateway doesn't support SSE
-- SSE connection fails
-- SSE doesn't connect within timeout
-- Behind restrictive proxy/firewall
-- Network requires periodic reconnection
-
-## SSE Strategy
+## SSE Strategy (Default)
 
 Server-Sent Events provide real-time push notifications when emails arrive.
 
@@ -98,7 +36,15 @@ Server-Sent Events provide real-time push notifications when emails arrive.
 
 ### Configuration
 
+SSE is the default strategy, so you don't need to specify it explicitly:
+
 ```go
+// SSE is used by default
+client, err := vaultsandbox.New(
+    os.Getenv("VAULTSANDBOX_API_KEY"),
+)
+
+// Or explicitly specify SSE
 client, err := vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
     vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE),
@@ -327,45 +273,26 @@ func main() {
 
 ## Choosing the Right Strategy
 
-### Use Auto (Default)
+### Use SSE (Default)
 
-For most use cases, let the SDK choose:
+For most use cases, use the default SSE strategy:
 
 ```go
 client, err := vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
-    // strategy defaults to StrategyAuto
+    // strategy defaults to StrategySSE
 )
 ```
 
 **Best for:**
 
 - General testing
-- Unknown network conditions
-- Mixed environments (dev, staging, CI)
-- When you want it to "just work"
-
-### Force SSE
-
-When you need guaranteed real-time performance:
-
-```go
-client, err := vaultsandbox.New(
-    os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE),
-)
-```
-
-**Best for:**
-
-- Local development (known to support SSE)
+- Local development
 - Real-time monitoring dashboards
 - High-volume email testing
 - Latency-sensitive tests
 
-**Caveat:** Will fall back to polling if SSE fails to connect.
-
-### Force Polling
+### Use Polling
 
 When compatibility is more important than speed:
 
@@ -419,13 +346,13 @@ func newCIClient() (*vaultsandbox.Client, error) {
 
 ### Production Testing
 
-Auto with reasonable defaults:
+SSE with reasonable defaults:
 
 ```go
 func newProductionClient() (*vaultsandbox.Client, error) {
     return vaultsandbox.New(
         os.Getenv("VAULTSANDBOX_API_KEY"),
-        vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+        // SSE is the default, no need to specify
         vaultsandbox.WithTimeout(60*time.Second),
     )
 }
@@ -439,17 +366,11 @@ func createClient() (*vaultsandbox.Client, error) {
         vaultsandbox.WithBaseURL(os.Getenv("VAULTSANDBOX_URL")),
     }
 
-    switch {
-    case os.Getenv("CI") != "":
-        // CI: Reliable polling
+    // Use polling in CI environments for maximum compatibility
+    if os.Getenv("CI") != "" {
         opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling))
-    case os.Getenv("GO_ENV") == "development":
-        // Dev: Fast SSE
-        opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE))
-    default:
-        // Production: Auto
-        opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto))
     }
+    // Otherwise, use the default SSE strategy
 
     return vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"), opts...)
 }
@@ -528,7 +449,7 @@ func compareStrategies(ctx context.Context) {
 
 ### SSE Connection Failures
 
-When SSE fails, the auto strategy automatically falls back to polling:
+If SSE connection fails, consider using the polling strategy instead:
 
 ```go
 import (
@@ -537,48 +458,34 @@ import (
     vaultsandbox "github.com/vaultsandbox/client-go"
 )
 
-// Using auto strategy handles SSE failures gracefully
+// Default SSE strategy
 client, err := vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
 )
 if err != nil {
-    // Handle initialization error
     var netErr *vaultsandbox.NetworkError
     if errors.As(err, &netErr) {
         fmt.Printf("Network error: %v\n", netErr.Err)
+        // Consider using polling strategy in environments where SSE is blocked
     }
 }
 
-// For explicit SSE strategy, the SDK will fall back to polling on failure
+// Switch to polling if SSE doesn't work in your environment
 client, err = vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE),
+    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling),
 )
-if err != nil {
-    var netErr *vaultsandbox.NetworkError
-    if errors.As(err, &netErr) {
-        fmt.Printf("Connection failed: %v\n", netErr.Err)
-        // Consider using polling strategy
-    }
-}
 ```
 
 ### Polling Too Slow
 
-If emails arrive slowly with polling:
+If emails arrive slowly with polling, use the default SSE strategy:
 
 ```go
-// Solution 1: Use SSE for real-time delivery
+// Use SSE (default) for real-time delivery
 client, _ := vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE), // Real-time delivery
-)
-
-// Solution 2: Use auto and let it choose
-client, _ := vaultsandbox.New(
-    os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto),
+    // SSE is the default, provides near-instant delivery
 )
 ```
 
@@ -604,39 +511,34 @@ if err != nil {
 
 ## Best Practices
 
-### 1. Use Auto Strategy by Default
+### 1. Use SSE Strategy by Default
 
-Let the SDK choose unless you have specific requirements:
+Use the default SSE strategy for best performance:
 
 ```go
-// Good: Let SDK choose
+// Good: Use the default SSE strategy
 client, _ := vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"))
 
-// Only specify when needed
+// Only specify polling when needed for compatibility
 ciClient, _ := vaultsandbox.New(
     os.Getenv("VAULTSANDBOX_API_KEY"),
-    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling), // CI needs guaranteed compatibility
+    vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling), // CI may need guaranteed compatibility
 )
 ```
 
-### 2. Tune for Environment
+### 2. Use Polling in CI Environments
 
-Configure differently for each environment:
+Configure polling for CI environments where SSE may be blocked:
 
 ```go
 func createClient() (*vaultsandbox.Client, error) {
     opts := []vaultsandbox.Option{}
 
     if os.Getenv("CI") != "" {
-        // CI: Reliable polling
+        // CI: Use polling for guaranteed compatibility
         opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyPolling))
-    } else if os.Getenv("GO_ENV") == "development" {
-        // Dev: Fast SSE
-        opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategySSE))
-    } else {
-        // Production: Auto
-        opts = append(opts, vaultsandbox.WithDeliveryStrategy(vaultsandbox.StrategyAuto))
     }
+    // Otherwise, the default SSE strategy is used
 
     return vaultsandbox.New(os.Getenv("VAULTSANDBOX_API_KEY"), opts...)
 }

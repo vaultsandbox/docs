@@ -347,7 +347,7 @@ Set these environment variables in your CI platform:
 
 | Variable                        | Description           | Default |
 | ------------------------------- | --------------------- | ------- |
-| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `auto`  |
+| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `sse`   |
 | `VAULTSANDBOX_TIMEOUT`          | Default timeout (ms)  | `30000` |
 | `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval (ms) | `2000`  |
 
@@ -359,7 +359,7 @@ export function getVaultSandboxConfig() {
 	return {
 		url: process.env.VAULTSANDBOX_URL,
 		apiKey: process.env.VAULTSANDBOX_API_KEY,
-		strategy: process.env.VAULTSANDBOX_STRATEGY || 'auto',
+		strategy: process.env.VAULTSANDBOX_STRATEGY || 'sse',
 		timeout: parseInt(process.env.VAULTSANDBOX_TIMEOUT || '30000', 10),
 		pollingInterval: parseInt(process.env.VAULTSANDBOX_POLLING_INTERVAL || '2000', 10),
 	};
@@ -628,15 +628,23 @@ const email1 = await inbox.getEmail(id1);
 const email2 = await inbox.getEmail(id2);
 ```
 
-### Use SSE for Real-time Tests
+### Use SSE (Default) for Real-time Tests
 
-Enable SSE strategy for faster delivery in supported environments:
+SSE is the default strategy and provides fastest delivery:
 
 ```javascript
+// SSE is the default, no need to specify
 const client = new VaultSandboxClient({
 	url: process.env.VAULTSANDBOX_URL,
 	apiKey: process.env.VAULTSANDBOX_API_KEY,
-	strategy: 'sse', // Faster than polling
+});
+
+// Or use polling for CI environments with connection restrictions
+const ciClient = new VaultSandboxClient({
+	url: process.env.VAULTSANDBOX_URL,
+	apiKey: process.env.VAULTSANDBOX_API_KEY,
+	strategy: 'polling',
+	pollingInterval: 2000,
 });
 ```
 
