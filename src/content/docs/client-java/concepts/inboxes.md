@@ -7,13 +7,14 @@ Inboxes are the core concept in VaultSandbox. Each inbox is an isolated, encrypt
 
 ## What is an Inbox?
 
-An inbox is a temporary, encrypted email destination that:
+An inbox is a temporary email destination that:
 
 - Has a **unique email address** (e.g., `a1b2c3d4@mail.example.com`)
-- Uses **client-side encryption** (ML-KEM-768 keypair)
+- Supports **optional encryption** (ML-KEM-768 keypair) based on server policy
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
 - Stores emails **in memory** on the gateway
+- Can optionally **skip email authentication** checks (SPF/DKIM/DMARC/PTR)
 
 ## Creating Inboxes
 
@@ -53,6 +54,50 @@ Inbox inbox = client.createInbox(
 ```
 
 **Note**: Requesting a specific email address may fail if it's already in use. The server will return an error.
+
+### With Email Auth Disabled
+
+Disable SPF/DKIM/DMARC/PTR checks for this inbox:
+
+```java
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+
+// All auth results will show "skipped" status
+Email email = inbox.waitForEmail();
+System.out.println(email.getAuthResults().getSpf().getResult()); // "skipped"
+```
+
+### With Encryption Options
+
+Request a specific encryption mode (when server policy allows):
+
+```java
+// Request a plain (unencrypted) inbox
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .encryption("plain")
+        .build()
+);
+
+// Or use convenience method
+Inbox inbox = client.createInbox(CreateInboxOptions.plain());
+
+// Request an encrypted inbox
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .encryption("encrypted")
+        .build()
+);
+
+// Or use convenience method
+Inbox inbox = client.createInbox(CreateInboxOptions.encrypted());
+```
+
+**Note**: Encryption options depend on server policy. See [Server Info](#checking-server-encryption-policy) for details.
 
 ## Inbox Properties
 
@@ -96,6 +141,32 @@ System.out.println(inbox.getExpiresAt());
 Duration untilExpiry = Duration.between(Instant.now(), inbox.getExpiresAt());
 System.out.printf("Expires in %.1f hours%n", untilExpiry.toHours());
 ```
+
+### emailAuth
+
+**Type**: `boolean`
+
+Whether email authentication checks (SPF/DKIM/DMARC/PTR) are enabled for this inbox.
+
+```java
+System.out.println(inbox.isEmailAuth());
+// true (default) or false if disabled
+```
+
+When `emailAuth` is `false`, all authentication results will have a `skipped` status.
+
+### encrypted
+
+**Type**: `boolean`
+
+Whether this inbox uses end-to-end encryption.
+
+```java
+System.out.println(inbox.isEncrypted());
+// true (encrypted) or false (plain)
+```
+
+**Note**: When `encrypted` is `true`, the inbox will have a `serverSigPk` property for signature verification. When `false`, `serverSigPk` will be `null`.
 
 ## Inbox Lifecycle
 
@@ -551,6 +622,44 @@ try {
     // - Invalid key format
     // - Missing required fields
 }
+```
+
+## Checking Server Encryption Policy
+
+The server's encryption policy determines how inbox encryption can be configured:
+
+```java
+ServerInfo info = client.getServerInfo();
+String policy = info.getEncryptionPolicy();
+
+System.out.println("Encryption policy: " + policy);
+System.out.println("Can override: " + info.canOverrideEncryption());
+System.out.println("Default encrypted: " + info.isDefaultEncrypted());
+```
+
+### Encryption Policies
+
+| Policy     | Default Behavior | Can Override?                          |
+| ---------- | ---------------- | -------------------------------------- |
+| `always`   | Encrypted        | No - all inboxes are always encrypted  |
+| `enabled`  | Encrypted        | Yes - can request `plain`              |
+| `disabled` | Plain            | Yes - can request `encrypted`          |
+| `never`    | Plain            | No - all inboxes are always plain      |
+
+### Example: Conditional Inbox Creation
+
+```java
+ServerInfo info = client.getServerInfo();
+
+CreateInboxOptions.Builder options = CreateInboxOptions.builder();
+
+if (info.canOverrideEncryption() && !info.isDefaultEncrypted()) {
+    // Server allows overrides and default is plain - request encrypted
+    options.encryption("encrypted");
+}
+
+Inbox inbox = client.createInbox(options.build());
+System.out.println("Inbox encrypted: " + inbox.isEncrypted());
 ```
 
 ## Next Steps

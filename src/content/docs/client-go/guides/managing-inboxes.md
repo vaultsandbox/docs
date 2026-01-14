@@ -86,6 +86,15 @@ info := client.ServerInfo()
 fmt.Println("Allowed domains:", info.AllowedDomains)
 fmt.Println("Max TTL:", info.MaxTTL)
 fmt.Println("Default TTL:", info.DefaultTTL)
+fmt.Println("Encryption policy:", info.EncryptionPolicy)
+
+// Check encryption settings
+if info.EncryptionPolicy.CanOverride() {
+	fmt.Println("Per-inbox encryption override is allowed")
+}
+if info.EncryptionPolicy.DefaultEncrypted() {
+	fmt.Println("Inboxes are encrypted by default")
+}
 ```
 
 ## Creating Inboxes
@@ -131,6 +140,51 @@ if err != nil {
 	log.Fatal(err)
 }
 fmt.Println("Got address:", inbox.EmailAddress())
+```
+
+### Disabling Email Authentication
+
+Disable SPF/DKIM/DMARC/PTR checks for faster processing or when testing with servers that don't have authentication configured:
+
+```go
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAuth(false))
+if err != nil {
+	log.Fatal(err)
+}
+
+// Check the setting
+fmt.Printf("Email auth enabled: %v\n", inbox.EmailAuth()) // false
+
+// Auth results will have status "skipped"
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+	log.Fatal(err)
+}
+// email.AuthResults.SPF.Result == "skipped"
+// Validate() treats "skipped" as passing
+```
+
+### Encryption Options
+
+Request encrypted or plain inboxes (when server policy allows):
+
+```go
+// Check server encryption policy first
+info := client.ServerInfo()
+fmt.Printf("Encryption policy: %s\n", info.EncryptionPolicy)
+
+if info.EncryptionPolicy.CanOverride() {
+	// Request a plain (unencrypted) inbox
+	inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Encrypted: %v\n", inbox.Encrypted()) // false
+}
+
+// Default: use server's default encryption setting
+inbox, err := client.CreateInbox(ctx)
+fmt.Printf("Encrypted: %v\n", inbox.Encrypted())
 ```
 
 ## Listing Emails

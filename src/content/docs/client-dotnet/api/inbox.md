@@ -86,6 +86,56 @@ if (inbox.IsDisposed)
 }
 ```
 
+---
+
+### EmailAuth
+
+```csharp
+bool EmailAuth { get; }
+```
+
+Indicates whether email authentication checks (SPF, DKIM, DMARC, PTR) are enabled for this inbox. When `false`, all authentication checks return `Skipped` status.
+
+#### Example
+
+```csharp
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    EmailAuth = false
+});
+
+Console.WriteLine($"Email auth enabled: {inbox.EmailAuth}");
+// Email auth enabled: False
+```
+
+---
+
+### Encrypted
+
+```csharp
+bool Encrypted { get; }
+```
+
+Indicates whether this inbox uses end-to-end encryption. When `true`, emails are encrypted client-side and the `ServerSigPk` property is available.
+
+#### Example
+
+```csharp
+var inbox = await client.CreateInboxAsync();
+
+Console.WriteLine($"Inbox encrypted: {inbox.Encrypted}");
+
+// Check encryption status
+if (inbox.Encrypted)
+{
+    Console.WriteLine("Emails are end-to-end encrypted");
+}
+else
+{
+    Console.WriteLine("Emails are stored in plain text on server");
+}
+```
+
 ## Methods
 
 ### GetEmailsAsync
@@ -623,11 +673,15 @@ public sealed record InboxExport
     public required string EmailAddress { get; init; }
     public required DateTimeOffset ExpiresAt { get; init; }
     public required string InboxHash { get; init; }
-    public required string ServerSigPk { get; init; }
-    public required string SecretKey { get; init; }  // Public key derived from bytes 1152-2400
+    public string? ServerSigPk { get; init; }  // Only present when inbox is encrypted
+    public string? SecretKey { get; init; }    // Only present when inbox is encrypted
+    public required bool Encrypted { get; init; }
+    public required bool EmailAuth { get; init; }
     public required DateTimeOffset ExportedAt { get; init; }
 }
 ```
+
+**Note**: `ServerSigPk` and `SecretKey` are only present when `Encrypted` is `true`.
 
 #### Example
 

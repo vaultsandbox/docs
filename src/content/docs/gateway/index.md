@@ -8,7 +8,8 @@ The Gateway is a receive-only SMTP server designed for QA and testing environmen
 ## Key Capabilities
 
 - **SMTP Reception**: Receive-only server on port 25 with automatic TLS via Let's Encrypt
-- **Email Authentication**: Full SPF, DKIM, DMARC, and reverse DNS validation on every message
+- **Email Authentication**: SPF, DKIM, DMARC, and reverse DNS validation (configurable per inbox or globally)
+- **Configurable Encryption**: Quantum-safe encryption (ML-KEM-768) by default, with optional plain storage mode
 - **Web Interface**: Angular-based UI at `/app` for viewing emails and authentication results
 - **REST API**: Programmatic access to emails with auto-generated API keys
 - **Configurable Retention**: Default 7-day TTL, adjustable via environment variables

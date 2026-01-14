@@ -126,10 +126,53 @@ Inbox inbox = client.createInbox(options);
 
 ### CreateInboxOptions
 
-| Option         | Type       | Default        | Description                    |
-| -------------- | ---------- | -------------- | ------------------------------ |
-| `emailAddress` | `String`   | auto-generated | Custom email address or domain |
-| `ttl`          | `Duration` | server default | Inbox time-to-live             |
+| Option         | Type       | Default        | Description                                              |
+| -------------- | ---------- | -------------- | -------------------------------------------------------- |
+| `emailAddress` | `String`   | auto-generated | Custom email address or domain                           |
+| `ttl`          | `Duration` | server default | Inbox time-to-live                                       |
+| `emailAuth`    | `Boolean`  | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                 |
+| `encryption`   | `String`   | server default | Request `"encrypted"` or `"plain"` inbox (if policy allows) |
+
+**Convenience Methods:**
+
+```java
+// Create plain inbox (shorthand for .encryption("plain"))
+CreateInboxOptions.plain()
+
+// Create encrypted inbox (shorthand for .encryption("encrypted"))
+CreateInboxOptions.encrypted()
+```
+
+**Examples:**
+
+```java
+// Disable email authentication
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+
+// Request plain (unencrypted) inbox
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .encryption("plain")
+        .build()
+);
+
+// Or use convenience method
+Inbox inbox = client.createInbox(CreateInboxOptions.plain());
+
+// Combine options
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAddress("test@yourdomain.com")
+        .ttl(Duration.ofHours(1))
+        .emailAuth(false)
+        .encryption("plain")
+        .build()
+);
+```
 
 ### getInbox(String emailAddress)
 
@@ -371,18 +414,46 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 
 ### ServerInfo Properties
 
-| Property         | Type           | Description                                               |
-| ---------------- | -------------- | --------------------------------------------------------- |
-| `serverSigPk`    | `String`       | Server's public signing key                               |
-| `context`        | `String`       | Server context identifier                                 |
-| `maxTtl`         | `int`          | Maximum inbox TTL in seconds                              |
-| `defaultTtl`     | `int`          | Default inbox TTL in seconds                              |
-| `sseConsole`     | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`) |
-| `allowedDomains` | `List<String>` | Allowed email domains                                     |
-| `algorithms`     | `Algorithms`   | Supported cryptographic algorithms                        |
-| `version`        | `String`       | Server version                                            |
-| `domain`         | `String`       | Server domain                                             |
-| `limits`         | `Limits`       | Rate limits and constraints                               |
+| Property           | Type           | Description                                               |
+| ------------------ | -------------- | --------------------------------------------------------- |
+| `serverSigPk`      | `String`       | Server's public signing key                               |
+| `context`          | `String`       | Server context identifier                                 |
+| `maxTtl`           | `int`          | Maximum inbox TTL in seconds                              |
+| `defaultTtl`       | `int`          | Default inbox TTL in seconds                              |
+| `sseConsole`       | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`) |
+| `allowedDomains`   | `List<String>` | Allowed email domains                                     |
+| `algs`             | `Algorithms`   | Supported cryptographic algorithms                        |
+| `version`          | `String`       | Server version                                            |
+| `domain`           | `String`       | Server domain                                             |
+| `limits`           | `Limits`       | Rate limits and constraints                               |
+| `encryptionPolicy` | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never` |
+
+### Encryption Policy
+
+The `encryptionPolicy` property determines how inbox encryption can be configured:
+
+| Policy     | Default Behavior | Can Override?                          |
+| ---------- | ---------------- | -------------------------------------- |
+| `always`   | Encrypted        | No - all inboxes are always encrypted  |
+| `enabled`  | Encrypted        | Yes - can request `plain`              |
+| `disabled` | Plain            | Yes - can request `encrypted`          |
+| `never`    | Plain            | No - all inboxes are always plain      |
+
+**Helper Methods:**
+
+```java
+ServerInfo info = client.getServerInfo();
+
+// Check if per-inbox encryption override is allowed
+boolean canOverride = info.canOverrideEncryption();  // true if "enabled" or "disabled"
+
+// Check if default is encrypted
+boolean defaultEncrypted = info.isDefaultEncrypted();  // true if "always" or "enabled"
+
+System.out.println("Policy: " + info.getEncryptionPolicy());
+System.out.println("Can override: " + canOverride);
+System.out.println("Default encrypted: " + defaultEncrypted);
+```
 
 ### Algorithms Properties
 

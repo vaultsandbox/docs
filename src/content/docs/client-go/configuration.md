@@ -903,13 +903,15 @@ Contains all data needed to restore an inbox:
 
 ```go
 type ExportedInbox struct {
+	Version      int
 	EmailAddress string
 	ExpiresAt    time.Time
 	InboxHash    string
-	ServerSigPk  string
-	PublicKeyB64 string
-	SecretKeyB64 string
+	ServerSigPk  string    // Only for encrypted inboxes
+	SecretKey    string    // Only for encrypted inboxes
 	ExportedAt   time.Time
+	EmailAuth    bool
+	Encrypted    bool
 }
 ```
 

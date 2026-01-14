@@ -52,6 +52,61 @@ except InboxAlreadyExistsError:
     inbox = await client.create_inbox()
 ```
 
+### Disabling Email Authentication
+
+Create inboxes without SPF/DKIM/DMARC/PTR checks (useful for testing without authentication overhead):
+
+```python
+from vaultsandbox import CreateInboxOptions
+
+# Disable email authentication checks
+inbox = await client.create_inbox(CreateInboxOptions(email_auth=False))
+
+print(f"Email auth enabled: {inbox.email_auth}")  # False
+
+# All auth results will show "skipped" status
+email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
+print(email.auth_results.spf.result)  # SPFStatus.SKIPPED
+```
+
+### Creating Plain (Unencrypted) Inboxes
+
+When the server's encryption policy allows it, you can create plain inboxes:
+
+```python
+from vaultsandbox import CreateInboxOptions
+
+# Check server policy first
+info = await client.get_server_info()
+
+if info.encryption_policy in ["enabled", "disabled"]:
+    # Policy allows per-inbox override
+    inbox = await client.create_inbox(CreateInboxOptions(encryption="plain"))
+    print(f"Encrypted: {inbox.encrypted}")  # False
+else:
+    print(f"Server policy is '{info.encryption_policy}', cannot override")
+```
+
+### Combining Options
+
+```python
+from vaultsandbox import CreateInboxOptions
+
+# Create inbox with multiple options
+inbox = await client.create_inbox(
+    CreateInboxOptions(
+        ttl=3600,                          # 1 hour
+        email_auth=False,                  # Skip auth checks
+        encryption="plain",                # Plain text (if allowed)
+        email_address="test@mail.example.com",  # Specific address
+    )
+)
+
+print(f"Address: {inbox.email_address}")
+print(f"Encrypted: {inbox.encrypted}")
+print(f"Email auth: {inbox.email_auth}")
+```
+
 ## Listing Emails
 
 ### List All Emails (Full Content)

@@ -77,13 +77,17 @@ createInbox(options?: CreateInboxOptions): Promise<Inbox>
 interface CreateInboxOptions {
 	ttl?: number;
 	emailAddress?: string;
+	emailAuth?: boolean;
+	encryption?: 'encrypted' | 'plain';
 }
 ```
 
-| Property       | Type     | Description                                                                                |
-| -------------- | -------- | ------------------------------------------------------------------------------------------ |
-| `ttl`          | `number` | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
-| `emailAddress` | `string` | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| Property       | Type                         | Description                                                                                |
+| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `ttl`          | `number`                     | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
+| `emailAddress` | `string`                     | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| `emailAuth`    | `boolean`                    | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
+| `encryption`   | `'encrypted' \| 'plain'`     | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
 
 #### Returns
 
@@ -102,6 +106,19 @@ const inbox = await client.createInbox({ ttl: 3600 });
 // Request specific email address
 const inbox = await client.createInbox({
 	emailAddress: 'mytest@inbox.vaultsandbox.com',
+});
+
+// Create inbox with email auth disabled (skip SPF/DKIM/DMARC/PTR checks)
+const inbox = await client.createInbox({ emailAuth: false });
+
+// Create plain text inbox (when encryption policy allows)
+const inbox = await client.createInbox({ encryption: 'plain' });
+
+// Combine options
+const inbox = await client.createInbox({
+	ttl: 3600,
+	emailAuth: false,
+	encryption: 'plain',
 });
 ```
 
@@ -193,22 +210,33 @@ interface ServerInfo {
 	defaultTtl: number;
 	sseConsole: boolean;
 	allowedDomains: string[];
+	encryptionPolicy: 'always' | 'enabled' | 'disabled' | 'never';
 }
 ```
 
-| Property         | Type       | Description                                               |
-| ---------------- | ---------- | --------------------------------------------------------- |
-| `serverSigPk`    | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`           | `object`   | Cryptographic algorithms supported by the server          |
-| `algs.kem`       | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
-| `algs.sig`       | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
-| `algs.aead`      | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
-| `algs.kdf`       | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
-| `context`        | `string`   | Context string for the encryption scheme                  |
-| `maxTtl`         | `number`   | Maximum time-to-live for inboxes in seconds               |
-| `defaultTtl`     | `number`   | Default time-to-live for inboxes in seconds               |
-| `sseConsole`     | `boolean`  | Whether the server SSE console is enabled                 |
-| `allowedDomains` | `string[]` | List of domains allowed for inbox creation                |
+| Property           | Type       | Description                                               |
+| ------------------ | ---------- | --------------------------------------------------------- |
+| `serverSigPk`      | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`             | `object`   | Cryptographic algorithms supported by the server          |
+| `algs.kem`         | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
+| `algs.sig`         | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
+| `algs.aead`        | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
+| `algs.kdf`         | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
+| `context`          | `string`   | Context string for the encryption scheme                  |
+| `maxTtl`           | `number`   | Maximum time-to-live for inboxes in seconds               |
+| `defaultTtl`       | `number`   | Default time-to-live for inboxes in seconds               |
+| `sseConsole`       | `boolean`  | Whether the server SSE console is enabled                 |
+| `allowedDomains`   | `string[]` | List of domains allowed for inbox creation                |
+| `encryptionPolicy` | `string`   | Server encryption policy (see table below)                |
+
+#### Encryption Policy
+
+| Policy     | Default Encryption | Per-Inbox Override |
+| ---------- | ------------------ | ------------------ |
+| `always`   | Encrypted          | No - all inboxes encrypted |
+| `enabled`  | Encrypted          | Yes - can request `plain` |
+| `disabled` | Plain              | Yes - can request `encrypted` |
+| `never`    | Plain              | No - all inboxes plain |
 
 #### Example
 
@@ -217,6 +245,15 @@ const info = await client.getServerInfo();
 console.log(`Encryption: ${info.algs.kem}`);
 console.log(`Max TTL: ${info.maxTtl}s, Default TTL: ${info.defaultTtl}s`);
 console.log(`Allowed domains: ${info.allowedDomains.join(', ')}`);
+
+// Check encryption policy
+console.log(`Encryption policy: ${info.encryptionPolicy}`);
+
+const canOverride = ['enabled', 'disabled'].includes(info.encryptionPolicy);
+const defaultEncrypted = ['always', 'enabled'].includes(info.encryptionPolicy);
+
+console.log(`Default encrypted: ${defaultEncrypted}`);
+console.log(`Can override: ${canOverride}`);
 ```
 
 ---

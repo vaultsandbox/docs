@@ -85,6 +85,59 @@ if inbox.IsExpired() {
 }
 ```
 
+---
+
+### EmailAuth
+
+```go
+func (i *Inbox) EmailAuth() bool
+```
+
+Returns whether email authentication (SPF, DKIM, DMARC, PTR) is enabled for this inbox.
+
+When `true`, incoming emails are validated and results are available in `AuthResults`.
+When `false`, authentication checks are skipped and all auth results have status `"skipped"`.
+
+#### Example
+
+```go
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAuth(false))
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Email auth enabled: %v\n", inbox.EmailAuth())
+// Output: Email auth enabled: false
+```
+
+---
+
+### Encrypted
+
+```go
+func (i *Inbox) Encrypted() bool
+```
+
+Returns whether the inbox uses end-to-end encryption.
+
+When `true`, emails are encrypted with ML-KEM-768 and require decryption (handled automatically by the SDK).
+When `false`, emails are stored as plain text on the server.
+
+#### Example
+
+```go
+inbox, err := client.CreateInbox(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+if inbox.Encrypted() {
+    fmt.Println("Inbox uses end-to-end encryption")
+} else {
+    fmt.Println("Inbox uses plain text storage")
+}
+```
+
 ## Methods
 
 ### GetEmails
@@ -558,13 +611,15 @@ func (i *Inbox) Export() *ExportedInbox
 
 ```go
 type ExportedInbox struct {
+    Version      int       `json:"version"`
     EmailAddress string    `json:"emailAddress"`
     ExpiresAt    time.Time `json:"expiresAt"`
     InboxHash    string    `json:"inboxHash"`
-    ServerSigPk  string    `json:"serverSigPk"`
-    PublicKeyB64 string    `json:"publicKeyB64"`
-    SecretKeyB64 string    `json:"secretKeyB64"`
+    ServerSigPk  string    `json:"serverSigPk,omitempty"`  // Only for encrypted inboxes
+    SecretKey    string    `json:"secretKey,omitempty"`    // Only for encrypted inboxes
     ExportedAt   time.Time `json:"exportedAt"`
+    EmailAuth    bool      `json:"emailAuth"`
+    Encrypted    bool      `json:"encrypted"`
 }
 ```
 

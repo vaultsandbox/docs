@@ -57,6 +57,15 @@ All environment variables at a glance. See sections below for details.
 | `VSB_CLUSTER_NAME`                   | `default`         | Cluster name                       |
 | `VSB_NODE_ID`                        | (auto)            | Node identifier                    |
 | `VSB_CLUSTER_PEERS`                  | —                 | Peer URLs                          |
+| **Encryption**                       |                   |                                    |
+| `VSB_ENCRYPTION_ENABLED`             | `always`          | Encryption policy for inboxes      |
+| **Email Authentication**             |                   |                                    |
+| `VSB_EMAIL_AUTH_ENABLED`             | `true`            | Master switch for all auth checks  |
+| `VSB_EMAIL_AUTH_SPF_ENABLED`         | `true`            | SPF verification                   |
+| `VSB_EMAIL_AUTH_DKIM_ENABLED`        | `true`            | DKIM verification                  |
+| `VSB_EMAIL_AUTH_DMARC_ENABLED`       | `true`            | DMARC verification                 |
+| `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true`            | Reverse DNS/PTR verification       |
+| `VSB_EMAIL_AUTH_INBOX_DEFAULT`       | `true`            | Default emailAuth for new inboxes  |
 | **Other**                            |                   |                                    |
 | `NODE_ENV`                           | `production`      | Environment                        |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
@@ -520,6 +529,118 @@ Never enable this in production environments. The test endpoint bypasses normal 
 - `POST /api/test/emails` - Create test emails with controlled SPF/DKIM/DMARC results
 
 See the [SDK Test Specification](/sdk/tests-spec/#9-development-test-endpoint) for endpoint details and usage examples.
+
+## Encryption Policy
+
+Control whether emails are stored encrypted or in plain text.
+
+### VSB_ENCRYPTION_ENABLED
+
+**Description**: Encryption policy for email storage. Controls whether inboxes use quantum-safe encryption (ML-KEM-768 + AES-256-GCM) or store emails in plain text.
+
+**Default**: `always`
+
+**Values**:
+
+| Policy     | Default Encryption | Per-Inbox Override                  |
+| :--------- | :----------------- | :---------------------------------- |
+| `always`   | Encrypted          | **No** - all inboxes encrypted      |
+| `enabled`  | Encrypted          | Yes - can request `plain`           |
+| `disabled` | Plain              | Yes - can request `encrypted`       |
+| `never`    | Plain              | **No** - all inboxes plain          |
+
+**Example**:
+
+```bash
+# Default: all inboxes encrypted, no override allowed
+VSB_ENCRYPTION_ENABLED=always
+
+# Encrypted by default, but clients can request plain inboxes
+VSB_ENCRYPTION_ENABLED=enabled
+
+# Plain by default, but clients can request encrypted inboxes
+VSB_ENCRYPTION_ENABLED=disabled
+
+# All inboxes plain, no override allowed
+VSB_ENCRYPTION_ENABLED=never
+```
+
+**API Impact**:
+
+- `GET /api/server-info` returns `encryptionPolicy` field with the current policy
+- `POST /api/inboxes` accepts optional `encryption` parameter (`"encrypted"` or `"plain"`) when policy allows overrides
+- Response includes `encrypted` boolean indicating actual encryption state
+- When encrypted, `clientKemPk` is required in inbox creation; `serverSigPk` is returned in response
+
+:::tip[When to use plain mode]
+Use `disabled` or `never` for development/debugging when you need to inspect raw email data without decryption, or when running in environments where quantum-safe encryption is not required.
+:::
+
+## Email Authentication
+
+Control SPF, DKIM, DMARC, and reverse DNS validation for incoming emails.
+
+### VSB_EMAIL_AUTH_ENABLED
+
+**Description**: Master switch for all email authentication checks. When `false`, all checks are skipped globally and return `status: 'skipped'`.
+
+**Default**: `true`
+
+**Example**:
+
+```bash
+VSB_EMAIL_AUTH_ENABLED=false  # Skip all auth checks globally
+```
+
+### Individual Authentication Checks
+
+When the master switch is enabled, each authentication method can be enabled or disabled independently:
+
+| Variable                           | Default | Description                                |
+| :--------------------------------- | :------ | :----------------------------------------- |
+| `VSB_EMAIL_AUTH_SPF_ENABLED`       | `true`  | SPF (Sender Policy Framework) verification |
+| `VSB_EMAIL_AUTH_DKIM_ENABLED`      | `true`  | DKIM signature verification                |
+| `VSB_EMAIL_AUTH_DMARC_ENABLED`     | `true`  | DMARC policy verification                  |
+| `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true` | Reverse DNS (PTR record) verification      |
+
+**Example**:
+
+```bash
+# Disable only DKIM checks
+VSB_EMAIL_AUTH_DKIM_ENABLED=false
+
+# Disable reverse DNS checks
+VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED=false
+```
+
+### VSB_EMAIL_AUTH_INBOX_DEFAULT
+
+**Description**: Default `emailAuth` setting for new inboxes when clients don't specify a preference.
+
+**Default**: `true`
+
+**Example**:
+
+```bash
+# New inboxes have email auth disabled by default
+VSB_EMAIL_AUTH_INBOX_DEFAULT=false
+```
+
+**Behavior Hierarchy**:
+
+1. If `VSB_EMAIL_AUTH_ENABLED=false` → ALL checks skipped globally (inbox setting ignored)
+2. If inbox has `emailAuth: false` → Checks skipped for that inbox
+3. Otherwise → Individual `VSB_EMAIL_AUTH_*_ENABLED` variables control each check
+
+**API Impact**:
+
+- `POST /api/inboxes` accepts optional `emailAuth` boolean to override the default per inbox
+- `GET /api/inboxes/:email/emails` returns `authResults` with `status: 'skipped'` when checks are disabled
+- `GET /api/server-info` does **not** expose the default (clients should omit the field to use server default)
+
+:::note[Per-inbox vs global settings]
+Per-inbox settings (`emailAuth: false`) only affect that specific inbox. Global settings (`VSB_EMAIL_AUTH_ENABLED=false`) affect all inboxes regardless of their individual settings.
+:::
 
 ## Crypto / Signing
 

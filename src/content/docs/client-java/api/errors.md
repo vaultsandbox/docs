@@ -62,16 +62,25 @@ public class ApiException extends VaultSandboxException {
 
 ### Common Status Codes
 
-| Code | Meaning               | Typical Cause                |
-| ---- | --------------------- | ---------------------------- |
-| 400  | Bad Request           | Invalid parameters           |
-| 401  | Unauthorized          | Invalid API key              |
-| 403  | Forbidden             | Insufficient permissions     |
-| 404  | Not Found             | Inbox or email doesn't exist |
-| 429  | Too Many Requests     | Rate limited                 |
-| 500  | Internal Server Error | Server-side issue            |
-| 502  | Bad Gateway           | Gateway issue                |
-| 503  | Service Unavailable   | Server overloaded            |
+| Code | Meaning               | Typical Cause                                                |
+| ---- | --------------------- | ------------------------------------------------------------ |
+| 400  | Bad Request           | Invalid parameters                                           |
+| 401  | Unauthorized          | Invalid API key                                              |
+| 403  | Forbidden             | Insufficient permissions                                     |
+| 404  | Not Found             | Inbox or email doesn't exist                                 |
+| 409  | Conflict              | Inbox already exists (duplicate email or KEM key)            |
+| 429  | Too Many Requests     | Rate limited                                                 |
+| 500  | Internal Server Error | Server-side issue                                            |
+| 502  | Bad Gateway           | Gateway issue                                                |
+| 503  | Service Unavailable   | Server overloaded                                            |
+
+### Encryption-Related Errors
+
+| Code | Message                                                    | Cause                                              |
+| ---- | ---------------------------------------------------------- | -------------------------------------------------- |
+| 400  | `clientKemPk is required when encryption is enabled`       | Server requires encryption but no KEM key provided |
+| 409  | `An inbox with the same client KEM public key already exists` | Duplicate KEM key (encrypted inbox)            |
+| 409  | `An inbox with this email address already exists`          | Duplicate email address (plain inbox)              |
 
 ### Example
 
@@ -143,7 +152,7 @@ try {
 
 ## InboxAlreadyExistsException
 
-Thrown when importing an inbox that's already registered with the client.
+Thrown when importing an inbox that's already registered with the client, or when creating an inbox with a duplicate email address or KEM public key.
 
 ```java
 public class InboxAlreadyExistsException extends VaultSandboxException {
@@ -160,6 +169,26 @@ try {
     System.out.println("Already registered: " + e.getMessage());
     // Use existing inbox instead
     Inbox existing = client.getInbox(emailAddress);
+}
+```
+
+### Encryption-Related Conflicts
+
+When creating inboxes, conflicts can occur differently based on encryption mode:
+
+```java
+try {
+    Inbox inbox = client.createInbox(
+        CreateInboxOptions.builder()
+            .emailAddress("test@example.com")
+            .build()
+    );
+} catch (ApiException e) {
+    if (e.getStatusCode() == 409) {
+        // For encrypted inboxes: "An inbox with the same client KEM public key already exists"
+        // For plain inboxes: "An inbox with this email address already exists"
+        System.out.println("Conflict: " + e.getMessage());
+    }
 }
 ```
 

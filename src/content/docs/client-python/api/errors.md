@@ -125,6 +125,17 @@ class ApiError(VaultSandboxError):
 - `status_code`: HTTP status code from the API
 - `message`: Error message from the server
 
+#### Common Status Codes
+
+| Status | Meaning |
+| ------ | ------- |
+| `400` | Bad request (invalid parameters, missing required fields) |
+| `401` | Invalid API key |
+| `403` | Permission denied |
+| `404` | Resource not found (inbox or email) |
+| `409` | Conflict (duplicate inbox) |
+| `429` | Rate limit exceeded |
+
 #### Example
 
 ```python
@@ -135,10 +146,15 @@ try:
 except ApiError as e:
     print(f"API Error ({e.status_code}): {e.message}")
 
-    if e.status_code == 401:
+    if e.status_code == 400:
+        print("Invalid request parameters")
+        # May include: "clientKemPk is required when encryption is enabled"
+    elif e.status_code == 401:
         print("Invalid API key")
     elif e.status_code == 403:
         print("Permission denied")
+    elif e.status_code == 409:
+        print("Conflict - inbox already exists")
     elif e.status_code == 429:
         print("Rate limit exceeded")
 ```
@@ -263,6 +279,8 @@ Thrown when attempting to import an inbox that already exists in the client.
 class InboxAlreadyExistsError(VaultSandboxError):
     pass
 ```
+
+**Note**: This error is only raised during **import** operations. When creating an inbox with a duplicate email address or KEM key, the server returns an `ApiError` with status code `409` instead.
 
 #### Example
 

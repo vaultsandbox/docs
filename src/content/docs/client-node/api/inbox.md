@@ -61,6 +61,49 @@ const timeUntilExpiry = inbox.expiresAt.getTime() - Date.now();
 console.log(`Time remaining: ${Math.round(timeUntilExpiry / 1000)}s`);
 ```
 
+---
+
+### emailAuth
+
+```typescript
+emailAuth: boolean;
+```
+
+Whether email authentication checks (SPF/DKIM/DMARC/PTR) are enabled for this inbox.
+
+#### Example
+
+```javascript
+const inbox = await client.createInbox({ emailAuth: false });
+console.log(`Email auth enabled: ${inbox.emailAuth}`); // false
+
+// When emailAuth is false, auth results will show "skipped" status
+const email = await inbox.waitForEmail({ timeout: 10000 });
+console.log(email.authResults.spf?.result); // "skipped"
+```
+
+---
+
+### encrypted
+
+```typescript
+encrypted: boolean;
+```
+
+Whether this inbox uses end-to-end encryption. When `true`, emails are encrypted at rest and the `serverSigPk` property is available.
+
+#### Example
+
+```javascript
+const inbox = await client.createInbox();
+console.log(`Inbox encrypted: ${inbox.encrypted}`);
+
+if (inbox.encrypted) {
+	// Inbox uses end-to-end encryption
+	// Emails are automatically decrypted by the SDK
+}
+```
+
 ## Methods
 
 ### listEmails()

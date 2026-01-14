@@ -55,10 +55,35 @@ func main() {
 inbox, err := client.CreateInbox(ctx,
 	vaultsandbox.WithTTL(time.Hour),                           // 1 hour (default: 1 hour)
 	vaultsandbox.WithEmailAddress("test@mail.example.com"),    // Request specific address
+	vaultsandbox.WithEmailAuth(false),                         // Disable email authentication
+	vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain), // Request plain inbox
 )
 ```
 
 **Note**: Requesting a specific email address may fail if it's already in use. The server will return an error.
+
+### Inbox Creation Options
+
+| Option             | Type             | Description                                                            |
+| ------------------ | ---------------- | ---------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)    |
+| `WithEmailAddress` | `string`         | Request a specific email address                                       |
+| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)        |
+| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox                                       |
+
+### Encryption Mode
+
+```go
+type EncryptionMode string
+
+const (
+    EncryptionModeDefault   EncryptionMode = ""          // Use server default
+    EncryptionModeEncrypted EncryptionMode = "encrypted" // Request encrypted inbox
+    EncryptionModePlain     EncryptionMode = "plain"     // Request plain inbox
+)
+```
+
+Whether encryption can be overridden depends on the server's encryption policy. See [ServerInfo](#getting-server-information) for details.
 
 ## Client Options
 
@@ -190,6 +215,40 @@ if inbox.IsExpired() {
 	fmt.Println("Inbox has expired")
 }
 ```
+
+### EmailAuth()
+
+**Returns**: `bool`
+
+Returns whether email authentication (SPF, DKIM, DMARC, PTR) is enabled for this inbox.
+
+```go
+fmt.Printf("Email auth enabled: %v\n", inbox.EmailAuth())
+```
+
+When `false`, all authentication results will have status `"skipped"`. The `Validate()` method treats `"skipped"` as passing (not a failure).
+
+---
+
+### Encrypted()
+
+**Returns**: `bool`
+
+Returns whether the inbox uses end-to-end encryption.
+
+```go
+if inbox.Encrypted() {
+	fmt.Println("Inbox uses end-to-end encryption")
+} else {
+	fmt.Println("Inbox uses plain text storage")
+}
+```
+
+When `true`, the inbox has ML-KEM-768 encryption keys and emails are encrypted. When `false`, emails are stored as Base64-encoded plain text.
+
+**Note**: The `ServerSigPk` field in exported inbox data is only present when `encrypted` is `true`.
+
+---
 
 ### GetSyncStatus()
 
@@ -332,21 +391,21 @@ type AuthResults struct {
 }
 
 type SPFResult struct {
-	Status string // pass, fail, softfail, neutral, none, temperror, permerror
+	Result string // pass, fail, softfail, neutral, none, temperror, permerror, skipped
 	Domain string
 	IP     string
 	Info   string
 }
 
 type DKIMResult struct {
-	Status   string // pass, fail, none
+	Result   string // pass, fail, none, skipped
 	Domain   string
 	Selector string
 	Info     string
 }
 
 type DMARCResult struct {
-	Status  string // pass, fail, none
+	Result  string // pass, fail, none, skipped
 	Policy  string // none, quarantine, reject
 	Aligned bool
 	Domain  string
@@ -354,10 +413,9 @@ type DMARCResult struct {
 }
 
 type ReverseDNSResult struct {
-	Status   string // pass, fail, none
+	Result   string // pass, fail, none, skipped
 	IP       string
 	Hostname string
-	Info     string
 }
 ```
 
@@ -404,8 +462,12 @@ if email.AuthResults != nil {
 	if email.AuthResults.DMARC != nil {
 		fmt.Printf("DMARC: %s\n", email.AuthResults.DMARC.Result)
 	}
+	if email.AuthResults.ReverseDNS != nil {
+		fmt.Printf("Reverse DNS: %s\n", email.AuthResults.ReverseDNS.Result)
+	}
 
 	// Use convenience method to check if all auth checks passed
+	// Note: "skipped" status is treated as passing
 	if email.AuthResults.IsPassing() {
 		fmt.Println("All authentication checks passed")
 	}
@@ -1125,15 +1187,54 @@ info := client.ServerInfo()
 fmt.Printf("Allowed domains: %v\n", info.AllowedDomains)
 fmt.Printf("Max TTL: %v\n", info.MaxTTL)
 fmt.Printf("Default TTL: %v\n", info.DefaultTTL)
+fmt.Printf("Encryption policy: %s\n", info.EncryptionPolicy)
 ```
 
 The `ServerInfo` struct contains:
 
 ```go
 type ServerInfo struct {
-	AllowedDomains []string      // Email domains available for inbox creation
-	MaxTTL         time.Duration // Maximum allowed TTL for inboxes
-	DefaultTTL     time.Duration // Default TTL when not specified
+	AllowedDomains   []string         // Email domains available for inbox creation
+	MaxTTL           time.Duration    // Maximum allowed TTL for inboxes
+	DefaultTTL       time.Duration    // Default TTL when not specified
+	EncryptionPolicy EncryptionPolicy // Server's encryption policy
+}
+```
+
+### Encryption Policy
+
+The `EncryptionPolicy` field indicates how the server handles inbox encryption:
+
+```go
+type EncryptionPolicy string
+
+const (
+	EncryptionPolicyAlways   EncryptionPolicy = "always"   // All inboxes encrypted, no override
+	EncryptionPolicyEnabled  EncryptionPolicy = "enabled"  // Encrypted by default, can request plain
+	EncryptionPolicyDisabled EncryptionPolicy = "disabled" // Plain by default, can request encrypted
+	EncryptionPolicyNever    EncryptionPolicy = "never"    // All inboxes plain, no override
+)
+```
+
+| Policy     | Default Encryption | Per-Inbox Override |
+|------------|-------------------|-------------------|
+| `always`   | Encrypted         | No - all inboxes encrypted |
+| `enabled`  | Encrypted         | Yes - can request plain |
+| `disabled` | Plain             | Yes - can request encrypted |
+| `never`    | Plain             | No - all inboxes plain |
+
+**Helper Methods:**
+
+```go
+// Check if we can override encryption settings per-inbox
+if info.EncryptionPolicy.CanOverride() {
+	// Can use WithEncryption() option
+	inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain))
+}
+
+// Check default encryption state
+if info.EncryptionPolicy.DefaultEncrypted() {
+	fmt.Println("Inboxes are encrypted by default")
 }
 ```
 

@@ -144,11 +144,18 @@ catch (ApiException ex)
 
     switch (ex.StatusCode)
     {
+        case 400:
+            Console.WriteLine("Bad request - check parameters");
+            // e.g., "clientKemPk is required when encryption is enabled"
+            break;
         case 401:
             Console.WriteLine("Invalid API key");
             break;
         case 403:
             Console.WriteLine("Permission denied");
+            break;
+        case 409:
+            Console.WriteLine("Conflict - inbox already exists");
             break;
         case 429:
             Console.WriteLine("Rate limit exceeded");
@@ -156,6 +163,14 @@ catch (ApiException ex)
     }
 }
 ```
+
+#### Common API Errors
+
+| Status | Error Message | Description |
+| ------ | ------------- | ----------- |
+| 400 | `clientKemPk is required when encryption is enabled` | Server requires encryption but no KEM public key was provided |
+| 409 | `An inbox with the same client KEM public key already exists` | Encrypted inbox conflict |
+| 409 | `An inbox with this email address already exists` | Plain inbox conflict |
 
 ---
 
@@ -305,7 +320,11 @@ catch (EmailNotFoundException ex)
 
 ### InboxAlreadyExistsException
 
-Thrown when attempting to create an inbox with an email address that already exists, or importing an inbox that's already in the client.
+Thrown when attempting to create an inbox that conflicts with an existing one. The conflict can occur due to:
+
+- **Encrypted inboxes**: An inbox with the same client KEM public key already exists
+- **Plain inboxes**: An inbox with the same email address already exists
+- **Import**: The inbox is already imported in this client
 
 ```csharp
 public class InboxAlreadyExistsException : VaultSandboxException
@@ -323,6 +342,20 @@ public class InboxAlreadyExistsException : VaultSandboxException
 
 ```csharp
 using VaultSandbox.Client.Exceptions;
+
+try
+{
+    var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+    {
+        EmailAddress = "test@inbox.vaultsandbox.com"
+    });
+}
+catch (InboxAlreadyExistsException ex)
+{
+    Console.WriteLine($"Inbox conflict: {ex.Message}");
+    // For encrypted: "An inbox with the same client KEM public key already exists"
+    // For plain: "An inbox with this email address already exists"
+}
 
 try
 {

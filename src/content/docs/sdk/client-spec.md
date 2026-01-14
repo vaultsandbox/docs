@@ -99,10 +99,12 @@ SDKs should support these configuration options when creating a client:
 
 ### Inbox Creation Options
 
-| Option         | Type   | Default | Description                                |
-| -------------- | ------ | ------- | ------------------------------------------ |
-| `ttl`          | number | 3600    | Time-to-live in seconds (60-604800)        |
-| `emailAddress` | string | null    | Desired email address or domain (optional) |
+| Option         | Type   | Default | Description                                         |
+| -------------- | ------ | ------- | --------------------------------------------------- |
+| `ttl`          | number | 3600    | Time-to-live in seconds (60-604800)                 |
+| `emailAddress` | string | null    | Desired email address or domain (optional)          |
+| `encryption`   | string | null    | `encrypted` or `plain` (omit to use server default) |
+| `emailAuth`    | boolean | null   | Enable/disable email auth checks (omit for default) |
 
 ---
 
@@ -346,6 +348,7 @@ Returns server cryptographic configuration.
 		"kdf": "HKDF-SHA-512"
 	},
 	"context": "vaultsandbox:email:v1",
+	"encryptionPolicy": "always",
 	"maxTtl": 604800,
 	"defaultTtl": 3600,
 	"sseConsole": false,
@@ -353,15 +356,32 @@ Returns server cryptographic configuration.
 }
 ```
 
-| Field            | Type     | Description                                               |
-| ---------------- | -------- | --------------------------------------------------------- |
-| `serverSigPk`    | string   | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`           | object   | Cryptographic algorithms supported by the server          |
-| `context`        | string   | Context string for the encryption scheme                  |
-| `maxTtl`         | number   | Maximum time-to-live for inboxes in seconds               |
-| `defaultTtl`     | number   | Default time-to-live for inboxes in seconds               |
-| `sseConsole`     | boolean  | Whether server SSE console logging is enabled             |
-| `allowedDomains` | string[] | List of domains allowed for inbox creation                |
+| Field              | Type     | Description                                               |
+| ------------------ | -------- | --------------------------------------------------------- |
+| `serverSigPk`      | string   | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`             | object   | Cryptographic algorithms supported by the server          |
+| `context`          | string   | Context string for the encryption scheme                  |
+| `encryptionPolicy` | string   | Encryption policy: `always`, `enabled`, `disabled`, `never` |
+| `maxTtl`           | number   | Maximum time-to-live for inboxes in seconds               |
+| `defaultTtl`       | number   | Default time-to-live for inboxes in seconds               |
+| `sseConsole`       | boolean  | Whether server SSE console logging is enabled             |
+| `allowedDomains`   | string[] | List of domains allowed for inbox creation                |
+
+#### Encryption Policy Values
+
+| Policy     | Default Encryption | Per-Inbox Override                    |
+| ---------- | ------------------ | ------------------------------------- |
+| `always`   | Encrypted          | **No** - all inboxes encrypted        |
+| `enabled`  | Encrypted          | Yes - can request `plain`             |
+| `disabled` | Plain              | Yes - can request `encrypted`         |
+| `never`    | Plain              | **No** - all inboxes plain            |
+
+**Client logic:**
+```python
+# Pseudocode
+can_override = policy in ['enabled', 'disabled']
+default_encrypted = policy in ['always', 'enabled']
+```
 
 ### Inbox Management
 
@@ -375,15 +395,19 @@ Creates a new inbox.
 {
 	"clientKemPk": "<base64url: client ML-KEM-768 public key>",
 	"ttl": 3600,
-	"emailAddress": "user@example.com"
+	"emailAddress": "user@example.com",
+	"encryption": "encrypted",
+	"emailAuth": true
 }
 ```
 
-| Field          | Type   | Required | Description                                     |
-| -------------- | ------ | -------- | ----------------------------------------------- |
-| `clientKemPk`  | string | Yes      | Base64url-encoded ML-KEM-768 public key         |
-| `ttl`          | number | No       | Time-to-live in seconds (min: 60, max: 604800)  |
-| `emailAddress` | string | No       | Desired email address or domain (max 254 chars) |
+| Field          | Type    | Required    | Description                                            |
+| -------------- | ------- | ----------- | ------------------------------------------------------ |
+| `clientKemPk`  | string  | Conditional | Base64url-encoded ML-KEM-768 public key (required when encryption enabled) |
+| `ttl`          | number  | No          | Time-to-live in seconds (min: 60, max: 604800)         |
+| `emailAddress` | string  | No          | Desired email address or domain (max 254 chars)        |
+| `encryption`   | string  | No          | `encrypted` or `plain` (omit to use server default)    |
+| `emailAuth`    | boolean | No          | Enable/disable email auth checks (omit for server default) |
 
 **Response:**
 
@@ -392,16 +416,20 @@ Creates a new inbox.
 	"emailAddress": "abc123@mail.example.com",
 	"expiresAt": "2024-01-15T12:00:00.000Z",
 	"inboxHash": "<base64url: SHA-256 hash of client KEM public key>",
+	"encrypted": true,
+	"emailAuth": true,
 	"serverSigPk": "<base64url: server signing public key>"
 }
 ```
 
-| Field          | Type   | Description                                                  |
-| -------------- | ------ | ------------------------------------------------------------ |
-| `emailAddress` | string | The email address assigned to the inbox                      |
-| `expiresAt`    | string | ISO 8601 timestamp when the inbox will expire                |
-| `inboxHash`    | string | Base64URL-encoded SHA-256 hash of the client KEM public key  |
-| `serverSigPk`  | string | Base64URL-encoded server signing public key for verification |
+| Field          | Type    | Description                                                            |
+| -------------- | ------- | ---------------------------------------------------------------------- |
+| `emailAddress` | string  | The email address assigned to the inbox                                |
+| `expiresAt`    | string  | ISO 8601 timestamp when the inbox will expire                          |
+| `inboxHash`    | string  | Base64URL-encoded SHA-256 hash of the client KEM public key            |
+| `encrypted`    | boolean | Whether the inbox uses encryption                                      |
+| `emailAuth`    | boolean | Whether email authentication checks are enabled                        |
+| `serverSigPk`  | string  | Base64URL-encoded server signing public key (only present when encrypted) |
 
 #### DELETE /api/inboxes/{emailAddress}
 
@@ -443,13 +471,20 @@ Returns inbox sync status for efficient polling.
 
 ### Email Operations
 
+Email responses differ based on inbox encryption state. Use field presence to discriminate between encrypted and plain formats.
+
 #### GET /api/inboxes/{emailAddress}/emails
 
-Lists all emails in an inbox (metadata only).
+Lists all emails in an inbox (metadata only by default).
 
-**Note:** The server returns only metadata (sender, subject, date) for this endpoint. To retrieve the full email content (body, attachments), the client library **must** fetch each email individually using `GET /api/inboxes/{emailAddress}/emails/{emailId}`.
+**Query Parameters:**
+| Parameter        | Type    | Description                                |
+| ---------------- | ------- | ------------------------------------------ |
+| `includeContent` | boolean | Include parsed content (default: `false`)  |
 
-**Response:**
+**Note:** The server returns only metadata (sender, subject, date) for this endpoint by default. Add `?includeContent=true` to include parsed content, or fetch each email individually using `GET /api/inboxes/{emailAddress}/emails/{emailId}`.
+
+**Response (Encrypted Inbox):**
 
 ```json
 [
@@ -460,16 +495,41 @@ Lists all emails in an inbox (metadata only).
 		"isRead": false,
 		"encryptedMetadata": {
 			/* EncryptedPayload */
+		},
+		"encryptedParsed": {
+			/* EncryptedPayload - only with ?includeContent=true */
 		}
 	}
 ]
+```
+
+**Response (Plain Inbox):**
+
+```json
+[
+	{
+		"id": "email-uuid",
+		"inboxId": "inbox-hash",
+		"receivedAt": "2024-01-15T12:00:00.000Z",
+		"isRead": false,
+		"metadata": "<base64-encoded-json>",
+		"parsed": "<base64-encoded-json>"
+	}
+]
+```
+
+**Type discrimination:**
+```python
+# Pseudocode
+def is_encrypted_email(email):
+    return 'encryptedMetadata' in email
 ```
 
 #### GET /api/inboxes/{emailAddress}/emails/{emailId}
 
 Retrieves a specific email with full content.
 
-**Response:**
+**Response (Encrypted Inbox):**
 
 ```json
 {
@@ -486,13 +546,26 @@ Retrieves a specific email with full content.
 }
 ```
 
-**Note:** Unlike the list endpoint, this returns `encryptedParsed` which contains the complete email body, HTML content, attachments, links, and authentication results.
+**Response (Plain Inbox):**
+
+```json
+{
+	"id": "email-uuid",
+	"inboxId": "inbox-hash",
+	"receivedAt": "2024-01-15T12:00:00.000Z",
+	"isRead": false,
+	"metadata": "<base64-encoded-json>",
+	"parsed": "<base64-encoded-json>"
+}
+```
+
+**Note:** Returns full content including email body, HTML content, attachments, links, and authentication results.
 
 #### GET /api/inboxes/{emailAddress}/emails/{emailId}/raw
 
-Retrieves the raw email source (encrypted).
+Retrieves the raw email source.
 
-**Response:**
+**Response (Encrypted Inbox):**
 
 ```json
 {
@@ -500,6 +573,15 @@ Retrieves the raw email source (encrypted).
 	"encryptedRaw": {
 		/* EncryptedPayload */
 	}
+}
+```
+
+**Response (Plain Inbox):**
+
+```json
+{
+	"id": "email-uuid",
+	"raw": "<base64-encoded-raw-email>"
 }
 ```
 
@@ -533,17 +615,26 @@ X-API-Key: your-api-key
 Accept: text/event-stream
 ```
 
-**Event Format:**
+**Event Format (Encrypted Inbox):**
 
 ```
 data: {"inboxId":"inbox-hash","emailId":"email-uuid","encryptedMetadata":{...}}
 ```
 
-| Field               | Type             | Description                                  |
-| ------------------- | ---------------- | -------------------------------------------- |
-| `inboxId`           | string           | The inbox hash that received the email       |
-| `emailId`           | string           | Unique identifier for the new email          |
-| `encryptedMetadata` | EncryptedPayload | Encrypted email metadata (from, to, subject) |
+**Event Format (Plain Inbox):**
+
+```
+data: {"inboxId":"inbox-hash","emailId":"email-uuid","metadata":"<base64-encoded-json>"}
+```
+
+| Field               | Type             | Description                                       |
+| ------------------- | ---------------- | ------------------------------------------------- |
+| `inboxId`           | string           | The inbox hash that received the email            |
+| `emailId`           | string           | Unique identifier for the new email               |
+| `encryptedMetadata` | EncryptedPayload | Encrypted email metadata (encrypted inboxes only) |
+| `metadata`          | string           | Base64-encoded metadata JSON (plain inboxes only) |
+
+**Type discrimination:** Use field presence (`encryptedMetadata` vs `metadata`) to determine format.
 
 **Note:** SSE events only include metadata. To get full email content (body, attachments), fetch the email by ID after receiving the notification.
 
@@ -670,9 +761,11 @@ Client libraries should provide a validation helper that verifies:
 1. **SPF**: `result` must be `"pass"`
 2. **DKIM**: At least one entry in the array must have `result: "pass"`
 3. **DMARC**: `result` must be `"pass"`
-4. **Reverse DNS**: `verified` must be `true`
+4. **Reverse DNS**: `result` must be `"pass"`
 
 **Note:** The overall `passed` status only considers SPF, DKIM, and DMARC. Reverse DNS is checked separately and does not affect the overall pass/fail status.
+
+**Skipped status:** When email authentication is disabled for an inbox (via `emailAuth: false`), all results will have `result: "skipped"`. Clients should treat `skipped` as informational, not as a failure.
 
 #### Validation Result
 
@@ -695,7 +788,7 @@ The `validate()` method returns a validation summary:
 | `spfPassed`        | `boolean`  | True if SPF result is `"pass"`               |
 | `dkimPassed`       | `boolean`  | True if at least one DKIM signature passed   |
 | `dmarcPassed`      | `boolean`  | True if DMARC result is `"pass"`             |
-| `reverseDnsPassed` | `boolean`  | True if reverse DNS `verified` is `true`     |
+| `reverseDnsPassed` | `boolean`  | True if reverse DNS result is `"pass"`       |
 | `failures`         | `string[]` | Human-readable descriptions of failed checks |
 
 SDKs may also provide a convenience method like `isPassing()` that returns the `passed` value directly.
@@ -727,6 +820,7 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 | `none`      | No SPF record           |
 | `temperror` | Temporary error         |
 | `permerror` | Permanent error         |
+| `skipped`   | Check disabled          |
 
 #### DKIM Result
 
@@ -746,11 +840,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 | `selector`  | `string` | DKIM selector (optional)       |
 | `signature` | `string` | DKIM signature info (optional) |
 
-| Result | Meaning           |
-| ------ | ----------------- |
-| `pass` | Valid signature   |
-| `fail` | Invalid signature |
-| `none` | No signature      |
+| Result    | Meaning           |
+| --------- | ----------------- |
+| `pass`    | Valid signature   |
+| `fail`    | Invalid signature |
+| `none`    | No signature      |
+| `skipped` | Check disabled    |
 
 #### DMARC Result
 
@@ -770,11 +865,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 | `aligned` | `boolean` | Whether SPF/DKIM aligned (optional) |
 | `domain`  | `string`  | Domain checked (optional)           |
 
-| Result | Meaning         |
-| ------ | --------------- |
-| `pass` | DMARC passed    |
-| `fail` | DMARC failed    |
-| `none` | No DMARC policy |
+| Result    | Meaning         |
+| --------- | --------------- |
+| `pass`    | DMARC passed    |
+| `fail`    | DMARC failed    |
+| `none`    | No DMARC policy |
+| `skipped` | Check disabled  |
 
 | Policy       | Meaning         |
 | ------------ | --------------- |
@@ -786,19 +882,24 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 
 ```json
 {
-	"verified": true,
+	"result": "pass",
 	"ip": "192.0.2.1",
 	"hostname": "mail.example.com"
 }
 ```
 
-| Field      | Type      | Description                  |
-| ---------- | --------- | ---------------------------- |
-| `verified` | `boolean` | Whether reverse DNS verified |
-| `ip`       | `string`  | Server IP address (optional) |
-| `hostname` | `string`  | Resolved hostname (optional) |
+| Field      | Type     | Description                           |
+| ---------- | -------- | ------------------------------------- |
+| `result`   | `string` | Reverse DNS check result (see values) |
+| `ip`       | `string` | Server IP address (optional)          |
+| `hostname` | `string` | Resolved hostname (optional)          |
 
-**Note:** Unlike other auth results, ReverseDNS uses a `verified` boolean instead of a `result` string. SDKs may provide a convenience method like `isPassing()` that returns `verified`.
+| Result    | Meaning                  |
+| --------- | ------------------------ |
+| `pass`    | Reverse DNS verified     |
+| `fail`    | Reverse DNS failed       |
+| `none`    | No reverse DNS record    |
+| `skipped` | Check disabled           |
 
 ### Exported Inbox Data
 
@@ -810,23 +911,25 @@ For persistence/sharing:
 	"emailAddress": "abc123@mail.example.com",
 	"expiresAt": "2024-01-15T12:00:00.000Z",
 	"inboxHash": "sha256-hash",
+	"encrypted": true,
 	"serverSigPk": "<base64url: server signing key>",
 	"secretKey": "<base64url: client secret key>",
 	"exportedAt": "2024-01-14T12:00:00.000Z"
 }
 ```
 
-| Field          | Type    | Required | Description                                                    |
-| -------------- | ------- | -------- | -------------------------------------------------------------- |
-| `version`      | integer | Yes      | Export format version. MUST be `1`.                            |
-| `emailAddress` | string  | Yes      | The inbox email address. MUST contain `@`.                     |
-| `expiresAt`    | string  | Yes      | Inbox expiration timestamp (ISO 8601).                         |
-| `inboxHash`    | string  | Yes      | Unique inbox identifier. Non-empty.                            |
-| `serverSigPk`  | string  | Yes      | Server's ML-DSA-65 public key (base64url, 1952 bytes decoded). |
-| `secretKey`    | string  | Yes      | ML-KEM-768 secret key (base64url, 2400 bytes decoded).         |
-| `exportedAt`   | string  | Yes      | Export timestamp (ISO 8601).                                   |
+| Field          | Type    | Required    | Description                                                    |
+| -------------- | ------- | ----------- | -------------------------------------------------------------- |
+| `version`      | integer | Yes         | Export format version. MUST be `1`.                            |
+| `emailAddress` | string  | Yes         | The inbox email address. MUST contain `@`.                     |
+| `expiresAt`    | string  | Yes         | Inbox expiration timestamp (ISO 8601).                         |
+| `inboxHash`    | string  | Yes         | Unique inbox identifier. Non-empty.                            |
+| `encrypted`    | boolean | Yes         | Whether the inbox uses encryption.                             |
+| `serverSigPk`  | string  | Conditional | Server's ML-DSA-65 public key (required when encrypted=true).  |
+| `secretKey`    | string  | Conditional | ML-KEM-768 secret key (required when encrypted=true).          |
+| `exportedAt`   | string  | Yes         | Export timestamp (ISO 8601).                                   |
 
-**Note:** The public key is NOT included in the export as it can be derived from the secret key (see [Deriving Public Key from Secret Key](#deriving-public-key-from-secret-key)).
+**Note:** For encrypted inboxes, the public key is NOT included in the export as it can be derived from the secret key (see [Deriving Public Key from Secret Key](#deriving-public-key-from-secret-key)). Plain inboxes do not require cryptographic keys.
 
 **Security Warning:** Exported data contains private keys. Handle securely.
 
@@ -843,7 +946,7 @@ Implementations MUST validate imported data in the following order:
        return ERROR_UNSUPPORTED_VERSION
    ```
 
-3. **Validate required fields**: All fields from the export format MUST be present and non-null.
+3. **Validate required fields**: Core fields (`version`, `emailAddress`, `expiresAt`, `inboxHash`, `encrypted`, `exportedAt`) MUST be present and non-null.
 
 4. **Validate emailAddress**:
    - MUST be a non-empty string
@@ -862,38 +965,55 @@ Implementations MUST validate imported data in the following order:
        return ERROR_INVALID_INBOX_HASH
    ```
 
-6. **Validate and decode secretKey**:
+6. **Validate encrypted field**:
+   - MUST be a boolean
 
    ```
-   secretKeyBytes = base64url_decode(secretKey)
-   if decoding fails:
-       return ERROR_INVALID_SECRET_KEY
-   if len(secretKeyBytes) != 2400:
-       return ERROR_INVALID_SECRET_KEY_SIZE
+   if typeof(encrypted) != boolean:
+       return ERROR_INVALID_ENCRYPTED_FIELD
    ```
 
-7. **Validate and decode serverSigPk**:
+7. **Validate and decode secretKey** (only if `encrypted == true`):
 
    ```
-   serverSigPkBytes = base64url_decode(serverSigPk)
-   if decoding fails:
-       return ERROR_INVALID_SERVER_KEY
-   if len(serverSigPkBytes) != 1952:
-       return ERROR_INVALID_SERVER_KEY_SIZE
+   if encrypted:
+       if secretKey is missing or null:
+           return ERROR_MISSING_SECRET_KEY
+       secretKeyBytes = base64url_decode(secretKey)
+       if decoding fails:
+           return ERROR_INVALID_SECRET_KEY
+       if len(secretKeyBytes) != 2400:
+           return ERROR_INVALID_SECRET_KEY_SIZE
    ```
 
-8. **Validate timestamps**:
+8. **Validate and decode serverSigPk** (only if `encrypted == true`):
+
+   ```
+   if encrypted:
+       if serverSigPk is missing or null:
+           return ERROR_MISSING_SERVER_KEY
+       serverSigPkBytes = base64url_decode(serverSigPk)
+       if decoding fails:
+           return ERROR_INVALID_SERVER_KEY
+       if len(serverSigPkBytes) != 1952:
+           return ERROR_INVALID_SERVER_KEY_SIZE
+   ```
+
+9. **Validate timestamps**:
    - `expiresAt` MUST be a valid ISO 8601 timestamp
    - `exportedAt` MUST be a valid ISO 8601 timestamp
 
 ### Keypair Reconstruction
 
-After validation, reconstruct the full keypair:
+After validation, reconstruct the full keypair (encrypted inboxes only):
 
 ```python
-secret_key = base64url_decode(export.secretKey)
-public_key = secret_key[1152:2336]  # Derive from secret key
-keypair = { secret_key, public_key }
+if export.encrypted:
+    secret_key = base64url_decode(export.secretKey)
+    public_key = secret_key[1152:2336]  # Derive from secret key
+    keypair = { secret_key, public_key }
+else:
+    keypair = None  # Plain inbox, no keys needed
 ```
 
 ### Duplicate Handling
@@ -1396,6 +1516,18 @@ def derive_key(shared_secret, context, aad, ct_kem):
 
 | Version | Date       | Changes                                                        |
 | ------- | ---------- | -------------------------------------------------------------- |
+| 0.9.0   | 2026-01-13 | Optional encryption and email authentication:                  |
+|         |            | - Server info: added `encryptionPolicy` field                  |
+|         |            | - Inbox creation: added `encryption` and `emailAuth` options   |
+|         |            | - Inbox response: added `encrypted`, `emailAuth` fields;       |
+|         |            | `serverSigPk` now conditional (only when encrypted)            |
+|         |            | - Email endpoints: document both encrypted and plain formats   |
+|         |            | - SSE events: document both formats with type discrimination   |
+|         |            | - Export format: added `encrypted` field; `secretKey` and      |
+|         |            | `serverSigPk` now conditional                                  |
+|         |            | - **Breaking:** Reverse DNS `verified` boolean changed to      |
+|         |            | `result` string (`pass`/`fail`/`none`/`skipped`)               |
+|         |            | - Auth results: added `skipped` status for all check types     |
 | 0.8.0   | 2026-01-04 | Aligned with VaultSandbox cryptographic protocol spec:         |
 |         |            | - Export format: added `version` field, renamed `secretKeyB64` |
 |         |            | to `secretKey`, removed `publicKeyB64`                         |

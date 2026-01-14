@@ -473,12 +473,14 @@ SPF (Sender Policy Framework) validation result.
 
 ```typescript
 interface SPFResult {
-	result: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
+	result: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror' | 'skipped';
 	domain?: string;
 	ip?: string;
 	details?: string;
 }
 ```
+
+**Note**: The `skipped` status appears when the inbox has `emailAuth: false`, the server has globally disabled SPF checks, or the master switch `VSB_EMAIL_AUTH_ENABLED=false` is set.
 
 #### dkim
 
@@ -490,12 +492,14 @@ DKIM (DomainKeys Identified Mail) validation results. May have multiple signatur
 
 ```typescript
 interface DKIMResult {
-	result: 'pass' | 'fail' | 'none';
+	result: 'pass' | 'fail' | 'none' | 'skipped';
 	domain?: string;
 	selector?: string;
 	signature?: string;
 }
 ```
+
+**Note**: The `skipped` status appears when the inbox has `emailAuth: false`, the server has globally disabled DKIM checks, or the master switch `VSB_EMAIL_AUTH_ENABLED=false` is set.
 
 #### dmarc
 
@@ -507,12 +511,14 @@ DMARC (Domain-based Message Authentication) validation result.
 
 ```typescript
 interface DMARCResult {
-	result: 'pass' | 'fail' | 'none';
+	result: 'pass' | 'fail' | 'none' | 'skipped';
 	policy?: 'none' | 'quarantine' | 'reject';
 	aligned?: boolean;
 	domain?: string;
 }
 ```
+
+**Note**: The `skipped` status appears when the inbox has `emailAuth: false`, the server has globally disabled DMARC checks, or the master switch `VSB_EMAIL_AUTH_ENABLED=false` is set.
 
 #### reverseDns
 
@@ -524,17 +530,21 @@ Reverse DNS lookup result.
 
 ```typescript
 interface ReverseDNSResult {
-	verified: boolean;
+	result: 'pass' | 'fail' | 'none' | 'skipped';
 	ip?: string;
 	hostname?: string;
 }
 ```
 
+**Breaking Change (v0.7.0)**: The `verified` boolean property has been replaced with a `result` string. Migrate existing code by replacing `verified === true` with `result === 'pass'`.
+
+**Note**: The `skipped` status appears when the inbox has `emailAuth: false`, the server has globally disabled reverse DNS checks, or the master switch `VSB_EMAIL_AUTH_ENABLED=false` is set.
+
 ### Methods
 
 #### validate()
 
-Validates all authentication results and returns a summary.
+Validates all authentication results and returns a summary. The `skipped` status is treated as passing (not a failure), since it indicates the check was intentionally disabled rather than failing.
 
 ```typescript
 validate(): AuthValidation

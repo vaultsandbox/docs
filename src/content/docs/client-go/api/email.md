@@ -563,7 +563,7 @@ SPF (Sender Policy Framework) validation result.
 
 ```go
 type SPFResult struct {
-    Status string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror"
+    Result string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror", "skipped"
     Domain string
     IP     string
     Info   string
@@ -580,7 +580,7 @@ DKIM (DomainKeys Identified Mail) validation results. May have multiple signatur
 
 ```go
 type DKIMResult struct {
-    Status   string // "pass", "fail", "none"
+    Result   string // "pass", "fail", "none", "skipped"
     Domain   string
     Selector string
     Info     string
@@ -597,7 +597,7 @@ DMARC (Domain-based Message Authentication) validation result.
 
 ```go
 type DMARCResult struct {
-    Status  string // "pass", "fail", "none"
+    Result  string // "pass", "fail", "none", "skipped"
     Policy  string // "none", "quarantine", "reject"
     Aligned bool
     Domain  string
@@ -615,12 +615,13 @@ Reverse DNS lookup result.
 
 ```go
 type ReverseDNSResult struct {
-    Status   string // "pass", "fail", "none"
+    Result   string // "pass", "fail", "none", "skipped"
     IP       string
     Hostname string
-    Info     string
 }
 ```
+
+**Note**: In v0.7.0, the `Verified` boolean field was replaced with a `Result` string field for consistency with other auth results. Replace `Verified == true` checks with `Result == "pass"`.
 
 ### Methods
 

@@ -121,23 +121,37 @@ The web interface provides comprehensive visualization of email authentication:
 - **SoftFail**: Yellow warning - Policy suggests rejection but not required
 - **Neutral**: Gray dash - No policy statement
 - **None**: Gray dash - No SPF record found
+- **Skipped**: Gray "Skipped" label - Check was disabled for this inbox
 
 ### DKIM (DomainKeys Identified Mail)
 
 - **Pass**: Green checkmark - Valid cryptographic signature
 - **Fail**: Red X - Invalid or missing signature
 - **None**: Gray dash - No DKIM signature present
+- **Skipped**: Gray "Skipped" label - Check was disabled for this inbox
 
 ### DMARC (Domain-based Message Authentication)
 
 - **Pass**: Green checkmark - Alignment checks passed
 - **Fail**: Red X - Alignment checks failed
 - **None**: Gray dash - No DMARC policy found
+- **Skipped**: Gray "Skipped" label - Check was disabled for this inbox
 
 ### Reverse DNS
 
 - **Pass**: Green checkmark - Valid PTR record for sender IP
 - **Fail**: Red X - No PTR record or mismatch
+- **None**: Gray dash - No PTR record found
+- **Skipped**: Gray "Skipped" label - Check was disabled for this inbox
+
+:::tip[When "Skipped" appears]
+Authentication checks show "Skipped" when:
+- The inbox was created with `emailAuth: false`
+- The server has that specific check disabled globally
+- The master switch `VSB_EMAIL_AUTH_ENABLED=false` is set
+
+See [Email Authentication Configuration](/gateway/configuration/#email-authentication) for details.
+:::
 
 ## Custom Inboxes
 

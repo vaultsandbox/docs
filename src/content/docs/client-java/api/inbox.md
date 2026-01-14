@@ -15,12 +15,14 @@ An inbox has a unique email address that can receive emails. Emails are end-to-e
 
 ## Properties
 
-| Property       | Type      | Description                       |
-| -------------- | --------- | --------------------------------- |
-| `emailAddress` | `String`  | Full email address for this inbox |
-| `hash`         | `String`  | Unique identifier hash            |
-| `expiresAt`    | `Instant` | When the inbox expires            |
-| `serverSigPk`  | `String`  | Server's signature public key     |
+| Property       | Type      | Description                                                         |
+| -------------- | --------- | ------------------------------------------------------------------- |
+| `emailAddress` | `String`  | Full email address for this inbox                                   |
+| `hash`         | `String`  | Unique identifier hash                                              |
+| `expiresAt`    | `Instant` | When the inbox expires                                              |
+| `serverSigPk`  | `String`  | Server's signature public key (only present when `encrypted: true`) |
+| `emailAuth`    | `boolean` | Whether email authentication checks are enabled                     |
+| `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption                       |
 
 ### Getters
 
@@ -28,7 +30,9 @@ An inbox has a unique email address that can receive emails. Emails are end-to-e
 public String getEmailAddress()
 public String getHash()
 public Instant getExpiresAt()
-public String getServerSigPk()
+public String getServerSigPk()  // null when encrypted is false
+public boolean isEmailAuth()
+public boolean isEncrypted()
 ```
 
 ## Email Retrieval Methods

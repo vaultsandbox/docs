@@ -160,6 +160,7 @@ AUTHENTICATION
 SPF:   PASS (domain: myapp.com)
 DKIM:  PASS (selector: default, domain: myapp.com)
 DMARC: PASS (policy: reject)
+PTR:   PASS (hostname: mail.myapp.com)
 
 TRANSPORT SECURITY
 TLS Version: TLS 1.3
@@ -179,6 +180,17 @@ message/rfc822
 
 Security Score: 100/100
 ```
+
+### Authentication Results
+
+Each authentication check can return one of the following statuses:
+
+| Status    | Description                                               |
+| --------- | --------------------------------------------------------- |
+| `PASS`    | Check passed successfully                                 |
+| `FAIL`    | Check failed                                              |
+| `NONE`    | No policy record found or check not applicable            |
+| `SKIPPED` | Check was skipped (e.g., inbox created with `--email-auth=false`) |
 
 ---
 

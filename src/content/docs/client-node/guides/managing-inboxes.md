@@ -50,6 +50,57 @@ try {
 }
 ```
 
+### With Email Auth Disabled
+
+Disable SPF/DKIM/DMARC/PTR checks for this inbox. Useful when testing with internal mail servers that don't have proper authentication configured.
+
+```javascript
+const inbox = await client.createInbox({ emailAuth: false });
+console.log(`Email auth enabled: ${inbox.emailAuth}`); // false
+
+// Auth results will show "skipped" status
+const email = await inbox.waitForEmail({ timeout: 10000 });
+console.log(email.authResults.spf?.result); // "skipped"
+```
+
+### With Encryption Options
+
+Control whether the inbox uses end-to-end encryption (when server policy allows).
+
+```javascript
+// Check server encryption policy first
+const info = await client.getServerInfo();
+console.log(`Encryption policy: ${info.encryptionPolicy}`);
+
+// Create plain text inbox (when policy is "enabled" or "disabled")
+if (['enabled', 'disabled'].includes(info.encryptionPolicy)) {
+	const plainInbox = await client.createInbox({ encryption: 'plain' });
+	console.log(`Inbox encrypted: ${plainInbox.encrypted}`); // false
+}
+
+// Create encrypted inbox (when policy is "enabled" or "disabled")
+if (['enabled', 'disabled'].includes(info.encryptionPolicy)) {
+	const encryptedInbox = await client.createInbox({ encryption: 'encrypted' });
+	console.log(`Inbox encrypted: ${encryptedInbox.encrypted}`); // true
+}
+```
+
+### Combining Options
+
+```javascript
+// Create inbox with multiple options
+const inbox = await client.createInbox({
+	ttl: 3600, // 1 hour
+	emailAuth: false, // Skip auth checks
+	encryption: 'plain', // No encryption (when allowed)
+});
+
+console.log(`Address: ${inbox.emailAddress}`);
+console.log(`Expires: ${inbox.expiresAt}`);
+console.log(`Auth enabled: ${inbox.emailAuth}`);
+console.log(`Encrypted: ${inbox.encrypted}`);
+```
+
 ## Listing Emails
 
 ### List All Emails

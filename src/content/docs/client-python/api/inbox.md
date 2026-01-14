@@ -68,10 +68,61 @@ print(f"Time remaining: {int(time_until_expiry.total_seconds())}s")
 ### server_sig_pk
 
 ```python
-server_sig_pk: str
+server_sig_pk: str | None
 ```
 
 Base64-encoded server signing public key for ML-DSA-65 signature verification.
+
+**Note**: This property is only present when the inbox is encrypted (`encrypted=True`). For plain inboxes, this will be `None`.
+
+---
+
+### encrypted
+
+```python
+encrypted: bool
+```
+
+Indicates whether the inbox uses encryption.
+
+- `True` - Emails are encrypted using ML-KEM-768 (end-to-end encrypted)
+- `False` - Emails are stored and transmitted in plain text (Base64-encoded)
+
+The encryption state is determined by the server's `encryption_policy` and the `encryption` option passed during inbox creation.
+
+#### Example
+
+```python
+inbox = await client.create_inbox()
+if inbox.encrypted:
+    print("Inbox is encrypted")
+    print(f"Server signing key: {inbox.server_sig_pk}")
+else:
+    print("Inbox is plain (not encrypted)")
+```
+
+---
+
+### email_auth
+
+```python
+email_auth: bool
+```
+
+Indicates whether email authentication checks (SPF, DKIM, DMARC, Reverse DNS) are enabled for this inbox.
+
+- `True` - Authentication checks are performed on incoming emails
+- `False` - Authentication checks are skipped (all auth results will show `skipped` status)
+
+#### Example
+
+```python
+inbox = await client.create_inbox()
+if inbox.email_auth:
+    print("Email authentication is enabled")
+else:
+    print("Email authentication is disabled")
+```
 
 ## Methods
 
@@ -287,7 +338,7 @@ async def wait_for_email_count(
     self,
     count: int,
     options: WaitForCountOptions | None = None,
-) -> None
+) -> list[Email]
 ```
 
 #### Parameters

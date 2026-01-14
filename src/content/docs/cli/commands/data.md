@@ -57,6 +57,8 @@ The export file is a JSON document containing:
 	"inboxHash": "abc123",
 	"expiresAt": "2024-01-16T14:30:00Z",
 	"exportedAt": "2024-01-15T14:30:00Z",
+	"encrypted": true,
+	"emailAuth": true,
 	"keys": {
 		"kemPrivate": "...",
 		"kemPublic": "...",
@@ -64,6 +66,11 @@ The export file is a JSON document containing:
 	}
 }
 ```
+
+| Field       | Description                                                     |
+| ----------- | --------------------------------------------------------------- |
+| `encrypted` | Whether the inbox uses end-to-end encryption                    |
+| `emailAuth` | Whether email authentication checks (SPF/DKIM/DMARC/PTR) are enabled |
 
 :::caution
 Export files contain private encryption keys. Handle them as sensitive data:

@@ -56,6 +56,7 @@ if (spf) {
 | `temperror` | Temporary error during check               |
 | `permerror` | Permanent error in SPF record              |
 | `none`      | No SPF record found                        |
+| `skipped`   | Check was disabled (see note below)        |
 
 ### SPF Example
 
@@ -95,11 +96,12 @@ if (dkim && dkim.length > 0) {
 
 ### DKIM Status Values
 
-| Status | Meaning                 |
-| ------ | ----------------------- |
-| `pass` | Signature is valid      |
-| `fail` | Signature is invalid    |
-| `none` | No DKIM signature found |
+| Status    | Meaning                             |
+| --------- | ----------------------------------- |
+| `pass`    | Signature is valid                  |
+| `fail`    | Signature is invalid                |
+| `none`    | No DKIM signature found             |
+| `skipped` | Check was disabled (see note below) |
 
 ### DKIM Example
 
@@ -135,11 +137,12 @@ if (dmarc) {
 
 ### DMARC Status Values
 
-| Status | Meaning                                  |
-| ------ | ---------------------------------------- |
-| `pass` | DMARC check passed (SPF or DKIM aligned) |
-| `fail` | DMARC check failed                       |
-| `none` | No DMARC policy found                    |
+| Status    | Meaning                                  |
+| --------- | ---------------------------------------- |
+| `pass`    | DMARC check passed (SPF or DKIM aligned) |
+| `fail`    | DMARC check failed                       |
+| `none`    | No DMARC policy found                    |
+| `skipped` | Check was disabled (see note below)      |
 
 ### DMARC Policies
 
@@ -174,18 +177,22 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 const reverseDns = email.authResults.reverseDns;
 
 if (reverseDns) {
-	console.log(reverseDns.verified); // true or false
+	console.log(reverseDns.result); // "pass", "fail", "none", or "skipped"
 	console.log(reverseDns.ip); // Server IP
 	console.log(reverseDns.hostname); // Resolved hostname (may be empty)
 }
 ```
 
-### Reverse DNS Values
+### Reverse DNS Status Values
 
-| Value   | Meaning              |
-| ------- | -------------------- |
-| `true`  | Reverse DNS verified |
-| `false` | Reverse DNS failed   |
+| Status    | Meaning                             |
+| --------- | ----------------------------------- |
+| `pass`    | Reverse DNS verified                |
+| `fail`    | Reverse DNS check failed            |
+| `none`    | No reverse DNS record found         |
+| `skipped` | Check was disabled (see note below) |
+
+**Breaking Change (v0.7.0)**: The `verified` boolean property has been replaced with a `result` string. Migrate existing code by replacing `verified === true` with `result === 'pass'`.
 
 ### Reverse DNS Example
 
@@ -196,22 +203,37 @@ if (email.authResults.reverseDns) {
 	const rdns = email.authResults.reverseDns;
 
 	console.log(`Reverse DNS: ${rdns.ip} → ${rdns.hostname}`);
-	console.log(`Verified: ${rdns.verified}`);
+	console.log(`Result: ${rdns.result}`);
+
+	// Check if reverse DNS passed
+	if (rdns.result === 'pass') {
+		console.log('Reverse DNS verified');
+	}
 }
 ```
 
+## When `skipped` Status Appears
+
+The `skipped` status appears for any authentication check when:
+
+- The inbox was created with `emailAuth: false`
+- The server has globally disabled that specific check
+- The master switch `VSB_EMAIL_AUTH_ENABLED=false` is set on the server
+
+The `skipped` status is informational and indicates the check was intentionally disabled, not that it failed.
+
 ## Validation Helper
 
-The `validate()` method provides a summary of all authentication checks:
+The `validate()` method provides a summary of all authentication checks. The `skipped` status is treated as passing (not a failure), since it indicates the check was intentionally disabled.
 
 ```javascript
 const validation = email.authResults.validate();
 
 console.log(validation.passed); // Overall pass/fail
-console.log(validation.spfPassed); // SPF check
-console.log(validation.dkimPassed); // DKIM check
-console.log(validation.dmarcPassed); // DMARC check
-console.log(validation.reverseDnsPassed); // Reverse DNS check
+console.log(validation.spfPassed); // SPF check (true if pass or skipped)
+console.log(validation.dkimPassed); // DKIM check (true if pass or skipped)
+console.log(validation.dmarcPassed); // DMARC check (true if pass or skipped)
+console.log(validation.reverseDnsPassed); // Reverse DNS check (true if pass or skipped)
 console.log(validation.failures); // Array of failure reasons
 ```
 
@@ -270,6 +292,31 @@ if (!validation.passed) {
 		console.error(`  - ${failure}`);
 	});
 }
+```
+
+**Handling skipped checks**:
+
+```javascript
+// Create inbox with auth disabled
+const inbox = await client.createInbox({ emailAuth: false });
+const email = await inbox.waitForEmail({ timeout: 10000 });
+
+// Check if SPF was skipped
+if (email.authResults.spf?.result === 'skipped') {
+	console.log('SPF check was disabled for this inbox');
+}
+
+// The validate() method treats "skipped" as passing
+const validation = email.authResults.validate();
+
+// {
+//   passed: true,
+//   spfPassed: true,       // true because skipped
+//   dkimPassed: true,      // true because skipped
+//   dmarcPassed: true,     // true because skipped
+//   reverseDnsPassed: true, // true because skipped
+//   failures: []
+// }
 ```
 
 ## Testing Patterns

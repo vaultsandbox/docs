@@ -56,7 +56,7 @@ if (email.AuthResults is not null)
     // Reverse DNS result
     if (email.AuthResults.ReverseDns is not null)
     {
-        Console.WriteLine(email.AuthResults.ReverseDns.Verified);  // bool
+        Console.WriteLine(email.AuthResults.ReverseDns.Result);    // ReverseDnsStatus enum
         Console.WriteLine(email.AuthResults.ReverseDns.Hostname);  // PTR hostname
     }
 }
@@ -80,15 +80,16 @@ public sealed record SpfResult
 
 ### SpfStatus Enum
 
-| Status      | Description                                |
-| ----------- | ------------------------------------------ |
-| `Pass`      | Sending server is authorized               |
-| `Fail`      | Sending server is NOT authorized           |
-| `SoftFail`  | Probably not authorized (policy says ~all) |
-| `Neutral`   | Domain makes no assertion                  |
-| `None`      | No SPF record found                        |
-| `TempError` | Temporary error during check               |
-| `PermError` | Permanent error in SPF record              |
+| Status      | Description                                              |
+| ----------- | -------------------------------------------------------- |
+| `Pass`      | Sending server is authorized                             |
+| `Fail`      | Sending server is NOT authorized                         |
+| `SoftFail`  | Probably not authorized (policy says ~all)               |
+| `Neutral`   | Domain makes no assertion                                |
+| `None`      | No SPF record found                                      |
+| `TempError` | Temporary error during check                             |
+| `PermError` | Permanent error in SPF record                            |
+| `Skipped`   | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### SPF Example
 
@@ -126,11 +127,12 @@ public sealed record DkimResult
 
 ### DkimStatus Enum
 
-| Status | Description             |
-| ------ | ----------------------- |
-| `Pass` | Signature is valid      |
-| `Fail` | Signature is invalid    |
-| `None` | No DKIM signature found |
+| Status    | Description                                              |
+| --------- | -------------------------------------------------------- |
+| `Pass`    | Signature is valid                                       |
+| `Fail`    | Signature is invalid                                     |
+| `None`    | No DKIM signature found                                  |
+| `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### DKIM Example
 
@@ -169,11 +171,12 @@ public sealed record DmarcResult
 
 ### DmarcStatus Enum
 
-| Status | Description                              |
-| ------ | ---------------------------------------- |
-| `Pass` | DMARC check passed (SPF or DKIM aligned) |
-| `Fail` | DMARC check failed                       |
-| `None` | No DMARC policy found                    |
+| Status    | Description                                              |
+| --------- | -------------------------------------------------------- |
+| `Pass`    | DMARC check passed (SPF or DKIM aligned)                 |
+| `Fail`    | DMARC check failed                                       |
+| `None`    | No DMARC policy found                                    |
+| `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### DmarcPolicy Enum
 
@@ -210,11 +213,20 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ```csharp
 public sealed record ReverseDnsResult
 {
-    public bool Verified { get; init; }
+    public ReverseDnsStatus Result { get; init; }
     public string? Ip { get; init; }
     public string? Hostname { get; init; }
 }
 ```
+
+### ReverseDnsStatus Enum
+
+| Status    | Description                                              |
+| --------- | -------------------------------------------------------- |
+| `Pass`    | PTR record exists and matches                            |
+| `Fail`    | PTR record doesn't match or lookup failed                |
+| `None`    | No PTR record found                                      |
+| `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### Reverse DNS Example
 
@@ -226,10 +238,58 @@ var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
 
 if (email.AuthResults?.ReverseDns is not null)
 {
-    Console.WriteLine($"Reverse DNS Verified: {email.AuthResults.ReverseDns.Verified}");
-    // Reverse DNS Verified: True
+    Console.WriteLine($"Reverse DNS Result: {email.AuthResults.ReverseDns.Result}");
+    // Reverse DNS Result: Pass
 }
 ```
+
+### Breaking Change Migration
+
+**Version 0.7.0** changed `ReverseDns.Verified` (boolean) to `ReverseDns.Result` (enum).
+
+**Before (v0.6.x):**
+```csharp
+if (email.AuthResults?.ReverseDns?.Verified == true)
+{
+    // PTR check passed
+}
+```
+
+**After (v0.7.0+):**
+```csharp
+if (email.AuthResults?.ReverseDns?.Result == ReverseDnsStatus.Pass)
+{
+    // PTR check passed
+}
+```
+
+## Understanding `Skipped` Status
+
+When an authentication check returns `Skipped`, it means the check was intentionally not performed. This happens when:
+
+- The inbox was created with `EmailAuth = false`
+- The server has globally disabled that specific check
+- The server's master switch `VSB_EMAIL_AUTH_ENABLED=false` is set
+
+```csharp
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    EmailAuth = false  // Disable auth checks
+});
+
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(10)
+});
+
+// All auth results will show Skipped
+if (email.AuthResults?.Spf?.Result == SpfStatus.Skipped)
+{
+    Console.WriteLine("SPF check was disabled for this inbox");
+}
+```
+
+**Note**: The `Validate()` method treats `Skipped` as passing (not a failure), since the check was intentionally disabled.
 
 ## Validation Helper
 

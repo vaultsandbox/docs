@@ -194,12 +194,21 @@ if errors.Is(err, vaultsandbox.ErrEmailNotFound) {
 
 ### ErrInboxAlreadyExists
 
-Returned when attempting to import an inbox that already exists.
+Returned when attempting to create or import an inbox that already exists.
+
+For encrypted inboxes, this error occurs when the same KEM public key is already registered.
+For plain inboxes, this error occurs when the same email address is already in use.
 
 ```go
 inbox, err := client.ImportInbox(ctx, exportedData)
 if errors.Is(err, vaultsandbox.ErrInboxAlreadyExists) {
     log.Println("Inbox already imported in this client")
+}
+
+// Also returned when creating an inbox with an existing address
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAddress("existing@example.com"))
+if errors.Is(err, vaultsandbox.ErrInboxAlreadyExists) {
+    log.Println("Email address already in use")
 }
 ```
 
@@ -328,10 +337,14 @@ if err != nil {
         log.Printf("API Error (%d): %s", apiErr.StatusCode, apiErr.Message)
 
         switch apiErr.StatusCode {
+        case 400:
+            log.Println("Bad request - check parameters")
         case 401:
             log.Println("Invalid API key")
         case 403:
             log.Println("Permission denied")
+        case 409:
+            log.Println("Conflict - inbox already exists")
         case 429:
             log.Println("Rate limit exceeded")
         }
@@ -342,6 +355,14 @@ if err != nil {
     }
 }
 ```
+
+#### Common API Errors
+
+| Status | Message | Cause |
+|--------|---------|-------|
+| 400 | `clientKemPk is required when encryption is enabled` | Trying to create encrypted inbox without KEM public key (SDK handles this automatically) |
+| 409 | `An inbox with the same client KEM public key already exists` | Encrypted inbox with same key already exists |
+| 409 | `An inbox with this email address already exists` | Plain inbox with same address already exists |
 
 ---
 

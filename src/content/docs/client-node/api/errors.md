@@ -146,6 +146,14 @@ try {
 }
 ```
 
+#### Common API Error Messages
+
+| Status | Message | Cause |
+| ------ | ------- | ----- |
+| `400` | `clientKemPk is required when encryption is enabled` | Encryption is enabled but the SDK failed to provide a KEM public key (internal SDK error) |
+| `409` | `An inbox with the same client KEM public key already exists` | Attempting to create an encrypted inbox with a key that's already in use |
+| `409` | `An inbox with this email address already exists` | Attempting to create an inbox with an email address that's already taken |
+
 ---
 
 ### NetworkError
@@ -266,7 +274,10 @@ try {
 
 ### InboxAlreadyExistsError
 
-Thrown when attempting to import an inbox that already exists in the client.
+Thrown when attempting to create or import an inbox that conflicts with an existing one. This can occur in two scenarios:
+
+- **Encrypted inboxes**: An inbox with the same client KEM public key already exists
+- **Plain inboxes**: An inbox with the requested email address already exists
 
 ```typescript
 class InboxAlreadyExistsError extends VaultSandboxError {
@@ -279,6 +290,19 @@ class InboxAlreadyExistsError extends VaultSandboxError {
 ```javascript
 import { InboxAlreadyExistsError } from '@vaultsandbox/client';
 
+try {
+	const inbox = await client.createInbox({
+		emailAddress: 'test@inbox.vaultsandbox.com',
+	});
+} catch (error) {
+	if (error instanceof InboxAlreadyExistsError) {
+		console.error('Inbox already exists:', error.message);
+		// For plain inboxes: "An inbox with this email address already exists"
+		// For encrypted: "An inbox with the same client KEM public key already exists"
+	}
+}
+
+// Also thrown when importing
 try {
 	const inbox = await client.importInbox(exportedData);
 } catch (error) {

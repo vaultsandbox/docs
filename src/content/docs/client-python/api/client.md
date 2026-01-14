@@ -90,12 +90,30 @@ async def create_inbox(
 class CreateInboxOptions:
     ttl: int | None = None
     email_address: str | None = None
+    email_auth: bool | None = None
+    encryption: str | None = None
 ```
 
 | Property        | Type          | Description                                                                                |
 | --------------- | ------------- | ------------------------------------------------------------------------------------------ |
 | `ttl`           | `int \| None` | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
 | `email_address` | `str \| None` | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| `email_auth`    | `bool \| None` | Enable/disable SPF/DKIM/DMARC/PTR checks (default: server setting)                        |
+| `encryption`    | `str \| None` | Request encryption mode: `"encrypted"` or `"plain"` (default: server policy)              |
+
+##### Email Authentication (`email_auth`)
+
+- `True` - Enable SPF/DKIM/DMARC/PTR checks for incoming emails
+- `False` - Skip all authentication checks (results will show `skipped` status)
+- Omit - Use server default
+
+##### Encryption Mode (`encryption`)
+
+- `"encrypted"` - Request an encrypted inbox (emails encrypted with ML-KEM-768)
+- `"plain"` - Request a plain inbox (emails stored as Base64-encoded JSON)
+- Omit - Use server default based on `encryption_policy`
+
+**Note**: The server may reject the encryption request based on its `encryption_policy`. Use `get_server_info()` to check the policy before creating inboxes.
 
 #### Returns
 
@@ -117,13 +135,27 @@ inbox = await client.create_inbox(CreateInboxOptions(ttl=3600))
 inbox = await client.create_inbox(
     CreateInboxOptions(email_address="mytest@inbox.vaultsandbox.com")
 )
+
+# Create inbox with email authentication disabled
+inbox = await client.create_inbox(CreateInboxOptions(email_auth=False))
+
+# Create a plain (unencrypted) inbox (when server policy allows)
+inbox = await client.create_inbox(CreateInboxOptions(encryption="plain"))
+
+# Create with multiple options
+inbox = await client.create_inbox(
+    CreateInboxOptions(
+        ttl=3600,
+        email_auth=False,
+        encryption="plain",
+    )
+)
 ```
 
 #### Errors
 
-- `ApiError` - API-level error (invalid request, permission denied)
+- `ApiError` - API-level error (invalid request, permission denied, or status 409 if email address/KEM key already exists)
 - `NetworkError` - Network connection failure
-- `InboxAlreadyExistsError` - Requested email address is already in use
 
 ---
 
@@ -185,17 +217,30 @@ class ServerInfo:
     default_ttl: int
     sse_console: bool
     allowed_domains: list[str]
+    encryption_policy: str
 ```
 
-| Property          | Type             | Description                                               |
-| ----------------- | ---------------- | --------------------------------------------------------- |
-| `server_sig_pk`   | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`            | `dict[str, str]` | Cryptographic algorithms supported by the server          |
-| `context`         | `str`            | Context string for the encryption scheme                  |
-| `max_ttl`         | `int`            | Maximum time-to-live for inboxes in seconds               |
-| `default_ttl`     | `int`            | Default time-to-live for inboxes in seconds               |
-| `sse_console`     | `bool`           | Whether the server SSE console is enabled                 |
-| `allowed_domains` | `list[str]`      | List of domains allowed for inbox creation                |
+| Property            | Type             | Description                                               |
+| ------------------- | ---------------- | --------------------------------------------------------- |
+| `server_sig_pk`     | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`              | `dict[str, str]` | Cryptographic algorithms supported by the server          |
+| `context`           | `str`            | Context string for the encryption scheme                  |
+| `max_ttl`           | `int`            | Maximum time-to-live for inboxes in seconds               |
+| `default_ttl`       | `int`            | Default time-to-live for inboxes in seconds               |
+| `sse_console`       | `bool`           | Whether the server SSE console is enabled                 |
+| `allowed_domains`   | `list[str]`      | List of domains allowed for inbox creation                |
+| `encryption_policy` | `str`            | Server encryption policy (see below)                      |
+
+#### Encryption Policy
+
+The `encryption_policy` field indicates the server's encryption settings:
+
+| Policy     | Default Encryption | Per-Inbox Override                  |
+| ---------- | ------------------ | ----------------------------------- |
+| `always`   | Encrypted          | No - all inboxes encrypted          |
+| `enabled`  | Encrypted          | Yes - can request `plain`           |
+| `disabled` | Plain              | Yes - can request `encrypted`       |
+| `never`    | Plain              | No - all inboxes plain              |
 
 #### Example
 
@@ -204,6 +249,12 @@ info = await client.get_server_info()
 print(f"Encryption: {info.algs['kem']}")
 print(f"Max TTL: {info.max_ttl}s, Default TTL: {info.default_ttl}s")
 print(f"Allowed domains: {', '.join(info.allowed_domains)}")
+
+# Check encryption policy
+print(f"Encryption policy: {info.encryption_policy}")
+can_override = info.encryption_policy in ["enabled", "disabled"]
+default_encrypted = info.encryption_policy in ["always", "enabled"]
+print(f"Can override: {can_override}, Default encrypted: {default_encrypted}")
 ```
 
 ---

@@ -40,11 +40,13 @@ async with VaultSandboxClient(base_url=url, api_key=api_key) as client:
         CreateInboxOptions(
             ttl=3600,  # 1 hour (default: 24 hours)
             email_address="test@mail.example.com",  # Request specific address
+            email_auth=False,  # Disable SPF/DKIM/DMARC checks
+            encryption="plain",  # Request plain inbox (if policy allows)
         )
     )
 ```
 
-**Note**: Requesting a specific email address may fail if it's already in use. The server will return an error.
+**Note**: Requesting a specific email address may fail if it's already in use. The `encryption` option may be rejected based on the server's `encryption_policy`.
 
 ## Inbox Properties
 
@@ -93,7 +95,7 @@ print(f"Expires in {hours_until_expiry:.1f} hours")
 
 ### server_sig_pk
 
-**Type**: `str`
+**Type**: `str | None`
 
 The server's signing public key (ML-DSA-65) used to verify email signatures.
 
@@ -101,6 +103,38 @@ The server's signing public key (ML-DSA-65) used to verify email signatures.
 print(inbox.server_sig_pk)
 # Base64URL-encoded public key string
 ```
+
+**Note**: This property is only present when the inbox is encrypted (`encrypted=True`). For plain inboxes, this will be `None`.
+
+### encrypted
+
+**Type**: `bool`
+
+Indicates whether the inbox uses encryption.
+
+```python
+print(inbox.encrypted)  # True or False
+```
+
+- `True` - Emails are encrypted using ML-KEM-768 (end-to-end encrypted)
+- `False` - Emails are stored in plain text (Base64-encoded JSON)
+
+The encryption state is determined by:
+1. Server's `encryption_policy` setting
+2. The `encryption` option passed during inbox creation (when policy allows)
+
+### email_auth
+
+**Type**: `bool`
+
+Indicates whether email authentication checks are enabled for this inbox.
+
+```python
+print(inbox.email_auth)  # True or False
+```
+
+- `True` - SPF, DKIM, DMARC, and Reverse DNS checks are performed
+- `False` - All authentication checks are skipped (results show `skipped` status)
 
 ## Inbox Lifecycle
 

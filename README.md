@@ -44,7 +44,7 @@ astro.config.mjs      # Starlight config and sidebar navigation
 
 ## License
 
-[MIT](LICENSE)
+[Apache-2.0](LICENSE)
 
 ## Support
 

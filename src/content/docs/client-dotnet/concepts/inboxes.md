@@ -46,6 +46,32 @@ var inbox = await client.CreateInboxAsync(new CreateInboxOptions
 
 **Note**: Requesting a specific email address may fail if it's already in use. The server will return an error.
 
+### With Email Auth Disabled
+
+```csharp
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    EmailAuth = false  // Skip SPF/DKIM/DMARC/PTR checks
+});
+```
+
+### With Encryption Override
+
+```csharp
+// Check server policy first
+var serverInfo = await client.GetServerInfoAsync();
+var canOverride = serverInfo.EncryptionPolicy is EncryptionPolicy.Enabled or EncryptionPolicy.Disabled;
+
+if (canOverride)
+{
+    // Create a plain (unencrypted) inbox
+    var plainInbox = await client.CreateInboxAsync(new CreateInboxOptions
+    {
+        Encryption = InboxEncryption.Plain
+    });
+}
+```
+
 ## Inbox Properties
 
 ### EmailAddress
@@ -87,6 +113,42 @@ Console.WriteLine(inbox.ExpiresAt);
 // Check if inbox is expiring soon
 var timeUntilExpiry = inbox.ExpiresAt - DateTimeOffset.UtcNow;
 Console.WriteLine($"Expires in {timeUntilExpiry.TotalHours:F1} hours");
+```
+
+### EmailAuth
+
+**Type**: `bool`
+
+Whether email authentication checks (SPF, DKIM, DMARC, Reverse DNS) are enabled for this inbox. When `false`, all authentication results will show `Skipped` status.
+
+```csharp
+Console.WriteLine(inbox.EmailAuth);
+// true
+
+if (!inbox.EmailAuth)
+{
+    Console.WriteLine("Auth checks are disabled for this inbox");
+}
+```
+
+### Encrypted
+
+**Type**: `bool`
+
+Whether this inbox uses end-to-end encryption. Determined by the server's encryption policy and any per-inbox override requested during creation.
+
+```csharp
+Console.WriteLine(inbox.Encrypted);
+// true
+
+if (inbox.Encrypted)
+{
+    Console.WriteLine("Emails are end-to-end encrypted");
+}
+else
+{
+    Console.WriteLine("Emails are stored in plain text");
+}
 ```
 
 ## Inbox Lifecycle

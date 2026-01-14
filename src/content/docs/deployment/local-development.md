@@ -38,7 +38,14 @@ services:
       - '127.0.0.1:8080:80' # HTTP Web UI on localhost only
     environment:
       # Accept emails for any domain (development mode)
-      VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'test.localhost'
+      VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'localhost'
+
+      # Disable email authentication checks (SPF/DKIM/DMARC) - not applicable locally
+      # since we don't receive emails from external mail servers
+      VSB_EMAIL_AUTH_ENABLED: 'false'
+
+      # Disable response encryption for direct API access without an SDK
+      # VSB_ENCRYPTION_ENABLED: 'never'
 
       # Disable TLS/HTTPS (local development only)
       VSB_CERT_ENABLED: 'false'
@@ -143,7 +150,13 @@ Alternatively, set a fixed API key in your `docker-compose.yml` by uncommenting 
 
 ## Using the API
 
-With your API key, you can query captured emails:
+With your API key, you can query captured emails.
+
+:::tip[Direct API Access Without an SDK]
+If no official SDK is available for your language, you can disable response encryption to work directly with the REST API. Set `VSB_ENCRYPTION_ENABLED: 'never'` in your environment variables (already included in the docker-compose example above). This returns plain JSON responses instead of encrypted payloads, making it easier to integrate using standard HTTP clients.
+:::
+
+
 
 ```bash
 # List all emails

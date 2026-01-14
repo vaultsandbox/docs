@@ -14,6 +14,31 @@ Email authentication helps verify that an email:
 - Complies with the domain's policy (**DMARC**)
 - Came from a legitimate mail server (**Reverse DNS**)
 
+## Skipped Status
+
+All authentication result types support a `"skipped"` status, which indicates the check was not performed. This occurs when:
+
+- The inbox has `emailAuth: false` (created with `WithEmailAuth(false)`)
+- The server has globally disabled that specific check
+- The master switch `VSB_EMAIL_AUTH_ENABLED=false` is set on the server
+
+When authentication checks are skipped:
+
+```go
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+    log.Fatal(err)
+}
+
+if email.AuthResults.SPF != nil && email.AuthResults.SPF.Result == "skipped" {
+    fmt.Println("SPF check was skipped for this inbox")
+}
+
+// The Validate() method treats "skipped" as passing (not a failure)
+validation := email.AuthResults.Validate()
+fmt.Printf("Validation passed: %v\n", validation.Passed) // true if all are pass or skipped
+```
+
 ## AuthResults Struct
 
 Every email has an `AuthResults` field:
@@ -53,10 +78,10 @@ Verifies the sending server is authorized to send from the sender's domain.
 
 ```go
 type SPFResult struct {
-    Result string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror"
-    Domain string
-    IP     string
-    Info   string
+    Result  string // "pass", "fail", "softfail", "neutral", "none", "temperror", "permerror", "skipped"
+    Domain  string
+    IP      string
+    Details string
 }
 ```
 
@@ -65,7 +90,7 @@ if email.AuthResults.SPF != nil {
     spf := email.AuthResults.SPF
     fmt.Printf("Result: %s\n", spf.Result)
     fmt.Printf("Domain: %s\n", spf.Domain)
-    fmt.Printf("Info: %s\n", spf.Info)
+    fmt.Printf("Details: %s\n", spf.Details)
 }
 ```
 
@@ -80,6 +105,7 @@ if email.AuthResults.SPF != nil {
 | `temperror` | Temporary error during check               |
 | `permerror` | Permanent error in SPF record              |
 | `none`      | No SPF record found                        |
+| `skipped`   | Check was skipped (emailAuth disabled)     |
 
 ### SPF Example
 
@@ -111,10 +137,11 @@ Cryptographically verifies the email hasn't been modified and came from the clai
 
 ```go
 type DKIMResult struct {
-    Result   string // "pass", "fail", "none"
-    Domain   string
-    Selector string
-    Info     string
+    Result    string // "pass", "fail", "none", "skipped"
+    Domain    string
+    Selector  string
+    Signature string
+    Info      string
 }
 ```
 
@@ -135,11 +162,12 @@ if len(dkim) > 0 {
 
 ### DKIM Status Values
 
-| Status | Meaning                 |
-| ------ | ----------------------- |
-| `pass` | Signature is valid      |
-| `fail` | Signature is invalid    |
-| `none` | No DKIM signature found |
+| Status    | Meaning                                |
+| --------- | -------------------------------------- |
+| `pass`    | Signature is valid                     |
+| `fail`    | Signature is invalid                   |
+| `none`    | No DKIM signature found                |
+| `skipped` | Check was skipped (emailAuth disabled) |
 
 ### DKIM Example
 
@@ -171,7 +199,7 @@ Checks that SPF or DKIM align with the From address and enforces the domain's po
 
 ```go
 type DMARCResult struct {
-    Result  string // "pass", "fail", "none"
+    Result  string // "pass", "fail", "none", "skipped"
     Policy  string // "none", "quarantine", "reject"
     Aligned bool
     Domain  string
@@ -192,11 +220,12 @@ if email.AuthResults.DMARC != nil {
 
 ### DMARC Status Values
 
-| Status | Meaning                                  |
-| ------ | ---------------------------------------- |
-| `pass` | DMARC check passed (SPF or DKIM aligned) |
-| `fail` | DMARC check failed                       |
-| `none` | No DMARC policy found                    |
+| Status    | Meaning                                    |
+| --------- | ------------------------------------------ |
+| `pass`    | DMARC check passed (SPF or DKIM aligned)   |
+| `fail`    | DMARC check failed                         |
+| `none`    | No DMARC policy found                      |
+| `skipped` | Check was skipped (emailAuth disabled)     |
 
 ### DMARC Policies
 
@@ -236,29 +265,29 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 
 ```go
 type ReverseDNSResult struct {
-    Verified bool   // true if reverse DNS verified
+    Result   string // "pass", "fail", "none", "skipped"
     IP       string
     Hostname string
-    Info     string
 }
 ```
 
 ```go
 if email.AuthResults.ReverseDNS != nil {
     rdns := email.AuthResults.ReverseDNS
-    fmt.Printf("Verified: %v\n", rdns.Verified)
+    fmt.Printf("Result: %s\n", rdns.Result)
     fmt.Printf("IP: %s\n", rdns.IP)
     fmt.Printf("Hostname: %s\n", rdns.Hostname)
-    fmt.Printf("Info: %s\n", rdns.Info)
 }
 ```
 
-### Reverse DNS Verified Values
+### Reverse DNS Status Values
 
-| Verified | Meaning              |
-| -------- | -------------------- |
-| `true`   | Reverse DNS verified |
-| `false`  | Reverse DNS failed   |
+| Status    | Meaning                                    |
+| --------- | ------------------------------------------ |
+| `pass`    | Reverse DNS verified                       |
+| `fail`    | Reverse DNS check failed                   |
+| `none`    | No reverse DNS record found                |
+| `skipped` | Check was skipped (emailAuth disabled)     |
 
 ### Reverse DNS Example
 
@@ -272,7 +301,30 @@ if email.AuthResults.ReverseDNS != nil {
     rdns := email.AuthResults.ReverseDNS
 
     fmt.Printf("Reverse DNS: %s -> %s\n", rdns.IP, rdns.Hostname)
-    fmt.Printf("Verified: %v\n", rdns.Verified)
+    fmt.Printf("Result: %s\n", rdns.Result)
+
+    // Check if verification passed
+    if rdns.Result == "pass" {
+        fmt.Println("Reverse DNS verified")
+    }
+}
+```
+
+#### Migration from v0.6.x
+
+In previous versions, `ReverseDNSResult` used a `Verified` boolean field. This has been replaced with a `Result` string field for consistency with other auth results.
+
+**Before (v0.6.x):**
+```go
+if rdns.Verified {
+    // Reverse DNS passed
+}
+```
+
+**After (v0.7.0+):**
+```go
+if rdns.Result == "pass" {
+    // Reverse DNS passed
 }
 ```
 
@@ -297,14 +349,16 @@ fmt.Printf("Failures: %v\n", validation.Failures)
 
 ```go
 type AuthValidation struct {
-    Passed           bool     // True if SPF, DKIM, and DMARC all passed
-    SPFPassed        bool     // SPF passed
-    DKIMPassed       bool     // At least one DKIM passed
-    DMARCPassed      bool     // DMARC passed
-    ReverseDNSPassed bool     // Reverse DNS passed
+    Passed           bool     // True if SPF, DKIM, and DMARC all passed (or skipped)
+    SPFPassed        bool     // SPF passed or skipped
+    DKIMPassed       bool     // At least one DKIM passed, or all skipped
+    DMARCPassed      bool     // DMARC passed or skipped
+    ReverseDNSPassed bool     // Reverse DNS passed or skipped
     Failures         []string // Slice of failure descriptions
 }
 ```
+
+**Note**: The `Validate()` method treats `"skipped"` status as passing (not a failure). This allows inboxes with disabled email authentication to still pass validation checks.
 
 ### Validation Examples
 

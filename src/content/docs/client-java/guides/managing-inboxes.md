@@ -60,18 +60,71 @@ Inbox inbox = client.createInbox(
 );
 ```
 
+### With Email Auth Disabled
+
+Skip SPF/DKIM/DMARC/PTR checks for faster processing or when using test SMTP servers:
+
+```java
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+
+// All auth results will show "skipped" status
+System.out.println("Email auth: " + inbox.isEmailAuth());  // false
+```
+
+### With Encryption Options
+
+Request a specific encryption mode (when server policy allows):
+
+```java
+// Request a plain (unencrypted) inbox
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .encryption("plain")
+        .build()
+);
+
+// Or use convenience method
+Inbox inbox = client.createInbox(CreateInboxOptions.plain());
+
+// Check encryption status
+System.out.println("Encrypted: " + inbox.isEncrypted());  // false
+```
+
+### Checking Server Encryption Policy
+
+```java
+ServerInfo info = client.getServerInfo();
+
+System.out.println("Policy: " + info.getEncryptionPolicy());
+System.out.println("Can override: " + info.canOverrideEncryption());
+System.out.println("Default encrypted: " + info.isDefaultEncrypted());
+
+// Only request plain if server allows overrides
+if (info.canOverrideEncryption()) {
+    Inbox inbox = client.createInbox(CreateInboxOptions.plain());
+}
+```
+
 ## Inbox Properties
 
-| Property       | Type      | Description             |
-| -------------- | --------- | ----------------------- |
-| `emailAddress` | `String`  | The inbox email address |
-| `expiresAt`    | `Instant` | When the inbox expires  |
+| Property       | Type      | Description                                     |
+| -------------- | --------- | ----------------------------------------------- |
+| `emailAddress` | `String`  | The inbox email address                         |
+| `expiresAt`    | `Instant` | When the inbox expires                          |
+| `emailAuth`    | `boolean` | Whether email authentication checks are enabled |
+| `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption   |
 
 ```java
 Inbox inbox = client.createInbox();
 
 String address = inbox.getEmailAddress();  // "abc123@vaultsandbox.com"
 Instant expires = inbox.getExpiresAt();    // 2024-01-15T12:00:00Z
+boolean auth = inbox.isEmailAuth();        // true (default)
+boolean encrypted = inbox.isEncrypted();   // depends on server policy
 ```
 
 ## Listing Emails
@@ -600,6 +653,62 @@ void cleanupSafely(Inbox inbox) {
     }
 }
 ```
+
+## Optional Email Handling
+
+Use `awaitEmail()` instead of `waitForEmail()` when an email might not arrive and you don't want an exception on timeout.
+
+### Check for Optional Email
+
+```java
+// Returns null on timeout instead of throwing TimeoutException
+Email notification = inbox.awaitEmail(
+    EmailFilter.subjectContains("Optional Notification"),
+    Duration.ofSeconds(5)
+);
+
+if (notification != null) {
+    processNotification(notification);
+} else {
+    // No notification - this is acceptable
+    log.info("No optional notification received");
+}
+```
+
+### Conditional Processing
+
+```java
+@Test
+void shouldHandleOptionalConfirmationEmail() {
+    // Trigger action that may or may not send email
+    performAction(inbox.getEmailAddress());
+
+    // Wait for required email
+    Email required = inbox.waitForEmail(
+        EmailFilter.subjectContains("Action Complete"),
+        Duration.ofSeconds(30)
+    );
+    assertThat(required).isNotNull();
+
+    // Check for optional follow-up (no exception if missing)
+    Email followUp = inbox.awaitEmail(
+        EmailFilter.subjectContains("Additional Info"),
+        Duration.ofSeconds(5)
+    );
+
+    if (followUp != null) {
+        // Verify follow-up content if present
+        assertThat(followUp.getText()).contains("extra details");
+    }
+}
+```
+
+### Difference from waitForEmail()
+
+| Method           | On Timeout            | Use Case                          |
+| ---------------- | --------------------- | --------------------------------- |
+| `waitForEmail()` | Throws `TimeoutException` | Required emails that must arrive  |
+| `awaitEmail()`   | Returns `null`        | Optional emails that may not come |
 
 ## Retrieving Inboxes
 

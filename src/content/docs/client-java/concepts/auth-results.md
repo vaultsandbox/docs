@@ -48,24 +48,25 @@ if (spf != null) {
 
 ### SPF Status Values
 
-| Status      | Meaning                                    |
-| ----------- | ------------------------------------------ |
-| `pass`      | Sending server is authorized               |
-| `fail`      | Sending server is NOT authorized           |
-| `softfail`  | Probably not authorized (policy says ~all) |
-| `neutral`   | Domain makes no assertion                  |
-| `temperror` | Temporary error during check               |
-| `permerror` | Permanent error in SPF record              |
-| `none`      | No SPF record found                        |
+| Status      | Meaning                                         |
+| ----------- | ----------------------------------------------- |
+| `pass`      | Sending server is authorized                    |
+| `fail`      | Sending server is NOT authorized                |
+| `softfail`  | Probably not authorized (policy says ~all)      |
+| `neutral`   | Domain makes no assertion                       |
+| `temperror` | Temporary error during check                    |
+| `permerror` | Permanent error in SPF record                   |
+| `none`      | No SPF record found                             |
+| `skipped`   | Check was skipped (inbox has `emailAuth: false`) |
 
 ### SpfResult Properties
 
-| Property  | Type     | Description                                                                 |
-| --------- | -------- | --------------------------------------------------------------------------- |
-| `result`  | `String` | SPF check result: pass, fail, softfail, neutral, none, temperror, permerror |
-| `domain`  | `String` | Domain being checked                                                        |
-| `ip`      | `String` | IP address of the sending server                                            |
-| `details` | `String` | Additional explanation about the result                                     |
+| Property  | Type     | Description                                                                          |
+| --------- | -------- | ------------------------------------------------------------------------------------ |
+| `result`  | `String` | SPF check result: pass, fail, softfail, neutral, none, temperror, permerror, skipped |
+| `domain`  | `String` | Domain being checked                                                                 |
+| `ip`      | `String` | IP address of the sending server                                                     |
+| `details` | `String` | Additional explanation about the result                                              |
 
 ### SpfResult Methods
 
@@ -113,20 +114,21 @@ if (dkim != null && !dkim.isEmpty()) {
 
 ### DKIM Status Values
 
-| Status | Meaning                 |
-| ------ | ----------------------- |
-| `pass` | Signature is valid      |
-| `fail` | Signature is invalid    |
-| `none` | No DKIM signature found |
+| Status    | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| `pass`    | Signature is valid                               |
+| `fail`    | Signature is invalid                             |
+| `none`    | No DKIM signature found                          |
+| `skipped` | Check was skipped (inbox has `emailAuth: false`) |
 
 ### DkimResult Properties
 
-| Property    | Type     | Description                                      |
-| ----------- | -------- | ------------------------------------------------ |
-| `result`    | `String` | DKIM verification result: pass, fail, none       |
-| `domain`    | `String` | Signing domain                                   |
-| `selector`  | `String` | DKIM selector (identifies the public key in DNS) |
-| `signature` | `String` | DKIM signature information                       |
+| Property    | Type     | Description                                               |
+| ----------- | -------- | --------------------------------------------------------- |
+| `result`    | `String` | DKIM verification result: pass, fail, none, skipped       |
+| `domain`    | `String` | Signing domain                                            |
+| `selector`  | `String` | DKIM selector (identifies the public key in DNS)          |
+| `signature` | `String` | DKIM signature information                                |
 
 ### DkimResult Methods
 
@@ -182,11 +184,12 @@ if (dmarc != null) {
 
 ### DMARC Status Values
 
-| Status | Meaning                                  |
-| ------ | ---------------------------------------- |
-| `pass` | DMARC check passed (SPF or DKIM aligned) |
-| `fail` | DMARC check failed                       |
-| `none` | No DMARC policy found                    |
+| Status    | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| `pass`    | DMARC check passed (SPF or DKIM aligned)         |
+| `fail`    | DMARC check failed                               |
+| `none`    | No DMARC policy found                            |
+| `skipped` | Check was skipped (inbox has `emailAuth: false`) |
 
 ### DMARC Policies
 
@@ -200,7 +203,7 @@ if (dmarc != null) {
 
 | Property  | Type      | Description                                                |
 | --------- | --------- | ---------------------------------------------------------- |
-| `result`  | `String`  | DMARC check result: pass, fail, none                       |
+| `result`  | `String`  | DMARC check result: pass, fail, none, skipped              |
 | `domain`  | `String`  | From domain being checked                                  |
 | `policy`  | `String`  | Domain's DMARC policy: `none`, `quarantine`, or `reject`   |
 | `aligned` | `Boolean` | Whether SPF/DKIM results align with the From header domain |
@@ -240,27 +243,37 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ReverseDnsResult reverseDns = email.getAuthResults().getReverseDns();
 
 if (reverseDns != null) {
-    System.out.println(reverseDns.isVerified()); // true if verified, false otherwise
+    System.out.println(reverseDns.getResult());   // "pass", "fail", "none", "skipped"
     System.out.println(reverseDns.getIp());       // IP address being validated
     System.out.println(reverseDns.getHostname()); // Resolved hostname
 }
 ```
 
+### Reverse DNS Status Values
+
+| Status    | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| `pass`    | PTR record matches and resolves correctly        |
+| `fail`    | PTR record doesn't match or doesn't resolve      |
+| `none`    | No PTR record found                              |
+| `skipped` | Check was skipped (inbox has `emailAuth: false`) |
+
 ### ReverseDnsResult Properties
 
-| Property   | Type      | Description                             |
-| ---------- | --------- | --------------------------------------- |
-| `verified` | `boolean` | Whether reverse DNS verification passed |
-| `ip`       | `String`  | IP address of the sending server        |
-| `hostname` | `String`  | Resolved hostname from PTR record       |
+| Property   | Type     | Description                                      |
+| ---------- | -------- | ------------------------------------------------ |
+| `result`   | `String` | Reverse DNS result: pass, fail, none, skipped    |
+| `ip`       | `String` | IP address of the sending server                 |
+| `hostname` | `String` | Resolved hostname from PTR record                |
 
 ### ReverseDnsResult Methods
 
-| Method          | Return Type | Description                             |
-| --------------- | ----------- | --------------------------------------- |
-| `isVerified()`  | `boolean`   | Returns true if reverse DNS is verified |
-| `getIp()`       | `String`    | Returns the IP address being validated  |
-| `getHostname()` | `String`    | Returns the resolved hostname           |
+| Method          | Return Type | Description                                                   |
+| --------------- | ----------- | ------------------------------------------------------------- |
+| `getResult()`   | `String`    | Returns the reverse DNS result                                |
+| `isVerified()`  | `boolean`   | Convenience: returns `true` if result is "pass"               |
+| `getIp()`       | `String`    | Returns the IP address being validated                        |
+| `getHostname()` | `String`    | Returns the resolved hostname                                 |
 
 ### Reverse DNS Example
 
@@ -270,18 +283,76 @@ Email email = inbox.waitForEmail(Duration.ofSeconds(10));
 ReverseDnsResult rdns = email.getAuthResults().getReverseDns();
 if (rdns != null) {
     System.out.printf("Reverse DNS: %s for %s -> %s%n",
-        rdns.isVerified() ? "verified" : "not verified",
-        rdns.getIp(), rdns.getHostname());
+        rdns.getResult(), rdns.getIp(), rdns.getHostname());
 
-    if (rdns.isVerified()) {
+    if ("pass".equals(rdns.getResult())) {
         System.out.println("Reverse DNS verification passed");
     }
 }
 ```
 
+:::caution[Breaking Change in v0.7.0]
+The `reverseDns` field now uses `result: String` instead of `verified: boolean`.
+
+**Migration:** Replace `isVerified()` or `verified == true` checks with `"pass".equals(getResult())`.
+
+```java
+// Before (v0.6.x)
+if (rdns.isVerified()) { ... }
+
+// After (v0.7.0) - preferred
+if ("pass".equals(rdns.getResult())) { ... }
+
+// Or use convenience method (still works)
+if (rdns.isVerified()) { ... }  // isVerified() returns result.equals("pass")
+```
+:::
+
+## Understanding the "skipped" Status
+
+All authentication checks can return `skipped` as a result. This happens when:
+
+1. **Inbox has `emailAuth: false`** - Authentication was disabled when creating the inbox
+2. **Server has globally disabled that check** - The server configuration skips certain checks
+3. **Master switch is disabled** - Server has `VSB_EMAIL_AUTH_ENABLED=false`
+
+### Handling Skipped Results
+
+```java
+Email email = inbox.waitForEmail(Duration.ofSeconds(10));
+
+SpfResult spf = email.getAuthResults().getSpf();
+if ("skipped".equals(spf.getResult())) {
+    // SPF check was disabled for this inbox
+    System.out.println("SPF check was skipped");
+}
+
+// The validate() method treats "skipped" as passing (not a failure)
+AuthValidation validation = email.getAuthResults().validate();
+// skipped results don't appear in getFailed()
+```
+
+### When to Use emailAuth: false
+
+Disabling email authentication is useful when:
+
+- Testing with SMTP servers that don't have proper DNS records
+- Local development environments
+- Testing email content without caring about authentication
+- High-volume testing where auth checks add latency
+
+```java
+// Create inbox without authentication checks
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+```
+
 ## Validation Helper
 
-The `validate()` method provides a summary of all authentication checks:
+The `validate()` method provides a summary of all authentication checks. Note that `skipped` results are treated as passing (they don't appear in the failed list):
 
 ```java
 AuthValidation validation = email.getAuthResults().validate();
@@ -570,7 +641,7 @@ void debugAuthResults(Email email) {
     System.out.println("DMARC: " + (dmarc != null ? dmarc.getResult() : "N/A"));
 
     ReverseDnsResult rdns = auth.getReverseDns();
-    System.out.println("rDNS: " + (rdns != null ? rdns.isVerified() : "N/A"));
+    System.out.println("rDNS: " + (rdns != null ? rdns.getResult() : "N/A"));
 
     AuthValidation validation = auth.validate();
     System.out.println("Passed: " + validation.getPassed());

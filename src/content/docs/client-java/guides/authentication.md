@@ -28,12 +28,14 @@ assertThat(validation.isFullyAuthenticated())
 
 VaultSandbox validates four authentication mechanisms:
 
-| Mechanism       | Purpose                           | Result Values                                             |
-| --------------- | --------------------------------- | --------------------------------------------------------- |
-| **SPF**         | Validates sender IP is authorized | pass, fail, softfail, neutral, none, temperror, permerror |
-| **DKIM**        | Validates email signature         | pass, fail, none                                          |
-| **DMARC**       | Policy enforcement for SPF/DKIM   | pass, fail, none                                          |
-| **Reverse DNS** | Validates PTR record              | pass, fail, none                                          |
+| Mechanism       | Purpose                           | Result Values                                                      |
+| --------------- | --------------------------------- | ------------------------------------------------------------------ |
+| **SPF**         | Validates sender IP is authorized | pass, fail, softfail, neutral, none, temperror, permerror, skipped |
+| **DKIM**        | Validates email signature         | pass, fail, none, skipped                                          |
+| **DMARC**       | Policy enforcement for SPF/DKIM   | pass, fail, none, skipped                                          |
+| **Reverse DNS** | Validates PTR record              | pass, fail, none, skipped                                          |
+
+**Note:** The `skipped` status appears when the inbox was created with `emailAuth: false`, or when the server has globally disabled that check.
 
 ## Testing Individual Mechanisms
 
@@ -118,7 +120,7 @@ void shouldHaveValidReverseDns() {
     Email email = inbox.waitForEmail(Duration.ofSeconds(30));
     ReverseDnsResult rdns = email.getAuthResults().getReverseDns();
 
-    assertThat(rdns.isVerified()).isTrue();
+    assertThat(rdns.getResult()).isEqualToIgnoringCase("pass");
     assertThat(rdns.getHostname()).isNotBlank();
     assertThat(rdns.getIp()).isNotBlank();
 }
@@ -145,8 +147,8 @@ void shouldPassAllAuthentication() {
     assertThat(auth.getDmarc().getResult())
         .isEqualToIgnoringCase("pass");
 
-    assertThat(auth.getReverseDns().isVerified())
-        .isTrue();
+    assertThat(auth.getReverseDns().getResult())
+        .isEqualToIgnoringCase("pass");
 
     // Or use the validation helper
     AuthValidation validation = auth.validate();
@@ -318,6 +320,62 @@ void shouldAuthenticateAllEmailTypes() {
 }
 ```
 
+## Handling Skipped Authentication
+
+When an inbox is created with `emailAuth: false`, all authentication results will return `skipped`. The `validate()` method treats `skipped` as passing (not a failure).
+
+### Creating Inbox Without Auth Checks
+
+```java
+// Create inbox without authentication checks
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+
+// All auth results will show "skipped"
+Email email = inbox.waitForEmail(Duration.ofSeconds(30));
+SpfResult spf = email.getAuthResults().getSpf();
+System.out.println(spf.getResult());  // "skipped"
+```
+
+### Detecting Skipped Results
+
+```java
+Email email = inbox.waitForEmail(Duration.ofSeconds(30));
+AuthResults auth = email.getAuthResults();
+
+if ("skipped".equals(auth.getSpf().getResult())) {
+    System.out.println("SPF check was disabled for this inbox");
+}
+
+// The validate() method treats "skipped" as passing
+AuthValidation validation = auth.validate();
+// skipped results don't appear in getFailed()
+```
+
+### When to Disable Auth Checks
+
+Disabling authentication is useful for:
+
+- **Local development** - Test SMTP servers often lack proper DNS records
+- **High-volume testing** - Auth checks add latency
+- **Testing email content** - When authentication isn't relevant to the test
+- **CI/CD pipelines** - Using simple SMTP test servers
+
+```java
+// Production test - require full authentication
+Inbox productionInbox = client.createInbox();
+
+// Development test - skip authentication
+Inbox devInbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .emailAuth(false)
+        .build()
+);
+```
+
 ## Handling Missing Authentication
 
 Some emails may not have authentication results available:
@@ -393,8 +451,7 @@ void debugAuthResults(Email email) {
     ReverseDnsResult rdns = auth.getReverseDns();
     if (rdns != null) {
         System.out.printf("Reverse DNS: %s (ip: %s, hostname: %s)%n",
-            rdns.isVerified() ? "verified" : "not verified",
-            rdns.getIp(), rdns.getHostname());
+            rdns.getResult(), rdns.getIp(), rdns.getHostname());
     }
 
     // Summary

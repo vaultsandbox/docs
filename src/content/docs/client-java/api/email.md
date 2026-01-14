@@ -262,12 +262,12 @@ if (validation.hasSpf() && validation.hasDkim()) {
 
 SPF (Sender Policy Framework) validation result.
 
-| Property  | Type     | Description                                               |
-| --------- | -------- | --------------------------------------------------------- |
-| `result`  | `String` | pass, fail, softfail, neutral, none, temperror, permerror |
-| `domain`  | `String` | Checked domain                                            |
-| `ip`      | `String` | IP address of the sending server                          |
-| `details` | `String` | Additional explanation about the result                   |
+| Property  | Type     | Description                                                        |
+| --------- | -------- | ------------------------------------------------------------------ |
+| `result`  | `String` | pass, fail, softfail, neutral, none, temperror, permerror, skipped |
+| `domain`  | `String` | Checked domain                                                     |
+| `ip`      | `String` | IP address of the sending server                                   |
+| `details` | `String` | Additional explanation about the result                            |
 
 ### Getters
 
@@ -282,12 +282,12 @@ public String getDetails()
 
 DKIM (DomainKeys Identified Mail) signature result.
 
-| Property    | Type     | Description                |
-| ----------- | -------- | -------------------------- |
-| `result`    | `String` | pass, fail, none           |
-| `domain`    | `String` | Signing domain             |
-| `selector`  | `String` | DKIM selector used         |
-| `signature` | `String` | DKIM signature information |
+| Property    | Type     | Description                        |
+| ----------- | -------- | ---------------------------------- |
+| `result`    | `String` | pass, fail, none, skipped          |
+| `domain`    | `String` | Signing domain                     |
+| `selector`  | `String` | DKIM selector used                 |
+| `signature` | `String` | DKIM signature information         |
 
 ### Getters
 
@@ -306,7 +306,7 @@ DMARC (Domain-based Message Authentication) result.
 
 | Property  | Type      | Description                                        |
 | --------- | --------- | -------------------------------------------------- |
-| `result`  | `String`  | pass, fail, none                                   |
+| `result`  | `String`  | pass, fail, none, skipped                          |
 | `domain`  | `String`  | From domain                                        |
 | `policy`  | `String`  | none, quarantine, reject                           |
 | `aligned` | `Boolean` | Whether SPF/DKIM align with the From header domain |
@@ -325,19 +325,46 @@ public boolean isAligned()   // Returns true if aligned, false otherwise
 
 Reverse DNS verification result.
 
-| Property   | Type      | Description                             |
-| ---------- | --------- | --------------------------------------- |
-| `verified` | `boolean` | Whether reverse DNS verification passed |
-| `ip`       | `String`  | IP address of the sending server        |
-| `hostname` | `String`  | Resolved hostname from PTR record       |
+| Property   | Type     | Description                                   |
+| ---------- | -------- | --------------------------------------------- |
+| `result`   | `String` | Result: pass, fail, none, skipped             |
+| `ip`       | `String` | IP address of the sending server              |
+| `hostname` | `String` | Resolved hostname from PTR record             |
+
+### Status Values
+
+| Status    | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| `pass`    | PTR record matches and resolves correctly        |
+| `fail`    | PTR record doesn't match or doesn't resolve      |
+| `none`    | No PTR record found                              |
+| `skipped` | Check was skipped (inbox has `emailAuth: false`) |
 
 ### Getters
 
 ```java
-public boolean isVerified()
+public String getResult()
+public boolean isVerified()   // Convenience: returns true if result is "pass"
 public String getIp()
 public String getHostname()
 ```
+
+:::caution[Breaking Change in v0.7.0]
+The `reverseDns` field now uses `result: String` instead of `verified: boolean`.
+
+**Migration:** Replace `isVerified()` or `verified == true` checks with `"pass".equals(getResult())`:
+
+```java
+// Before (v0.6.x)
+if (rdns.isVerified()) { ... }
+
+// After (v0.7.0) - preferred
+if ("pass".equals(rdns.getResult())) { ... }
+
+// Or use convenience method (still works)
+if (rdns.isVerified()) { ... }  // isVerified() returns result.equals("pass")
+```
+:::
 
 ## Examples
 
@@ -437,8 +464,7 @@ if (auth.getDmarc() != null) {
 }
 
 if (auth.getReverseDns() != null) {
-    System.out.println("Reverse DNS: " +
-        (auth.getReverseDns().isVerified() ? "verified" : "not verified") +
+    System.out.println("Reverse DNS: " + auth.getReverseDns().getResult() +
         " (ip: " + auth.getReverseDns().getIp() +
         ", hostname: " + auth.getReverseDns().getHostname() + ")");
 }

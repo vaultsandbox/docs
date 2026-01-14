@@ -26,9 +26,11 @@ vsb inbox create [flags]
 
 ### Flags
 
-| Flag    | Description                                     | Default |
-| ------- | ----------------------------------------------- | ------- |
-| `--ttl` | Time-to-live duration (e.g., `1h`, `24h`, `7d`) | `24h`   |
+| Flag           | Description                                                                 | Default        |
+| -------------- | --------------------------------------------------------------------------- | -------------- |
+| `--ttl`        | Time-to-live duration (e.g., `1h`, `24h`, `7d`)                             | `24h`          |
+| `--email-auth` | Enable/disable SPF/DKIM/DMARC/PTR authentication checks (`true` or `false`) | Server default |
+| `--encryption` | Request encryption mode (`encrypted` or `plain`)                            | Server default |
 
 ### Examples
 
@@ -39,6 +41,15 @@ vsb inbox create
 # Create inbox with custom TTL
 vsb inbox create --ttl 1h
 vsb inbox create --ttl 7d
+
+# Create inbox without email authentication checks
+vsb inbox create --email-auth=false
+
+# Create unencrypted inbox (if server policy allows)
+vsb inbox create --encryption=plain
+
+# Combine options
+vsb inbox create --ttl 7d --email-auth=true --encryption=encrypted
 
 # Create inbox and output JSON (useful for scripting)
 vsb inbox create -o json

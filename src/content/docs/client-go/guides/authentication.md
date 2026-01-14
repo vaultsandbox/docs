@@ -53,9 +53,43 @@ if auth.DMARC != nil {
 	fmt.Printf("DMARC: %s (aligned: %v)\n", auth.DMARC.Result, auth.DMARC.Aligned)
 }
 if auth.ReverseDNS != nil {
-	fmt.Printf("Reverse DNS verified: %v\n", auth.ReverseDNS.Verified)
+	fmt.Printf("Reverse DNS: %s\n", auth.ReverseDNS.Result)
 }
 ```
+
+## Disabling Authentication Checks
+
+You can disable email authentication checks when creating an inbox using `WithEmailAuth(false)`. This is useful for testing scenarios where you don't need authentication validation.
+
+```go
+// Create inbox with authentication disabled
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAuth(false))
+if err != nil {
+    log.Fatal(err)
+}
+
+// All auth results will have status "skipped"
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+    log.Fatal(err)
+}
+
+// Check if authentication was skipped
+if email.AuthResults.SPF != nil && email.AuthResults.SPF.Result == "skipped" {
+    fmt.Println("SPF check was skipped for this inbox")
+}
+
+// Validate() treats "skipped" as passing (not a failure)
+validation := email.AuthResults.Validate()
+fmt.Printf("Validation passed: %v\n", validation.Passed) // true
+```
+
+### When to Disable Authentication
+
+- Testing email content without authentication overhead
+- Testing with internal SMTP servers that don't have SPF/DKIM configured
+- Faster test execution when authentication isn't the focus
+- Development environments without DNS configuration
 
 ## Testing SPF
 
@@ -304,18 +338,15 @@ func TestServerHasValidReverseDNS(t *testing.T) {
 
 	rdns := email.AuthResults.ReverseDNS
 	if rdns != nil {
-		if !rdns.Verified {
-			t.Error("expected reverse DNS to be verified")
+		if rdns.Result != "pass" {
+			t.Errorf("expected reverse DNS to pass, got %s", rdns.Result)
 		}
 		if rdns.Hostname == "" {
 			t.Error("expected hostname to be set")
 		}
 
 		t.Logf("Reverse DNS: %s -> %s", rdns.IP, rdns.Hostname)
-		t.Logf("Verified: %v", rdns.Verified)
-		if rdns.Info != "" {
-			t.Logf("Info: %s", rdns.Info)
-		}
+		t.Logf("Result: %s", rdns.Result)
 	}
 }
 ```
@@ -616,12 +647,9 @@ func logAuthenticationDetails(email *vaultsandbox.Email) {
 	if auth.ReverseDNS != nil {
 		fmt.Println()
 		fmt.Println("Reverse DNS:")
-		fmt.Printf("  Verified: %v\n", auth.ReverseDNS.Verified)
+		fmt.Printf("  Result: %s\n", auth.ReverseDNS.Result)
 		fmt.Printf("  IP: %s\n", auth.ReverseDNS.IP)
 		fmt.Printf("  Hostname: %s\n", auth.ReverseDNS.Hostname)
-		if auth.ReverseDNS.Info != "" {
-			fmt.Printf("  Info: %s\n", auth.ReverseDNS.Info)
-		}
 	}
 
 	// Validation Summary
@@ -660,6 +688,8 @@ if email.AuthResults.IsPassing() {
 ```
 
 **Note**: `IsPassing()` is equivalent to `Validate().Passed` and checks SPF, DKIM, and DMARC. Reverse DNS is not included in this check.
+
+Both `IsPassing()` and `Validate()` treat `"skipped"` status as passing. If you create an inbox with `WithEmailAuth(false)`, all auth results will have status `"skipped"` and validation will pass.
 
 ## Next Steps
 

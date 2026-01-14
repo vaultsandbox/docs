@@ -129,12 +129,28 @@ func (c *Client) CreateInbox(ctx context.Context, opts ...InboxOption) (*Inbox, 
 // Available inbox options
 WithTTL(ttl time.Duration) InboxOption
 WithEmailAddress(email string) InboxOption
+WithEmailAuth(enabled bool) InboxOption
+WithEncryption(mode EncryptionMode) InboxOption
 ```
 
-| Option             | Type            | Description                                                            |
-| ------------------ | --------------- | ---------------------------------------------------------------------- |
-| `WithTTL`          | `time.Duration` | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)    |
-| `WithEmailAddress` | `string`        | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`) |
+| Option             | Type             | Description                                                            |
+| ------------------ | ---------------- | ---------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)    |
+| `WithEmailAddress` | `string`         | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`) |
+| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)        |
+| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox (`EncryptionModeEncrypted`, `EncryptionModePlain`) |
+
+#### Encryption Mode
+
+```go
+type EncryptionMode string
+
+const (
+    EncryptionModeDefault   EncryptionMode = ""          // Use server default
+    EncryptionModeEncrypted EncryptionMode = "encrypted" // Request encrypted inbox
+    EncryptionModePlain     EncryptionMode = "plain"     // Request plain inbox
+)
+```
 
 #### Returns
 
@@ -160,14 +176,23 @@ inbox, err := client.CreateInbox(ctx, vaultsandbox.WithTTL(time.Hour))
 inbox, err := client.CreateInbox(ctx,
     vaultsandbox.WithEmailAddress("mytest@inbox.vaultsandbox.com"),
 )
+
+// Create inbox with email authentication disabled
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAuth(false))
+
+// Create a plain (unencrypted) inbox (when server policy allows)
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain))
 ```
 
 #### Errors
 
 - `ErrUnauthorized` - Invalid API key
-- `ErrInboxAlreadyExists` - Requested email address is already in use
+- `ErrInboxAlreadyExists` - Requested email address or KEM public key is already in use
 - `*NetworkError` - Network connection failure
 - `*APIError` - API-level error (invalid request, permission denied)
+  - 400: `clientKemPk is required when encryption is enabled`
+  - 409: `An inbox with the same client KEM public key already exists` (encrypted inboxes)
+  - 409: `An inbox with this email address already exists` (plain inboxes)
 
 ---
 
@@ -232,17 +257,49 @@ func (c *Client) ServerInfo() *ServerInfo
 
 ```go
 type ServerInfo struct {
-    AllowedDomains []string
-    MaxTTL         time.Duration
-    DefaultTTL     time.Duration
+    AllowedDomains   []string
+    MaxTTL           time.Duration
+    DefaultTTL       time.Duration
+    EncryptionPolicy EncryptionPolicy
 }
 ```
 
-| Field            | Type            | Description                                |
-| ---------------- | --------------- | ------------------------------------------ |
-| `AllowedDomains` | `[]string`      | List of domains allowed for inbox creation |
-| `MaxTTL`         | `time.Duration` | Maximum time-to-live for inboxes           |
-| `DefaultTTL`     | `time.Duration` | Default time-to-live for inboxes           |
+| Field              | Type               | Description                                |
+| ------------------ | ------------------ | ------------------------------------------ |
+| `AllowedDomains`   | `[]string`         | List of domains allowed for inbox creation |
+| `MaxTTL`           | `time.Duration`    | Maximum time-to-live for inboxes           |
+| `DefaultTTL`       | `time.Duration`    | Default time-to-live for inboxes           |
+| `EncryptionPolicy` | `EncryptionPolicy` | Server's encryption policy for inboxes     |
+
+#### Encryption Policy
+
+```go
+type EncryptionPolicy string
+
+const (
+    EncryptionPolicyAlways   EncryptionPolicy = "always"   // All inboxes encrypted, no override
+    EncryptionPolicyEnabled  EncryptionPolicy = "enabled"  // Encrypted by default, can request plain
+    EncryptionPolicyDisabled EncryptionPolicy = "disabled" // Plain by default, can request encrypted
+    EncryptionPolicyNever    EncryptionPolicy = "never"    // All inboxes plain, no override
+)
+```
+
+| Policy     | Default Encryption | Per-Inbox Override |
+|------------|-------------------|-------------------|
+| `always`   | Encrypted         | No - all inboxes encrypted |
+| `enabled`  | Encrypted         | Yes - can request plain |
+| `disabled` | Plain             | Yes - can request encrypted |
+| `never`    | Plain             | No - all inboxes plain |
+
+**Helper Methods:**
+
+```go
+// CanOverride returns true if the policy allows per-inbox encryption override
+func (p EncryptionPolicy) CanOverride() bool
+
+// DefaultEncrypted returns true if encryption is the default for this policy
+func (p EncryptionPolicy) DefaultEncrypted() bool
+```
 
 #### Example
 
@@ -250,6 +307,17 @@ type ServerInfo struct {
 info := client.ServerInfo()
 fmt.Printf("Max TTL: %v, Default TTL: %v\n", info.MaxTTL, info.DefaultTTL)
 fmt.Printf("Allowed domains: %v\n", info.AllowedDomains)
+fmt.Printf("Encryption policy: %s\n", info.EncryptionPolicy)
+
+// Check if we can override encryption settings
+if info.EncryptionPolicy.CanOverride() {
+    fmt.Println("Per-inbox encryption override is allowed")
+}
+
+// Check default encryption state
+if info.EncryptionPolicy.DefaultEncrypted() {
+    fmt.Println("Inboxes are encrypted by default")
+}
 ```
 
 ---
@@ -533,13 +601,15 @@ func (c *Client) ImportInbox(ctx context.Context, data *ExportedInbox) (*Inbox, 
 
 ```go
 type ExportedInbox struct {
+    Version      int       `json:"version"`
     EmailAddress string    `json:"emailAddress"`
     ExpiresAt    time.Time `json:"expiresAt"`
     InboxHash    string    `json:"inboxHash"`
-    ServerSigPk  string    `json:"serverSigPk"`
-    PublicKeyB64 string    `json:"publicKeyB64"`
-    SecretKeyB64 string    `json:"secretKeyB64"`
+    ServerSigPk  string    `json:"serverSigPk,omitempty"`  // Only present for encrypted inboxes
+    SecretKey    string    `json:"secretKey,omitempty"`    // Only present for encrypted inboxes
     ExportedAt   time.Time `json:"exportedAt"`
+    EmailAuth    bool      `json:"emailAuth"`
+    Encrypted    bool      `json:"encrypted"`
 }
 ```
 

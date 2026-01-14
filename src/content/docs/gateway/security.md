@@ -5,11 +5,15 @@ description: Deep dive into VaultSandbox's zero-knowledge security architecture 
 
 VaultSandbox implements a zero-knowledge security architecture using quantum-safe cryptography. This guide explains how the system protects your email data.
 
+:::note[Encryption is configurable]
+The gateway supports both encrypted and plain storage modes. The security features described in this guide apply to **encrypted mode** (the default). When using plain mode, emails are stored without encryption. See [Encryption Policy](/gateway/configuration/#encryption-policy) for configuration options.
+:::
+
 ## Zero-Knowledge Architecture
 
-### Core Principle
+### Core Principle (Encrypted Mode)
 
-**The server never stores your plaintext emails.**
+**In encrypted mode, the server never stores your plaintext emails.**
 
 The gateway receives emails via SMTP in plaintext, immediately encrypts them with your public key, and discards the plaintext. The gateway:
 
@@ -322,6 +326,8 @@ Inbox Deleted → Keypair Destroyed
 
 ### What the Server Knows
 
+**Encrypted Mode (default):**
+
 | Data                   | Server Can See      |
 | ---------------------- | ------------------- |
 | Email arrived          | ✅ Yes              |
@@ -335,6 +341,10 @@ Inbox Deleted → Keypair Destroyed
 | Attachments            | ❌ No (encrypted)   |
 | Email links            | ❌ No (encrypted)   |
 | Private keys           | ❌ No (client-only) |
+
+**Plain Mode:**
+
+When using plain storage mode (`VSB_ENCRYPTION_ENABLED=never` or `disabled`), emails are stored without encryption. The API returns email content as Base64-encoded JSON. In this mode, the server can see all email content. Use plain mode only for development/testing scenarios where encryption is not required.
 
 ### Metadata Leakage
 

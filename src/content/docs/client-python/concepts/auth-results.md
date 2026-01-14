@@ -60,6 +60,7 @@ if spf:
 | `TEMPERROR` | Temporary error during check               |
 | `PERMERROR` | Permanent error in SPF record              |
 | `NONE`      | No SPF record found                        |
+| `SKIPPED`   | Check was skipped (see below)              |
 
 ### SPF Example
 
@@ -100,11 +101,12 @@ if dkim:
 
 ### DKIM Status Values
 
-| Status | Meaning                 |
-| ------ | ----------------------- |
-| `PASS` | Signature is valid      |
-| `FAIL` | Signature is invalid    |
-| `NONE` | No DKIM signature found |
+| Status    | Meaning                       |
+| --------- | ----------------------------- |
+| `PASS`    | Signature is valid            |
+| `FAIL`    | Signature is invalid          |
+| `NONE`    | No DKIM signature found       |
+| `SKIPPED` | Check was skipped (see below) |
 
 ### DKIM Example
 
@@ -142,11 +144,12 @@ if dmarc:
 
 ### DMARC Status Values
 
-| Status | Meaning                                  |
-| ------ | ---------------------------------------- |
-| `PASS` | DMARC check passed (SPF or DKIM aligned) |
-| `FAIL` | DMARC check failed                       |
-| `NONE` | No DMARC policy found                    |
+| Status    | Meaning                                  |
+| --------- | ---------------------------------------- |
+| `PASS`    | DMARC check passed (SPF or DKIM aligned) |
+| `FAIL`    | DMARC check failed                       |
+| `NONE`    | No DMARC policy found                    |
+| `SKIPPED` | Check was skipped (see below)            |
 
 ### DMARC Policies
 
@@ -179,29 +182,106 @@ Verifies the sending server's IP resolves to a hostname that matches the sending
 ### Reverse DNS Result Structure
 
 ```python
+from vaultsandbox.types import ReverseDNSStatus
+
 reverse_dns = email.auth_results.reverse_dns
 
 if reverse_dns:
-    print(reverse_dns.verified)   # True if verified, False otherwise
+    print(reverse_dns.result)     # ReverseDNSStatus.PASS, FAIL, NONE, or SKIPPED
     print(reverse_dns.ip)         # Server IP
     print(reverse_dns.hostname)   # Resolved hostname (may be None)
 ```
 
+### Reverse DNS Status Values
+
+| Status    | Meaning                                          |
+| --------- | ------------------------------------------------ |
+| `PASS`    | IP resolves to hostname matching sender domain   |
+| `FAIL`    | IP doesn't resolve or hostname doesn't match     |
+| `NONE`    | No reverse DNS record found                      |
+| `SKIPPED` | Check was skipped (see below)                    |
+
 ### Reverse DNS Example
 
 ```python
+from vaultsandbox.types import ReverseDNSStatus
+
 email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
 
 if email.auth_results.reverse_dns:
     rdns = email.auth_results.reverse_dns
 
     print(f"Reverse DNS: {rdns.ip} → {rdns.hostname}")
-    print(f"Verified: {rdns.verified}")
+    print(f"Result: {rdns.result.value}")
+
+    if rdns.result == ReverseDNSStatus.PASS:
+        print("Reverse DNS verified")
+```
+
+### Migration Note
+
+**Breaking Change in 0.7.0**: The `verified` boolean field has been replaced with `result` string field.
+
+**Before (< 0.7.0)**:
+```python
+if reverse_dns.verified:  # True/False
+    print("Verified")
+```
+
+**After (0.7.0+)**:
+```python
+from vaultsandbox.types import ReverseDNSStatus
+
+if reverse_dns.result == ReverseDNSStatus.PASS:
+    print("Verified")
+```
+
+## Skipped Status
+
+All authentication checks (SPF, DKIM, DMARC, Reverse DNS) can return a `SKIPPED` status, indicating the check was not performed.
+
+### When Skipped Appears
+
+The `skipped` status appears when:
+
+- **Inbox has `email_auth: False`** - Authentication was disabled for this inbox
+- **Server has globally disabled that check** - Server configuration skips certain checks
+- **Master switch is off** - Server has `VSB_EMAIL_AUTH_ENABLED=false` set
+
+### Handling Skipped Results
+
+```python
+from vaultsandbox.types import SPFStatus
+
+email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
+
+if email.auth_results.spf:
+    if email.auth_results.spf.result == SPFStatus.SKIPPED:
+        print("SPF check was skipped for this inbox")
+    elif email.auth_results.spf.result == SPFStatus.PASS:
+        print("SPF passed")
+```
+
+### Validation with Skipped
+
+The `validate()` method treats `skipped` as **not a failure** - it's informational. When all checks are skipped, validation passes (since there are no failures).
+
+```python
+# Inbox with email_auth=False
+inbox = await client.create_inbox(CreateInboxOptions(email_auth=False))
+
+# ... receive email ...
+
+email = await inbox.wait_for_email(WaitForEmailOptions(timeout=10000))
+validation = email.auth_results.validate()
+
+# validation.passed will be True (no failures, just skipped)
+# validation.failures will be []
 ```
 
 ## Validation Helper
 
-The `validate()` method provides a summary of all authentication checks. It requires explicit `pass` status for each check - `none` or other statuses are considered failures.
+The `validate()` method provides a summary of all authentication checks. The `skipped` status is treated as passing (not a failure) - only explicit failures like `FAIL` are counted.
 
 ```python
 validation = email.auth_results.validate()
