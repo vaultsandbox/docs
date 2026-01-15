@@ -31,39 +31,21 @@ Create a `docker-compose.yml` file:
 services:
   gateway:
     image: vaultsandbox/gateway:latest
-    container_name: vaultsandbox-gateway-local
-    restart: unless-stopped
     ports:
-      - '127.0.0.1:2525:25' # SMTP on localhost only
-      - '127.0.0.1:8080:80' # HTTP Web UI on localhost only
-    environment:
-      # Accept emails for any domain (development mode)
-      VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS: 'localhost'
-
-      # Disable email authentication checks (SPF/DKIM/DMARC) - not applicable locally
-      # since we don't receive emails from external mail servers
-      VSB_EMAIL_AUTH_ENABLED: 'false'
-
-      # Disable response encryption for direct API access without an SDK
-      # VSB_ENCRYPTION_ENABLED: 'never'
-
-      # Disable TLS/HTTPS (local development only)
-      VSB_CERT_ENABLED: 'false'
-
-      # Optional: Set a fixed API key for convenience (minimum 32 characters)
-      # VSB_API_KEY: 'dev-api-key-change-me-at-least-32-chars'
+      - '127.0.0.1:2525:25'   # SMTP
+      - '127.0.0.1:8080:80'   # HTTP API + Web UI
     volumes:
       - gateway-data:/app/data
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost/health']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 volumes:
   gateway-data:
 ```
+
+That's it — zero environment variables needed for local development. The gateway automatically detects dev mode and configures sensible defaults:
+
+- **Allowed domains**: `localhost`
+- **Email authentication**: Disabled (SPF/DKIM/DMARC checks skipped)
+- **API key**: Auto-generated and displayed in logs
 
 ## Starting the Gateway
 
@@ -76,6 +58,21 @@ docker compose logs -f gateway
 
 # Check health status
 curl http://localhost:8080/health
+```
+
+## Retrieving the API Key
+
+The API key is auto-generated on first startup and persisted to a file. Retrieve it with:
+
+```bash
+docker compose exec gateway cat /app/data/.api-key; echo
+```
+
+Alternatively, set a fixed API key by adding to your `docker-compose.yml`:
+
+```yaml
+environment:
+  VSB_LOCAL_API_KEY: 'your-api-key-at-least-32-characters-long'
 ```
 
 ## Accessing the Gateway
@@ -116,10 +113,7 @@ const inbox = await client.createInbox();
 const transporter = nodemailer.createTransport({
 	host: 'localhost',
 	port: 2525,
-	secure: false, // No TLS for local development
-	tls: {
-		rejectUnauthorized: false,
-	},
+	secure: false,
 });
 
 // Send a test email to the inbox's generated address
@@ -138,25 +132,13 @@ console.log('Received:', email.subject);
 await inbox.delete();
 ```
 
-## Retrieving the API Key
-
-On first startup, VaultSandbox generates an API key. Retrieve it from the logs:
-
-```bash
-docker compose exec gateway cat /app/data/.api-key; echo
-```
-
-Alternatively, set a fixed API key in your `docker-compose.yml` by uncommenting the `VSB_API_KEY` environment variable.
-
 ## Using the API
 
 With your API key, you can query captured emails.
 
 :::tip[Direct API Access Without an SDK]
-If no official SDK is available for your language, you can disable response encryption to work directly with the REST API. Set `VSB_ENCRYPTION_ENABLED: 'never'` in your environment variables (already included in the docker-compose example above). This returns plain JSON responses instead of encrypted payloads, making it easier to integrate using standard HTTP clients.
+If no official SDK is available for your language, you can disable response encryption to work directly with the REST API. Add `VSB_ENCRYPTION_ENABLED: 'never'` to your environment variables. This returns plain JSON responses instead of encrypted payloads, making it easier to integrate using standard HTTP clients.
 :::
-
-
 
 ```bash
 # List all emails
@@ -168,28 +150,67 @@ curl -H "X-API-Key: YOUR_API_KEY" http://localhost:8080/api/emails/{id}
 
 See the [API Reference](/gateway/api-reference/) for complete documentation.
 
-## Using with VaultSandbox Node.js Client
+## Enabling Local HTTPS (Optional)
 
-```javascript
-const { VaultSandboxClient } = require('@vaultsandbox/client');
+If you need to test HTTPS locally (e.g., for secure cookies or service workers), we recommend using [mkcert](https://github.com/FiloSottile/mkcert) — a simple tool for making locally-trusted development certificates.
 
-const client = new VaultSandboxClient({
-	url: 'http://localhost:8080',
-	apiKey: 'YOUR_API_KEY',
-});
+### Install mkcert
 
-// Create an inbox (generates a unique email address)
-const inbox = await client.createInbox();
-console.log('Send emails to:', inbox.emailAddress);
+```bash
+# macOS
+brew install mkcert
 
-// Wait for an email to arrive
-const email = await inbox.waitForEmail({ timeout: 5000 });
-console.log('Subject:', email.subject);
-console.log('Text:', email.text);
+# Linux
+sudo apt install libnss3-tools
+curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
+chmod +x mkcert-v*-linux-amd64
+sudo mv mkcert-v*-linux-amd64 /usr/local/bin/mkcert
 
-// Cleanup when done
-await inbox.delete();
+# Windows (with Chocolatey)
+choco install mkcert
 ```
+
+### Generate Certificates
+
+```bash
+# Install the local CA (one-time setup)
+mkcert -install
+
+# Generate certificates for localhost
+mkcert -cert-file localhost.pem -key-file localhost-key.pem localhost 127.0.0.1 ::1
+
+# Ensure the key file is readable by the Docker container
+chmod 644 localhost-key.pem
+```
+
+:::note[File Permissions]
+The private key file must be readable by the Docker container. By default, mkcert creates keys with restrictive permissions (`600`), which will cause a "permission denied" error when the container tries to read it.
+:::
+
+### Use with VaultSandbox Gateway
+
+```yaml
+services:
+  gateway:
+    image: vaultsandbox/gateway:latest
+    ports:
+      - '127.0.0.1:2525:25'   # SMTP
+      - '127.0.0.1:8080:80'   # HTTP
+      - '127.0.0.1:8443:443'  # HTTPS
+    environment:
+      VSB_CERT_ENABLED: 'true'
+      VSB_TLS_CERT_PATH: '/certs/localhost.pem'
+      VSB_TLS_KEY_PATH: '/certs/localhost-key.pem'
+    volumes:
+      - gateway-data:/app/data
+      - ./localhost.pem:/certs/localhost.pem:ro
+      - ./localhost-key.pem:/certs/localhost-key.pem:ro
+
+volumes:
+  gateway-data:
+```
+
+The mkcert CA is automatically trusted by your system browsers and tools after running `mkcert -install`.
 
 ## Stopping the Gateway
 
@@ -226,7 +247,7 @@ docker compose logs gateway
 
 1. Verify your application is sending to `localhost:2525`
 2. Check the gateway logs for incoming connections
-3. Ensure `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` includes your test domain or is set to `*`
+3. Ensure the recipient address ends with `@localhost` (the default in dev mode)
 
 ## Next Steps
 

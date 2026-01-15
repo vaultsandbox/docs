@@ -14,7 +14,7 @@ All environment variables at a glance. See sections below for details.
 | **VSX DNS**                          |                   |                                    |
 | `VSB_VSX_DNS_ENABLED`                | `false`           | Enable automatic DNS via vsx.email |
 | **Custom Domain**                    |                   |                                    |
-| `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | —                 | Domains to accept emails for       |
+| `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` | `localhost`       | Domains to accept emails for       |
 | **SMTP**                             |                   |                                    |
 | `VSB_SMTP_HOST`                      | `0.0.0.0`         | SMTP bind address                  |
 | `VSB_SMTP_PORT`                      | `25`              | SMTP port                          |
@@ -29,8 +29,8 @@ All environment variables at a glance. See sections below for details.
 | `VSB_CERT_EMAIL`                     | —                 | Let's Encrypt email (optional)     |
 | `VSB_CERT_DOMAIN`                    | (auto)            | Primary certificate domain         |
 | `VSB_CERT_STAGING`                   | `false`           | Use staging environment            |
-| `VSB_SMTP_TLS_CERT_PATH`             | —                 | Manual cert path                   |
-| `VSB_SMTP_TLS_KEY_PATH`              | —                 | Manual key path                    |
+| `VSB_TLS_CERT_PATH     `             | —                 | Manual cert path                   |
+| `VSB_TLS_KEY_PATH`                   | —                 | Manual key path                    |
 | `VSB_SMTP_TLS_MIN_VERSION`           | `TLSv1.2`         | Minimum TLS version                |
 | **HTTP Server**                      |                   |                                    |
 | `VSB_SERVER_PORT`                    | `80`              | HTTP port                          |
@@ -58,18 +58,18 @@ All environment variables at a glance. See sections below for details.
 | `VSB_NODE_ID`                        | (auto)            | Node identifier                    |
 | `VSB_CLUSTER_PEERS`                  | —                 | Peer URLs                          |
 | **Encryption**                       |                   |                                    |
-| `VSB_ENCRYPTION_ENABLED`             | `always`          | Encryption policy for inboxes      |
+| `VSB_ENCRYPTION_ENABLED`             | (mode)            | Encryption policy for inboxes      |
 | **Email Authentication**             |                   |                                    |
-| `VSB_EMAIL_AUTH_ENABLED`             | `true`            | Master switch for all auth checks  |
+| `VSB_EMAIL_AUTH_ENABLED`             | (mode)            | Master switch for all auth checks  |
 | `VSB_EMAIL_AUTH_SPF_ENABLED`         | `true`            | SPF verification                   |
 | `VSB_EMAIL_AUTH_DKIM_ENABLED`        | `true`            | DKIM verification                  |
 | `VSB_EMAIL_AUTH_DMARC_ENABLED`       | `true`            | DMARC verification                 |
 | `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true`            | Reverse DNS/PTR verification       |
-| `VSB_EMAIL_AUTH_INBOX_DEFAULT`       | `true`            | Default emailAuth for new inboxes  |
+| `VSB_EMAIL_AUTH_INBOX_DEFAULT`       | (mode)            | Default emailAuth for new inboxes  |
 | **Other**                            |                   |                                    |
 | `NODE_ENV`                           | `production`      | Environment                        |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
-| `VSB_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)   |
+| `VSB_SDK_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)   |
 
 ## Configuration Methods
 
@@ -124,7 +124,9 @@ Use your own domain instead of VSX DNS. Requires manual DNS configuration.
 
 ### VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS
 
-**Description**: Comma-separated list of domains to accept emails for. The gateway will reject emails addressed to other domains. **Required when not using VSX DNS.**
+**Description**: Comma-separated list of domains to accept emails for. The gateway will reject emails addressed to other domains.
+
+**Default**: `localhost` (dev mode)
 
 **Example**:
 
@@ -137,6 +139,16 @@ VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS=mail.example.com,sandbox.example.com
 - SMTP RCPT TO validation
 - Default domain for ACME certificates (first domain in list)
 - Auto-derived CORS origin (if `VSB_SERVER_ORIGIN` not set)
+- **Dev mode detection**: When not set, the gateway enters dev mode with relaxed defaults
+
+:::tip[Dev Mode]
+When this variable is not set (or empty), the gateway automatically enters **dev mode**:
+- Defaults to `localhost` for easy local testing
+- Email authentication checks are disabled by default
+- API key is displayed in startup logs
+
+This allows zero-config local development. Simply run the container without any environment variables.
+:::
 
 :::note[Not needed with VSX DNS]
 When `VSB_VSX_DNS_ENABLED=true`, the allowed recipient domain is automatically configured based on your assigned vsx.email subdomain.
@@ -256,8 +268,8 @@ If not using automatic certificate management, provide paths to your certificate
 
 | Variable                 | Default | Description                                    |
 | :----------------------- | :------ | :--------------------------------------------- |
-| `VSB_SMTP_TLS_CERT_PATH` | (empty) | Path to the TLS certificate file (PEM format). |
-| `VSB_SMTP_TLS_KEY_PATH`  | (empty) | Path to the TLS private key file (PEM format). |
+| `VSB_TLS_CERT_PATH`      | (empty) | Path to the TLS certificate file (PEM format). |
+| `VSB_TLS_KEY_PATH`       | (empty) | Path to the TLS private key file (PEM format). |
 
 **Note**: Both paths must be provided together. For automatic certificate management, use `VSB_CERT_ENABLED=true` instead.
 
@@ -506,9 +518,9 @@ If `VSB_GATEWAY_MODE` is `backend`, or if `VSB_ORCHESTRATION_ENABLED` is `true`,
 | :------------------------ | :----------- | :--------------------------------------------------------------------------- |
 | `NODE_ENV`                | `production` | Application environment (`development` or `production`).                     |
 | `VSB_SSE_CONSOLE_ENABLED` | `true`       | Enable Server-Sent Events console for real-time logs.                        |
-| `VSB_DEVELOPMENT`         | `false`      | Enable development mode. Exposes test endpoints for SDK testing (see below). |
+| `VSB_SDK_DEVELOPMENT`         | `false`      | Enable development mode. Exposes test endpoints for SDK testing (see below). |
 
-### VSB_DEVELOPMENT
+### VSB_SDK_DEVELOPMENT
 
 **Description**: Enables development-only features, including a test endpoint for creating emails with controlled authentication results. Useful for SDK development and testing email auth flows without SMTP infrastructure.
 
@@ -517,7 +529,7 @@ If `VSB_GATEWAY_MODE` is `backend`, or if `VSB_ORCHESTRATION_ENABLED` is `true`,
 **Example**:
 
 ```bash
-VSB_DEVELOPMENT=true
+VSB_SDK_DEVELOPMENT=true
 ```
 
 :::caution[Not for production]
@@ -538,7 +550,9 @@ Control whether emails are stored encrypted or in plain text.
 
 **Description**: Encryption policy for email storage. Controls whether inboxes use quantum-safe encryption (ML-KEM-768 + AES-256-GCM) or store emails in plain text.
 
-**Default**: `always`
+**Default**:
+- `disabled` in dev mode (plain by default, but can request encrypted inboxes)
+- `always` in production mode (secure by default)
 
 **Values**:
 
@@ -584,13 +598,20 @@ Control SPF, DKIM, DMARC, and reverse DNS validation for incoming emails.
 
 **Description**: Master switch for all email authentication checks. When `false`, all checks are skipped globally and return `status: 'skipped'`.
 
-**Default**: `true`
+**Default**:
+- `false` in dev mode (when `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` is not set)
+- `true` in production mode (when a domain is configured)
 
 **Example**:
 
 ```bash
 VSB_EMAIL_AUTH_ENABLED=false  # Skip all auth checks globally
+VSB_EMAIL_AUTH_ENABLED=true   # Enable auth checks (override dev mode default)
 ```
+
+:::note[Dev Mode Default]
+In dev mode, email authentication is disabled by default because SPF/DKIM/DMARC checks require public DNS infrastructure that isn't available in local development. You can still explicitly enable it by setting `VSB_EMAIL_AUTH_ENABLED=true`.
+:::
 
 ### Individual Authentication Checks
 
@@ -617,7 +638,9 @@ VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED=false
 
 **Description**: Default `emailAuth` setting for new inboxes when clients don't specify a preference.
 
-**Default**: `true`
+**Default**:
+- `false` in dev mode (no auth checks on new inboxes by default)
+- `true` in production mode (auth checks enabled by default)
 
 **Example**:
 

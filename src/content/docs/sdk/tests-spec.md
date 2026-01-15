@@ -499,7 +499,7 @@ Tests should respect these environment variables:
 
 ## 9. Development Test Endpoint
 
-When `VSB_DEVELOPMENT=true` is set on the gateway, a test endpoint becomes available that allows creating emails with controlled authentication results. This eliminates the need for a real SMTP server when testing email authentication flows in SDK implementations.
+When `VSB_SDK_DEVELOPMENT=true` is set on the gateway, a test endpoint becomes available that allows creating emails with controlled authentication results. This eliminates the need for a real SMTP server when testing email authentication flows in SDK implementations.
 
 ### 9.1 Endpoint Overview
 
@@ -507,7 +507,7 @@ When `VSB_DEVELOPMENT=true` is set on the gateway, a test endpoint becomes avail
 | -------------- | -------------------------------- |
 | Endpoint       | `POST /api/test/emails`          |
 | Authentication | API Key (`X-API-Key` header)     |
-| Availability   | Only when `VSB_DEVELOPMENT=true` |
+| Availability   | Only when `VSB_SDK_DEVELOPMENT=true` |
 
 ### 9.2 Request Schema
 
