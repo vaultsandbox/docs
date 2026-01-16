@@ -661,6 +661,331 @@ with open("inbox-backup.json", "w") as f:
 
 Exported data contains private encryption keys. Store securely!
 
+## Webhook Methods
+
+The Inbox class provides methods for managing webhooks that receive HTTP callbacks when events occur.
+
+### create_webhook()
+
+Creates a new webhook for this inbox.
+
+```python
+async def create_webhook(
+    self,
+    url: str,
+    events: list[str],
+    *,
+    template: str | CustomTemplate | None = None,
+    filter: FilterConfig | None = None,
+    description: str | None = None,
+) -> Webhook
+```
+
+#### Parameters
+
+- `url`: Target URL for webhook deliveries (HTTPS required in production)
+- `events`: Event types to subscribe to (e.g., `["email.received"]`)
+- `template`: Optional payload template name (`"slack"`, `"discord"`, etc.) or `CustomTemplate`
+- `filter`: Optional `FilterConfig` to only receive matching events
+- `description`: Optional human-readable description (max 500 chars)
+
+#### Returns
+
+`Webhook` - The created webhook including the signing secret
+
+#### Example
+
+```python
+webhook = await inbox.create_webhook(
+    url="https://your-app.com/webhook/emails",
+    events=["email.received"],
+    description="Production email notifications",
+)
+
+print(f"Webhook ID: {webhook.id}")
+print(f"Secret: {webhook.secret}")  # Save this!
+```
+
+#### Errors
+
+- `WebhookLimitReachedError` - Webhook limit for this inbox is reached
+
+---
+
+### list_webhooks()
+
+Lists all webhooks for this inbox.
+
+```python
+async def list_webhooks(self) -> list[Webhook]
+```
+
+#### Returns
+
+`list[Webhook]` - List of webhook objects
+
+**Note**: The signing secret is not included in list responses. Use `get_webhook()` to retrieve a webhook with its secret.
+
+#### Example
+
+```python
+webhooks = await inbox.list_webhooks()
+
+print(f"Total webhooks: {len(webhooks)}")
+for webhook in webhooks:
+    status = "enabled" if webhook.enabled else "disabled"
+    print(f"- {webhook.id}: {webhook.url} ({status})")
+```
+
+---
+
+### get_webhook()
+
+Retrieves a specific webhook by ID.
+
+```python
+async def get_webhook(self, webhook_id: str) -> Webhook
+```
+
+#### Parameters
+
+- `webhook_id`: The webhook ID (whk_ prefix)
+
+#### Returns
+
+`Webhook` - The webhook object including secret and stats
+
+```python
+@dataclass
+class Webhook:
+    id: str
+    url: str
+    events: list[str]
+    scope: Literal["global", "inbox"]
+    enabled: bool
+    created_at: datetime
+    inbox_email: str | None = None
+    inbox_hash: str | None = None
+    secret: str | None = None
+    template: str | CustomTemplate | None = None
+    filter: FilterConfig | None = None
+    description: str | None = None
+    updated_at: datetime | None = None
+    last_delivery_at: datetime | None = None
+    last_delivery_status: Literal["success", "failed"] | None = None
+    stats: WebhookStats | None = None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+
+print(f"URL: {webhook.url}")
+print(f"Enabled: {webhook.enabled}")
+print(f"Last delivery: {webhook.last_delivery_at or 'Never'}")
+
+if webhook.stats:
+    print(f"Deliveries: {webhook.stats.successful_deliveries}/{webhook.stats.total_deliveries}")
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+### delete_webhook()
+
+Deletes a specific webhook by ID.
+
+```python
+async def delete_webhook(self, webhook_id: str) -> None
+```
+
+#### Parameters
+
+- `webhook_id`: The webhook ID (whk_ prefix)
+
+#### Example
+
+```python
+await inbox.delete_webhook("whk_abc123")
+print("Webhook deleted")
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+## Webhook Class Methods
+
+The `Webhook` object returned from `create_webhook()` and `get_webhook()` has additional methods for management.
+
+### webhook.update()
+
+Updates the webhook configuration.
+
+```python
+async def update(
+    self,
+    *,
+    url: str | None = None,
+    events: list[str] | None = None,
+    template: str | CustomTemplate | None = None,
+    remove_template: bool = False,
+    filter: FilterConfig | None = None,
+    remove_filter: bool = False,
+    description: str | None = None,
+    enabled: bool | None = None,
+) -> None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+
+await webhook.update(
+    url="https://your-app.com/webhook/v2/emails",
+    enabled=False,
+)
+
+print(f"Updated URL: {webhook.url}")
+```
+
+---
+
+### webhook.delete()
+
+Deletes this webhook.
+
+```python
+async def delete(self) -> None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+await webhook.delete()
+print("Webhook deleted")
+```
+
+---
+
+### webhook.test()
+
+Tests the webhook by sending a test payload.
+
+```python
+async def test(self) -> TestWebhookResult
+```
+
+#### Returns
+
+`TestWebhookResult` - The test result
+
+```python
+@dataclass
+class TestWebhookResult:
+    success: bool
+    status_code: int | None = None
+    response_time: int | None = None
+    response_body: str | None = None
+    error: str | None = None
+    payload_sent: Any | None = None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+result = await webhook.test()
+
+if result.success:
+    print(f"Test passed! Status: {result.status_code}")
+    print(f"Response time: {result.response_time}ms")
+else:
+    print(f"Test failed: {result.error}")
+```
+
+---
+
+### webhook.rotate_secret()
+
+Rotates the webhook signing secret. The old secret remains valid for a grace period.
+
+```python
+async def rotate_secret(self) -> RotateSecretResult
+```
+
+#### Returns
+
+`RotateSecretResult` - The new secret and grace period info
+
+```python
+@dataclass
+class RotateSecretResult:
+    id: str
+    secret: str
+    previous_secret_valid_until: str
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+result = await webhook.rotate_secret()
+
+print(f"New secret: {result.secret}")
+print(f"Old secret valid until: {result.previous_secret_valid_until}")
+```
+
+---
+
+### webhook.enable() / webhook.disable()
+
+Enable or disable the webhook.
+
+```python
+async def enable(self) -> None
+async def disable(self) -> None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+
+await webhook.disable()
+print("Webhook disabled")
+
+await webhook.enable()
+print("Webhook enabled")
+```
+
+---
+
+### webhook.refresh()
+
+Refresh the webhook data from the server.
+
+```python
+async def refresh(self) -> None
+```
+
+#### Example
+
+```python
+webhook = await inbox.get_webhook("whk_abc123")
+# ... some time passes ...
+await webhook.refresh()
+print(f"Updated stats: {webhook.stats}")
+```
+
 ## Complete Inbox Example
 
 ```python
@@ -724,5 +1049,6 @@ asyncio.run(complete_inbox_example())
 
 - [Email API Reference](/client-python/api/email/) - Work with email objects
 - [VaultSandboxClient API](/client-python/api/client/) - Learn about client methods
+- [Webhooks Guide](/client-python/guides/webhooks/) - Set up webhook notifications
 - [Waiting for Emails Guide](/client-python/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-python/guides/real-time/) - Advanced monitoring patterns

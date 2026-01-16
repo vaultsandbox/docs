@@ -153,6 +153,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-python/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-python/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-python/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-python/guides/webhooks/' },
 							],
 						},
 						{

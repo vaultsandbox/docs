@@ -16,10 +16,13 @@ VaultSandboxError (base class)
 ├── TimeoutError
 ├── InboxNotFoundError
 ├── EmailNotFoundError
+├── WebhookNotFoundError
+├── WebhookLimitReachedError
 ├── InboxAlreadyExistsError
 ├── InvalidImportDataError
 ├── DecryptionError
 ├── SignatureVerificationError
+├── WebhookSignatureVerificationError
 ├── UnsupportedVersionError
 ├── InvalidPayloadError
 ├── InvalidAlgorithmError
@@ -271,6 +274,61 @@ except ApiError as e:
 
 ---
 
+### WebhookNotFoundError
+
+Thrown when a webhook does not exist or has been deleted.
+
+```python
+class WebhookNotFoundError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import WebhookNotFoundError
+
+try:
+    webhook = await inbox.get_webhook("non-existent-id")
+except WebhookNotFoundError:
+    print("Webhook not found")
+    print("It may have been deleted or the ID is invalid")
+```
+
+#### Common Scenarios
+
+- Webhook was deleted by another process
+- Webhook ID is invalid or malformed
+- Inbox was deleted (webhooks are deleted with the inbox)
+
+---
+
+### WebhookLimitReachedError
+
+Thrown when the maximum number of webhooks for an inbox has been reached.
+
+```python
+class WebhookLimitReachedError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import WebhookLimitReachedError
+
+try:
+    webhook = await inbox.create_webhook(
+        url="https://example.com/webhook",
+        events=["email.received"],
+    )
+except WebhookLimitReachedError:
+    print("Webhook limit reached for this inbox")
+    print("Delete an existing webhook before creating a new one")
+```
+
+---
+
 ### InboxAlreadyExistsError
 
 Thrown when attempting to import an inbox that already exists in the client.
@@ -413,6 +471,52 @@ Signature verification errors should **never** be ignored:
 2. **Alert security/operations team**
 3. **Stop processing** - do not continue with the operation
 4. **Investigate** - check for network issues, proxy problems, or actual attacks
+
+---
+
+### WebhookSignatureVerificationError
+
+Thrown when a webhook payload signature cannot be verified. This error indicates that the webhook request may not be from VaultSandbox or has been tampered with.
+
+```python
+class WebhookSignatureVerificationError(VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import verify_webhook_signature, WebhookSignatureVerificationError
+
+def handle_webhook(request):
+    raw_body = request.get_data(as_text=True)
+    signature = request.headers.get("X-Vault-Signature")
+    timestamp = request.headers.get("X-Vault-Timestamp")
+
+    try:
+        verify_webhook_signature(raw_body, signature, timestamp, WEBHOOK_SECRET)
+        # Signature is valid, process the event
+        event = request.get_json()
+        print(f"Received event: {event['type']}")
+    except WebhookSignatureVerificationError as e:
+        print(f"Invalid webhook signature: {e}")
+        return "Unauthorized", 401
+```
+
+#### Common Causes
+
+- Wrong webhook secret being used
+- Request body was modified in transit
+- Timestamp is outside the tolerance window (default: 5 minutes)
+- Missing required headers (`X-Vault-Signature`, `X-Vault-Timestamp`)
+
+#### Handling
+
+Webhook signature verification errors should be:
+
+1. **Logged** for monitoring and debugging
+2. **Rejected** with HTTP 401 response
+3. **Not processed** - never trust unverified webhooks
 
 ---
 
