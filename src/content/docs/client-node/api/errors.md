@@ -16,6 +16,7 @@ VaultSandboxError (base class)
 ├── TimeoutError
 ├── InboxNotFoundError
 ├── EmailNotFoundError
+├── WebhookNotFoundError
 ├── InboxAlreadyExistsError
 ├── InvalidImportDataError
 ├── DecryptionError
@@ -269,6 +270,39 @@ try {
 	}
 }
 ```
+
+---
+
+### WebhookNotFoundError
+
+Thrown when a webhook does not exist or has been deleted.
+
+```typescript
+class WebhookNotFoundError extends VaultSandboxError {
+	message: string;
+}
+```
+
+#### Example
+
+```javascript
+import { WebhookNotFoundError } from '@vaultsandbox/client';
+
+try {
+	const webhook = await inbox.getWebhook('non-existent-id');
+} catch (error) {
+	if (error instanceof WebhookNotFoundError) {
+		console.error('Webhook not found');
+		console.error('It may have been deleted or the ID is invalid');
+	}
+}
+```
+
+#### Common Scenarios
+
+- Webhook was deleted by another process
+- Webhook ID is invalid or malformed
+- Inbox was deleted (webhooks are deleted with the inbox)
 
 ---
 

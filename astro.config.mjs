@@ -96,6 +96,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-node/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-node/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-node/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-node/guides/webhooks/' },
 							],
 						},
 						{
