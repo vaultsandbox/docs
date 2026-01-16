@@ -12,6 +12,7 @@ The Gateway is a receive-only SMTP server designed for QA and testing environmen
 - **Configurable Encryption**: Quantum-safe encryption (ML-KEM-768) by default, with optional plain storage mode
 - **Web Interface**: Angular-based UI at `/app` for viewing emails and authentication results
 - **REST API**: Programmatic access to emails with auto-generated API keys
+- **Webhooks**: Real-time HTTP notifications for email events with cryptographic signatures
 - **Configurable Retention**: Default 7-day TTL, adjustable via environment variables
 
 ## Architecture
@@ -52,4 +53,5 @@ The Gateway runs as a single container with two integrated components:
 - [Configuration](/gateway/configuration/) - Environment variables and setup options
 - [API Keys](/gateway/api-keys/) - Authentication for the REST API
 - [API Reference](/gateway/api-reference/) - REST API endpoints
+- [Webhooks](/gateway/webhooks/) - Real-time HTTP notifications for email events
 - [Security](/gateway/security/) - Security features and considerations

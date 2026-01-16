@@ -66,6 +66,14 @@ All environment variables at a glance. See sections below for details.
 | `VSB_EMAIL_AUTH_DMARC_ENABLED`       | `true`            | DMARC verification                 |
 | `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true`            | Reverse DNS/PTR verification       |
 | `VSB_EMAIL_AUTH_INBOX_DEFAULT`       | (mode)            | Default emailAuth for new inboxes  |
+| **Webhooks**                         |                   |                                    |
+| `VSB_WEBHOOK_ENABLED`                | `true`            | Enable webhook system              |
+| `VSB_WEBHOOK_MAX_GLOBAL`             | `100`             | Max global webhooks                |
+| `VSB_WEBHOOK_MAX_INBOX`              | `50`              | Max webhooks per inbox             |
+| `VSB_WEBHOOK_TIMEOUT`                | `10000`           | Delivery timeout (ms)              |
+| `VSB_WEBHOOK_MAX_RETRIES`            | `5`               | Max retry attempts                 |
+| `VSB_WEBHOOK_ALLOW_HTTP`             | `false`           | Allow HTTP URLs (dev only)         |
+| `VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT`   | `false`           | Default requireAuth filter value   |
 | **Other**                            |                   |                                    |
 | `NODE_ENV`                           | `production`      | Environment                        |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
@@ -664,6 +672,42 @@ VSB_EMAIL_AUTH_INBOX_DEFAULT=false
 :::note[Per-inbox vs global settings]
 Per-inbox settings (`emailAuth: false`) only affect that specific inbox. Global settings (`VSB_EMAIL_AUTH_ENABLED=false`) affect all inboxes regardless of their individual settings.
 :::
+
+## Webhooks
+
+Configure real-time HTTP notifications for email events. See the [Webhooks documentation](/gateway/webhooks/) for full details on usage.
+
+| Variable | Default | Description |
+| :------- | :------ | :---------- |
+| `VSB_WEBHOOK_ENABLED` | `true` | Enable/disable the webhook system |
+| `VSB_WEBHOOK_MAX_GLOBAL` | `100` | Maximum global webhooks per account |
+| `VSB_WEBHOOK_MAX_INBOX` | `50` | Maximum webhooks per inbox |
+| `VSB_WEBHOOK_TIMEOUT` | `10000` | Delivery timeout in milliseconds |
+| `VSB_WEBHOOK_MAX_RETRIES` | `5` | Maximum retry attempts before disabling |
+| `VSB_WEBHOOK_ALLOW_HTTP` | `false` | Allow HTTP URLs (development only) |
+| `VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT` | `false` | Default `requireAuth` filter value |
+
+### VSB_WEBHOOK_ENABLED
+
+**Description**: Master switch for the webhook system. When `false`, no webhooks are dispatched.
+
+**Default**: `true`
+
+### VSB_WEBHOOK_ALLOW_HTTP
+
+**Description**: Allow non-HTTPS webhook URLs. Only enable for local development.
+
+**Default**: `false`
+
+:::caution[Security Risk]
+Never enable `VSB_WEBHOOK_ALLOW_HTTP` in production. Webhook payloads may contain sensitive email data and should only be transmitted over HTTPS.
+:::
+
+### VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT
+
+**Description**: Default value for the `requireAuth` filter option when creating webhooks. When `true`, webhooks only fire for emails that pass SPF/DKIM/DMARC authentication.
+
+**Default**: `false`
 
 ## Crypto / Signing
 

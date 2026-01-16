@@ -46,6 +46,7 @@ export default defineConfig({
 						{ label: 'Configuration Reference', link: '/gateway/configuration/' },
 						{ label: 'Web Interface', link: '/gateway/webui/' },
 						{ label: 'API Keys & Authentication', link: '/gateway/api-keys/' },
+						{ label: 'Webhooks', link: '/gateway/webhooks/' },
 						{ label: 'Security & Encryption', link: '/gateway/security/' },
 						{ label: 'API Reference', link: '/gateway/api-reference/' },
 					],
