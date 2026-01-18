@@ -267,6 +267,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-go/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-go/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-go/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-go/guides/webhooks/' },
 							],
 						},
 						{

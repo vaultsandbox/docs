@@ -20,6 +20,7 @@ var (
     ErrUnauthorized       error
     ErrInboxNotFound      error
     ErrEmailNotFound      error
+    ErrWebhookNotFound    error
     ErrInboxAlreadyExists error
     ErrInvalidImportData  error
     ErrDecryptionFailed   error
@@ -33,6 +34,7 @@ const (
     ResourceUnknown ResourceType
     ResourceInbox   ResourceType
     ResourceEmail   ResourceType
+    ResourceWebhook ResourceType
 )
 
 // Error types for errors.As() checks
@@ -192,6 +194,19 @@ if errors.Is(err, vaultsandbox.ErrEmailNotFound) {
 
 ---
 
+### ErrWebhookNotFound
+
+Returned when a webhook does not exist.
+
+```go
+webhook, err := inbox.GetWebhook(ctx, "non-existent-id")
+if errors.Is(err, vaultsandbox.ErrWebhookNotFound) {
+    log.Println("Webhook not found - it may have been deleted")
+}
+```
+
+---
+
 ### ErrInboxAlreadyExists
 
 Returned when attempting to create or import an inbox that already exists.
@@ -276,9 +291,10 @@ Indicates which type of resource an error relates to. Used by `APIError` to dist
 type ResourceType string
 
 const (
-    ResourceUnknown ResourceType = ""      // Resource type not specified
-    ResourceInbox   ResourceType = "inbox" // Error relates to an inbox
-    ResourceEmail   ResourceType = "email" // Error relates to an email
+    ResourceUnknown ResourceType = ""        // Resource type not specified
+    ResourceInbox   ResourceType = "inbox"   // Error relates to an inbox
+    ResourceEmail   ResourceType = "email"   // Error relates to an email
+    ResourceWebhook ResourceType = "webhook" // Error relates to a webhook
 )
 ```
 
@@ -294,6 +310,8 @@ if errors.As(err, &apiErr) && apiErr.StatusCode == 404 {
         log.Println("Email not found")
     case vaultsandbox.ResourceInbox:
         log.Println("Inbox not found")
+    case vaultsandbox.ResourceWebhook:
+        log.Println("Webhook not found")
     }
 }
 ```

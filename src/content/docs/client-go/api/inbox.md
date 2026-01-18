@@ -657,6 +657,312 @@ if err != nil {
 
 Exported data contains private encryption keys. Store securely with restrictive file permissions (0600)!
 
+## Webhook Methods
+
+The Inbox type provides methods for managing webhooks that receive HTTP callbacks when events occur. For a complete guide, see [Webhooks Guide](/client-go/guides/webhooks/).
+
+### CreateWebhook
+
+Creates a new webhook for this inbox.
+
+```go
+func (i *Inbox) CreateWebhook(ctx context.Context, url string, opts ...WebhookCreateOption) (*Webhook, error)
+```
+
+#### Parameters
+
+- `url`: The endpoint that receives webhook notifications
+- `opts`: Optional configuration options
+
+#### Options
+
+| Option | Description |
+| ------ | ----------- |
+| `WithWebhookEvents(events...)` | Events that trigger the webhook |
+| `WithWebhookTemplate(name)` | Built-in template (slack, discord, teams, etc.) |
+| `WithWebhookCustomTemplate(body, contentType)` | Custom payload template |
+| `WithWebhookFilter(filter)` | Filter which emails trigger the webhook |
+| `WithWebhookDescription(desc)` | Human-readable description |
+
+#### Returns
+
+`*Webhook` - The created webhook including the secret for signature verification
+
+#### Example
+
+```go
+webhook, err := inbox.CreateWebhook(ctx, "https://your-app.com/webhook/emails",
+    vaultsandbox.WithWebhookEvents(vaultsandbox.WebhookEventEmailReceived),
+    vaultsandbox.WithWebhookDescription("Production email notifications"),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Webhook ID: %s\n", webhook.ID)
+fmt.Printf("Secret: %s\n", webhook.Secret) // Save this!
+```
+
+---
+
+### ListWebhooks
+
+Lists all webhooks for this inbox.
+
+```go
+func (i *Inbox) ListWebhooks(ctx context.Context) (*WebhookListResponse, error)
+```
+
+#### Returns
+
+`*WebhookListResponse` - List of webhooks and total count
+
+```go
+type WebhookListResponse struct {
+    Webhooks []*Webhook
+    Total    int
+}
+```
+
+#### Example
+
+```go
+response, err := inbox.ListWebhooks(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Total webhooks: %d\n", response.Total)
+for _, wh := range response.Webhooks {
+    fmt.Printf("- %s: %s\n", wh.ID, wh.URL)
+}
+```
+
+---
+
+### GetWebhook
+
+Retrieves a specific webhook by ID.
+
+```go
+func (i *Inbox) GetWebhook(ctx context.Context, webhookID string) (*Webhook, error)
+```
+
+#### Parameters
+
+- `webhookID`: The unique identifier for the webhook
+
+#### Returns
+
+`*Webhook` - The webhook data
+
+```go
+type Webhook struct {
+    ID             string
+    URL            string
+    Events         []WebhookEventType
+    Scope          WebhookScope
+    InboxEmail     string
+    Secret         string
+    Template       string
+    CustomTemplate *CustomTemplate
+    Filter         *FilterConfig
+    Description    string
+    Enabled        bool
+    Stats          *WebhookStats
+    CreatedAt      time.Time
+    UpdatedAt      time.Time
+}
+```
+
+#### Example
+
+```go
+webhook, err := inbox.GetWebhook(ctx, "webhook-id")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("URL: %s\n", webhook.URL)
+fmt.Printf("Enabled: %v\n", webhook.Enabled)
+```
+
+#### Errors
+
+- `ErrWebhookNotFound` - Webhook does not exist
+
+---
+
+### UpdateWebhook
+
+Updates a specific webhook.
+
+```go
+func (i *Inbox) UpdateWebhook(ctx context.Context, webhookID string, opts ...WebhookUpdateOption) (*Webhook, error)
+```
+
+#### Parameters
+
+- `webhookID`: The unique identifier for the webhook
+- `opts`: Update options
+
+#### Options
+
+| Option | Description |
+| ------ | ----------- |
+| `WithUpdateURL(url)` | Update the webhook URL |
+| `WithUpdateEvents(events...)` | Update event types |
+| `WithUpdateTemplate(name)` | Update built-in template |
+| `WithUpdateCustomTemplate(body, contentType)` | Update custom template |
+| `WithUpdateFilter(filter)` | Update filter configuration |
+| `WithClearFilter()` | Remove the filter |
+| `WithUpdateDescription(desc)` | Update description |
+| `WithUpdateEnabled(bool)` | Enable or disable the webhook |
+
+#### Returns
+
+`*Webhook` - The updated webhook data
+
+#### Example
+
+```go
+updated, err := inbox.UpdateWebhook(ctx, "webhook-id",
+    vaultsandbox.WithUpdateURL("https://your-app.com/webhook/v2/emails"),
+    vaultsandbox.WithUpdateEnabled(false),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Updated URL: %s\n", updated.URL)
+```
+
+#### Errors
+
+- `ErrWebhookNotFound` - Webhook does not exist
+
+---
+
+### DeleteWebhook
+
+Deletes a specific webhook.
+
+```go
+func (i *Inbox) DeleteWebhook(ctx context.Context, webhookID string) error
+```
+
+#### Parameters
+
+- `webhookID`: The unique identifier for the webhook
+
+#### Example
+
+```go
+err := inbox.DeleteWebhook(ctx, "webhook-id")
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Println("Webhook deleted")
+```
+
+#### Errors
+
+- `ErrWebhookNotFound` - Webhook does not exist
+
+---
+
+### TestWebhook
+
+Tests a webhook by sending a test payload.
+
+```go
+func (i *Inbox) TestWebhook(ctx context.Context, webhookID string) (*TestWebhookResponse, error)
+```
+
+#### Parameters
+
+- `webhookID`: The unique identifier for the webhook
+
+#### Returns
+
+`*TestWebhookResponse` - The test result
+
+```go
+type TestWebhookResponse struct {
+    Success      bool
+    StatusCode   int
+    ResponseTime int    // milliseconds
+    Error        string
+    RequestID    string
+}
+```
+
+#### Example
+
+```go
+result, err := inbox.TestWebhook(ctx, "webhook-id")
+if err != nil {
+    log.Fatal(err)
+}
+
+if result.Success {
+    fmt.Printf("Test passed! Status: %d\n", result.StatusCode)
+    fmt.Printf("Response time: %dms\n", result.ResponseTime)
+} else {
+    fmt.Printf("Test failed: %s\n", result.Error)
+}
+```
+
+#### Errors
+
+- `ErrWebhookNotFound` - Webhook does not exist
+
+---
+
+### RotateWebhookSecret
+
+Rotates the secret for a webhook. The old secret remains valid for a grace period.
+
+```go
+func (i *Inbox) RotateWebhookSecret(ctx context.Context, webhookID string) (*RotateSecretResponse, error)
+```
+
+#### Parameters
+
+- `webhookID`: The unique identifier for the webhook
+
+#### Returns
+
+`*RotateSecretResponse` - The new secret and grace period
+
+```go
+type RotateSecretResponse struct {
+    ID                       string
+    Secret                   string
+    PreviousSecretValidUntil *time.Time
+}
+```
+
+#### Example
+
+```go
+result, err := inbox.RotateWebhookSecret(ctx, "webhook-id")
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("New secret: %s\n", result.Secret)
+if result.PreviousSecretValidUntil != nil {
+    fmt.Printf("Old secret valid until: %s\n", result.PreviousSecretValidUntil.Format(time.RFC3339))
+}
+```
+
+#### Errors
+
+- `ErrWebhookNotFound` - Webhook does not exist
+
+---
+
 ## Complete Inbox Example
 
 ```go
@@ -765,5 +1071,6 @@ func main() {
 
 - [Email API Reference](/client-go/api/email/) - Work with email objects
 - [Client API Reference](/client-go/api/client/) - Learn about client methods
+- [Webhooks Guide](/client-go/guides/webhooks/) - Set up webhook notifications
 - [Waiting for Emails Guide](/client-go/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-go/guides/real-time/) - Advanced monitoring patterns
