@@ -185,11 +185,11 @@ Security Score: 100/100
 
 Each authentication check can return one of the following statuses:
 
-| Status    | Description                                               |
-| --------- | --------------------------------------------------------- |
-| `PASS`    | Check passed successfully                                 |
-| `FAIL`    | Check failed                                              |
-| `NONE`    | No policy record found or check not applicable            |
+| Status    | Description                                                       |
+| --------- | ----------------------------------------------------------------- |
+| `PASS`    | Check passed successfully                                         |
+| `FAIL`    | Check failed                                                      |
+| `NONE`    | No policy record found or check not applicable                    |
 | `SKIPPED` | Check was skipped (e.g., inbox created with `--email-auth=false`) |
 
 ---
@@ -406,4 +406,5 @@ Links: 3 found
 ## Next Steps
 
 - [Inbox Commands](/cli/commands/inbox/) - Manage inboxes
+- [Webhook Commands](/cli/commands/webhook/) - Real-time email notifications
 - [TUI Dashboard](/cli/tui/) - Interactive email monitoring

@@ -7,10 +7,10 @@ The Java SDK supports two delivery strategies for receiving emails. This guide c
 
 ## Strategy Overview
 
-| Strategy    | Description                               |
-| ----------- | ----------------------------------------- |
+| Strategy    | Description                                |
+| ----------- | ------------------------------------------ |
 | **SSE**     | Real-time via Server-Sent Events (default) |
-| **POLLING** | Periodic HTTP polling                     |
+| **POLLING** | Periodic HTTP polling                      |
 
 ## Strategy Comparison
 

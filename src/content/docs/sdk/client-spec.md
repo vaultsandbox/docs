@@ -99,12 +99,12 @@ SDKs should support these configuration options when creating a client:
 
 ### Inbox Creation Options
 
-| Option         | Type   | Default | Description                                         |
-| -------------- | ------ | ------- | --------------------------------------------------- |
-| `ttl`          | number | 3600    | Time-to-live in seconds (60-604800)                 |
-| `emailAddress` | string | null    | Desired email address or domain (optional)          |
-| `encryption`   | string | null    | `encrypted` or `plain` (omit to use server default) |
-| `emailAuth`    | boolean | null   | Enable/disable email auth checks (omit for default) |
+| Option         | Type    | Default | Description                                         |
+| -------------- | ------- | ------- | --------------------------------------------------- |
+| `ttl`          | number  | 3600    | Time-to-live in seconds (60-604800)                 |
+| `emailAddress` | string  | null    | Desired email address or domain (optional)          |
+| `encryption`   | string  | null    | `encrypted` or `plain` (omit to use server default) |
+| `emailAuth`    | boolean | null    | Enable/disable email auth checks (omit for default) |
 
 ---
 
@@ -356,27 +356,28 @@ Returns server cryptographic configuration.
 }
 ```
 
-| Field              | Type     | Description                                               |
-| ------------------ | -------- | --------------------------------------------------------- |
-| `serverSigPk`      | string   | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`             | object   | Cryptographic algorithms supported by the server          |
-| `context`          | string   | Context string for the encryption scheme                  |
+| Field              | Type     | Description                                                 |
+| ------------------ | -------- | ----------------------------------------------------------- |
+| `serverSigPk`      | string   | Base64URL-encoded server signing public key for ML-DSA-65   |
+| `algs`             | object   | Cryptographic algorithms supported by the server            |
+| `context`          | string   | Context string for the encryption scheme                    |
 | `encryptionPolicy` | string   | Encryption policy: `always`, `enabled`, `disabled`, `never` |
-| `maxTtl`           | number   | Maximum time-to-live for inboxes in seconds               |
-| `defaultTtl`       | number   | Default time-to-live for inboxes in seconds               |
-| `sseConsole`       | boolean  | Whether server SSE console logging is enabled             |
-| `allowedDomains`   | string[] | List of domains allowed for inbox creation                |
+| `maxTtl`           | number   | Maximum time-to-live for inboxes in seconds                 |
+| `defaultTtl`       | number   | Default time-to-live for inboxes in seconds                 |
+| `sseConsole`       | boolean  | Whether server SSE console logging is enabled               |
+| `allowedDomains`   | string[] | List of domains allowed for inbox creation                  |
 
 #### Encryption Policy Values
 
-| Policy     | Default Encryption | Per-Inbox Override                    |
-| ---------- | ------------------ | ------------------------------------- |
-| `always`   | Encrypted          | **No** - all inboxes encrypted        |
-| `enabled`  | Encrypted          | Yes - can request `plain`             |
-| `disabled` | Plain              | Yes - can request `encrypted`         |
-| `never`    | Plain              | **No** - all inboxes plain            |
+| Policy     | Default Encryption | Per-Inbox Override             |
+| ---------- | ------------------ | ------------------------------ |
+| `always`   | Encrypted          | **No** - all inboxes encrypted |
+| `enabled`  | Encrypted          | Yes - can request `plain`      |
+| `disabled` | Plain              | Yes - can request `encrypted`  |
+| `never`    | Plain              | **No** - all inboxes plain     |
 
 **Client logic:**
+
 ```python
 # Pseudocode
 can_override = policy in ['enabled', 'disabled']
@@ -401,13 +402,13 @@ Creates a new inbox.
 }
 ```
 
-| Field          | Type    | Required    | Description                                            |
-| -------------- | ------- | ----------- | ------------------------------------------------------ |
+| Field          | Type    | Required    | Description                                                                |
+| -------------- | ------- | ----------- | -------------------------------------------------------------------------- |
 | `clientKemPk`  | string  | Conditional | Base64url-encoded ML-KEM-768 public key (required when encryption enabled) |
-| `ttl`          | number  | No          | Time-to-live in seconds (min: 60, max: 604800)         |
-| `emailAddress` | string  | No          | Desired email address or domain (max 254 chars)        |
-| `encryption`   | string  | No          | `encrypted` or `plain` (omit to use server default)    |
-| `emailAuth`    | boolean | No          | Enable/disable email auth checks (omit for server default) |
+| `ttl`          | number  | No          | Time-to-live in seconds (min: 60, max: 604800)                             |
+| `emailAddress` | string  | No          | Desired email address or domain (max 254 chars)                            |
+| `encryption`   | string  | No          | `encrypted` or `plain` (omit to use server default)                        |
+| `emailAuth`    | boolean | No          | Enable/disable email auth checks (omit for server default)                 |
 
 **Response:**
 
@@ -422,13 +423,13 @@ Creates a new inbox.
 }
 ```
 
-| Field          | Type    | Description                                                            |
-| -------------- | ------- | ---------------------------------------------------------------------- |
-| `emailAddress` | string  | The email address assigned to the inbox                                |
-| `expiresAt`    | string  | ISO 8601 timestamp when the inbox will expire                          |
-| `inboxHash`    | string  | Base64URL-encoded SHA-256 hash of the client KEM public key            |
-| `encrypted`    | boolean | Whether the inbox uses encryption                                      |
-| `emailAuth`    | boolean | Whether email authentication checks are enabled                        |
+| Field          | Type    | Description                                                               |
+| -------------- | ------- | ------------------------------------------------------------------------- |
+| `emailAddress` | string  | The email address assigned to the inbox                                   |
+| `expiresAt`    | string  | ISO 8601 timestamp when the inbox will expire                             |
+| `inboxHash`    | string  | Base64URL-encoded SHA-256 hash of the client KEM public key               |
+| `encrypted`    | boolean | Whether the inbox uses encryption                                         |
+| `emailAuth`    | boolean | Whether email authentication checks are enabled                           |
 | `serverSigPk`  | string  | Base64URL-encoded server signing public key (only present when encrypted) |
 
 #### DELETE /api/inboxes/{emailAddress}
@@ -478,9 +479,9 @@ Email responses differ based on inbox encryption state. Use field presence to di
 Lists all emails in an inbox (metadata only by default).
 
 **Query Parameters:**
-| Parameter        | Type    | Description                                |
+| Parameter | Type | Description |
 | ---------------- | ------- | ------------------------------------------ |
-| `includeContent` | boolean | Include parsed content (default: `false`)  |
+| `includeContent` | boolean | Include parsed content (default: `false`) |
 
 **Note:** The server returns only metadata (sender, subject, date) for this endpoint by default. Add `?includeContent=true` to include parsed content, or fetch each email individually using `GET /api/inboxes/{emailAddress}/emails/{emailId}`.
 
@@ -519,6 +520,7 @@ Lists all emails in an inbox (metadata only by default).
 ```
 
 **Type discrimination:**
+
 ```python
 # Pseudocode
 def is_encrypted_email(email):
@@ -894,12 +896,12 @@ SDKs may also provide a convenience method like `isPassing()` that returns the `
 | `ip`       | `string` | Server IP address (optional)          |
 | `hostname` | `string` | Resolved hostname (optional)          |
 
-| Result    | Meaning                  |
-| --------- | ------------------------ |
-| `pass`    | Reverse DNS verified     |
-| `fail`    | Reverse DNS failed       |
-| `none`    | No reverse DNS record    |
-| `skipped` | Check disabled           |
+| Result    | Meaning               |
+| --------- | --------------------- |
+| `pass`    | Reverse DNS verified  |
+| `fail`    | Reverse DNS failed    |
+| `none`    | No reverse DNS record |
+| `skipped` | Check disabled        |
 
 ### Exported Inbox Data
 
@@ -918,16 +920,16 @@ For persistence/sharing:
 }
 ```
 
-| Field          | Type    | Required    | Description                                                    |
-| -------------- | ------- | ----------- | -------------------------------------------------------------- |
-| `version`      | integer | Yes         | Export format version. MUST be `1`.                            |
-| `emailAddress` | string  | Yes         | The inbox email address. MUST contain `@`.                     |
-| `expiresAt`    | string  | Yes         | Inbox expiration timestamp (ISO 8601).                         |
-| `inboxHash`    | string  | Yes         | Unique inbox identifier. Non-empty.                            |
-| `encrypted`    | boolean | Yes         | Whether the inbox uses encryption.                             |
-| `serverSigPk`  | string  | Conditional | Server's ML-DSA-65 public key (required when encrypted=true).  |
-| `secretKey`    | string  | Conditional | ML-KEM-768 secret key (required when encrypted=true).          |
-| `exportedAt`   | string  | Yes         | Export timestamp (ISO 8601).                                   |
+| Field          | Type    | Required    | Description                                                   |
+| -------------- | ------- | ----------- | ------------------------------------------------------------- |
+| `version`      | integer | Yes         | Export format version. MUST be `1`.                           |
+| `emailAddress` | string  | Yes         | The inbox email address. MUST contain `@`.                    |
+| `expiresAt`    | string  | Yes         | Inbox expiration timestamp (ISO 8601).                        |
+| `inboxHash`    | string  | Yes         | Unique inbox identifier. Non-empty.                           |
+| `encrypted`    | boolean | Yes         | Whether the inbox uses encryption.                            |
+| `serverSigPk`  | string  | Conditional | Server's ML-DSA-65 public key (required when encrypted=true). |
+| `secretKey`    | string  | Conditional | ML-KEM-768 secret key (required when encrypted=true).         |
+| `exportedAt`   | string  | Yes         | Export timestamp (ISO 8601).                                  |
 
 **Note:** For encrypted inboxes, the public key is NOT included in the export as it can be derived from the secret key (see [Deriving Public Key from Secret Key](#deriving-public-key-from-secret-key)). Plain inboxes do not require cryptographic keys.
 

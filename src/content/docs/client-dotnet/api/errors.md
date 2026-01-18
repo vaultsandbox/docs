@@ -166,11 +166,11 @@ catch (ApiException ex)
 
 #### Common API Errors
 
-| Status | Error Message | Description |
-| ------ | ------------- | ----------- |
-| 400 | `clientKemPk is required when encryption is enabled` | Server requires encryption but no KEM public key was provided |
-| 409 | `An inbox with the same client KEM public key already exists` | Encrypted inbox conflict |
-| 409 | `An inbox with this email address already exists` | Plain inbox conflict |
+| Status | Error Message                                                 | Description                                                   |
+| ------ | ------------------------------------------------------------- | ------------------------------------------------------------- |
+| 400    | `clientKemPk is required when encryption is enabled`          | Server requires encryption but no KEM public key was provided |
+| 409    | `An inbox with the same client KEM public key already exists` | Encrypted inbox conflict                                      |
+| 409    | `An inbox with this email address already exists`             | Plain inbox conflict                                          |
 
 ---
 

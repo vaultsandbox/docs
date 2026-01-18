@@ -48,15 +48,15 @@ if (spf != null) {
 
 ### SPF Status Values
 
-| Status      | Meaning                                         |
-| ----------- | ----------------------------------------------- |
-| `pass`      | Sending server is authorized                    |
-| `fail`      | Sending server is NOT authorized                |
-| `softfail`  | Probably not authorized (policy says ~all)      |
-| `neutral`   | Domain makes no assertion                       |
-| `temperror` | Temporary error during check                    |
-| `permerror` | Permanent error in SPF record                   |
-| `none`      | No SPF record found                             |
+| Status      | Meaning                                          |
+| ----------- | ------------------------------------------------ |
+| `pass`      | Sending server is authorized                     |
+| `fail`      | Sending server is NOT authorized                 |
+| `softfail`  | Probably not authorized (policy says ~all)       |
+| `neutral`   | Domain makes no assertion                        |
+| `temperror` | Temporary error during check                     |
+| `permerror` | Permanent error in SPF record                    |
+| `none`      | No SPF record found                              |
 | `skipped`   | Check was skipped (inbox has `emailAuth: false`) |
 
 ### SpfResult Properties
@@ -123,12 +123,12 @@ if (dkim != null && !dkim.isEmpty()) {
 
 ### DkimResult Properties
 
-| Property    | Type     | Description                                               |
-| ----------- | -------- | --------------------------------------------------------- |
-| `result`    | `String` | DKIM verification result: pass, fail, none, skipped       |
-| `domain`    | `String` | Signing domain                                            |
-| `selector`  | `String` | DKIM selector (identifies the public key in DNS)          |
-| `signature` | `String` | DKIM signature information                                |
+| Property    | Type     | Description                                         |
+| ----------- | -------- | --------------------------------------------------- |
+| `result`    | `String` | DKIM verification result: pass, fail, none, skipped |
+| `domain`    | `String` | Signing domain                                      |
+| `selector`  | `String` | DKIM selector (identifies the public key in DNS)    |
+| `signature` | `String` | DKIM signature information                          |
 
 ### DkimResult Methods
 
@@ -260,20 +260,20 @@ if (reverseDns != null) {
 
 ### ReverseDnsResult Properties
 
-| Property   | Type     | Description                                      |
-| ---------- | -------- | ------------------------------------------------ |
-| `result`   | `String` | Reverse DNS result: pass, fail, none, skipped    |
-| `ip`       | `String` | IP address of the sending server                 |
-| `hostname` | `String` | Resolved hostname from PTR record                |
+| Property   | Type     | Description                                   |
+| ---------- | -------- | --------------------------------------------- |
+| `result`   | `String` | Reverse DNS result: pass, fail, none, skipped |
+| `ip`       | `String` | IP address of the sending server              |
+| `hostname` | `String` | Resolved hostname from PTR record             |
 
 ### ReverseDnsResult Methods
 
-| Method          | Return Type | Description                                                   |
-| --------------- | ----------- | ------------------------------------------------------------- |
-| `getResult()`   | `String`    | Returns the reverse DNS result                                |
-| `isVerified()`  | `boolean`   | Convenience: returns `true` if result is "pass"               |
-| `getIp()`       | `String`    | Returns the IP address being validated                        |
-| `getHostname()` | `String`    | Returns the resolved hostname                                 |
+| Method          | Return Type | Description                                     |
+| --------------- | ----------- | ----------------------------------------------- |
+| `getResult()`   | `String`    | Returns the reverse DNS result                  |
+| `isVerified()`  | `boolean`   | Convenience: returns `true` if result is "pass" |
+| `getIp()`       | `String`    | Returns the IP address being validated          |
+| `getHostname()` | `String`    | Returns the resolved hostname                   |
 
 ### Reverse DNS Example
 
@@ -306,6 +306,7 @@ if ("pass".equals(rdns.getResult())) { ... }
 // Or use convenience method (still works)
 if (rdns.isVerified()) { ... }  // isVerified() returns result.equals("pass")
 ```
+
 :::
 
 ## Understanding the "skipped" Status

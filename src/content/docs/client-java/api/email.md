@@ -282,12 +282,12 @@ public String getDetails()
 
 DKIM (DomainKeys Identified Mail) signature result.
 
-| Property    | Type     | Description                        |
-| ----------- | -------- | ---------------------------------- |
-| `result`    | `String` | pass, fail, none, skipped          |
-| `domain`    | `String` | Signing domain                     |
-| `selector`  | `String` | DKIM selector used                 |
-| `signature` | `String` | DKIM signature information         |
+| Property    | Type     | Description                |
+| ----------- | -------- | -------------------------- |
+| `result`    | `String` | pass, fail, none, skipped  |
+| `domain`    | `String` | Signing domain             |
+| `selector`  | `String` | DKIM selector used         |
+| `signature` | `String` | DKIM signature information |
 
 ### Getters
 
@@ -325,11 +325,11 @@ public boolean isAligned()   // Returns true if aligned, false otherwise
 
 Reverse DNS verification result.
 
-| Property   | Type     | Description                                   |
-| ---------- | -------- | --------------------------------------------- |
-| `result`   | `String` | Result: pass, fail, none, skipped             |
-| `ip`       | `String` | IP address of the sending server              |
-| `hostname` | `String` | Resolved hostname from PTR record             |
+| Property   | Type     | Description                       |
+| ---------- | -------- | --------------------------------- |
+| `result`   | `String` | Result: pass, fail, none, skipped |
+| `ip`       | `String` | IP address of the sending server  |
+| `hostname` | `String` | Resolved hostname from PTR record |
 
 ### Status Values
 
@@ -364,6 +364,7 @@ if ("pass".equals(rdns.getResult())) { ... }
 // Or use convenience method (still works)
 if (rdns.isVerified()) { ... }  // isVerified() returns result.equals("pass")
 ```
+
 :::
 
 ## Examples

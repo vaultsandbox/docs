@@ -126,11 +126,11 @@ Inbox inbox = client.createInbox(options);
 
 ### CreateInboxOptions
 
-| Option         | Type       | Default        | Description                                              |
-| -------------- | ---------- | -------------- | -------------------------------------------------------- |
-| `emailAddress` | `String`   | auto-generated | Custom email address or domain                           |
-| `ttl`          | `Duration` | server default | Inbox time-to-live                                       |
-| `emailAuth`    | `Boolean`  | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                 |
+| Option         | Type       | Default        | Description                                                 |
+| -------------- | ---------- | -------------- | ----------------------------------------------------------- |
+| `emailAddress` | `String`   | auto-generated | Custom email address or domain                              |
+| `ttl`          | `Duration` | server default | Inbox time-to-live                                          |
+| `emailAuth`    | `Boolean`  | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                    |
 | `encryption`   | `String`   | server default | Request `"encrypted"` or `"plain"` inbox (if policy allows) |
 
 **Convenience Methods:**
@@ -414,30 +414,30 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 
 ### ServerInfo Properties
 
-| Property           | Type           | Description                                               |
-| ------------------ | -------------- | --------------------------------------------------------- |
-| `serverSigPk`      | `String`       | Server's public signing key                               |
-| `context`          | `String`       | Server context identifier                                 |
-| `maxTtl`           | `int`          | Maximum inbox TTL in seconds                              |
-| `defaultTtl`       | `int`          | Default inbox TTL in seconds                              |
-| `sseConsole`       | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`) |
-| `allowedDomains`   | `List<String>` | Allowed email domains                                     |
-| `algs`             | `Algorithms`   | Supported cryptographic algorithms                        |
-| `version`          | `String`       | Server version                                            |
-| `domain`           | `String`       | Server domain                                             |
-| `limits`           | `Limits`       | Rate limits and constraints                               |
+| Property           | Type           | Description                                                        |
+| ------------------ | -------------- | ------------------------------------------------------------------ |
+| `serverSigPk`      | `String`       | Server's public signing key                                        |
+| `context`          | `String`       | Server context identifier                                          |
+| `maxTtl`           | `int`          | Maximum inbox TTL in seconds                                       |
+| `defaultTtl`       | `int`          | Default inbox TTL in seconds                                       |
+| `sseConsole`       | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`)          |
+| `allowedDomains`   | `List<String>` | Allowed email domains                                              |
+| `algs`             | `Algorithms`   | Supported cryptographic algorithms                                 |
+| `version`          | `String`       | Server version                                                     |
+| `domain`           | `String`       | Server domain                                                      |
+| `limits`           | `Limits`       | Rate limits and constraints                                        |
 | `encryptionPolicy` | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never` |
 
 ### Encryption Policy
 
 The `encryptionPolicy` property determines how inbox encryption can be configured:
 
-| Policy     | Default Behavior | Can Override?                          |
-| ---------- | ---------------- | -------------------------------------- |
-| `always`   | Encrypted        | No - all inboxes are always encrypted  |
-| `enabled`  | Encrypted        | Yes - can request `plain`              |
-| `disabled` | Plain            | Yes - can request `encrypted`          |
-| `never`    | Plain            | No - all inboxes are always plain      |
+| Policy     | Default Behavior | Can Override?                         |
+| ---------- | ---------------- | ------------------------------------- |
+| `always`   | Encrypted        | No - all inboxes are always encrypted |
+| `enabled`  | Encrypted        | Yes - can request `plain`             |
+| `disabled` | Plain            | Yes - can request `encrypted`         |
+| `never`    | Plain            | No - all inboxes are always plain     |
 
 **Helper Methods:**
 

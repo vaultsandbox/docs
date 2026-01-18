@@ -220,12 +220,12 @@ if email.AuthResults.DMARC != nil {
 
 ### DMARC Status Values
 
-| Status    | Meaning                                    |
-| --------- | ------------------------------------------ |
-| `pass`    | DMARC check passed (SPF or DKIM aligned)   |
-| `fail`    | DMARC check failed                         |
-| `none`    | No DMARC policy found                      |
-| `skipped` | Check was skipped (emailAuth disabled)     |
+| Status    | Meaning                                  |
+| --------- | ---------------------------------------- |
+| `pass`    | DMARC check passed (SPF or DKIM aligned) |
+| `fail`    | DMARC check failed                       |
+| `none`    | No DMARC policy found                    |
+| `skipped` | Check was skipped (emailAuth disabled)   |
 
 ### DMARC Policies
 
@@ -282,12 +282,12 @@ if email.AuthResults.ReverseDNS != nil {
 
 ### Reverse DNS Status Values
 
-| Status    | Meaning                                    |
-| --------- | ------------------------------------------ |
-| `pass`    | Reverse DNS verified                       |
-| `fail`    | Reverse DNS check failed                   |
-| `none`    | No reverse DNS record found                |
-| `skipped` | Check was skipped (emailAuth disabled)     |
+| Status    | Meaning                                |
+| --------- | -------------------------------------- |
+| `pass`    | Reverse DNS verified                   |
+| `fail`    | Reverse DNS check failed               |
+| `none`    | No reverse DNS record found            |
+| `skipped` | Check was skipped (emailAuth disabled) |
 
 ### Reverse DNS Example
 
@@ -315,6 +315,7 @@ if email.AuthResults.ReverseDNS != nil {
 In previous versions, `ReverseDNSResult` used a `Verified` boolean field. This has been replaced with a `Result` string field for consistency with other auth results.
 
 **Before (v0.6.x):**
+
 ```go
 if rdns.Verified {
     // Reverse DNS passed
@@ -322,6 +323,7 @@ if rdns.Verified {
 ```
 
 **After (v0.7.0+):**
+
 ```go
 if rdns.Result == "pass" {
     // Reverse DNS passed

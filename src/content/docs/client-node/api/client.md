@@ -33,17 +33,17 @@ interface ClientConfig {
 
 #### Properties
 
-| Property                  | Type                    | Required | Default                          | Description                                         |
-| ------------------------- | ----------------------- | -------- | -------------------------------- | --------------------------------------------------- |
-| `url`                     | `string`                | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`) |
-| `apiKey`                  | `string`                | Yes      | -                                | Your API authentication key                         |
-| `strategy`                | `'sse' \| 'polling'`    | No       | `'sse'`                          | Email delivery strategy                             |
-| `pollingInterval`         | `number`                | No       | `2000`                           | Polling interval in milliseconds                    |
-| `maxRetries`              | `number`                | No       | `3`                              | Maximum retry attempts for HTTP requests            |
-| `retryDelay`              | `number`                | No       | `1000`                           | Base delay in milliseconds between retries          |
-| `retryOn`                 | `number[]`              | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry              |
-| `sseReconnectInterval`    | `number`                | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
-| `sseMaxReconnectAttempts` | `number`                | No       | `10`                             | Maximum SSE reconnection attempts                   |
+| Property                  | Type                 | Required | Default                          | Description                                         |
+| ------------------------- | -------------------- | -------- | -------------------------------- | --------------------------------------------------- |
+| `url`                     | `string`             | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`) |
+| `apiKey`                  | `string`             | Yes      | -                                | Your API authentication key                         |
+| `strategy`                | `'sse' \| 'polling'` | No       | `'sse'`                          | Email delivery strategy                             |
+| `pollingInterval`         | `number`             | No       | `2000`                           | Polling interval in milliseconds                    |
+| `maxRetries`              | `number`             | No       | `3`                              | Maximum retry attempts for HTTP requests            |
+| `retryDelay`              | `number`             | No       | `1000`                           | Base delay in milliseconds between retries          |
+| `retryOn`                 | `number[]`           | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry              |
+| `sseReconnectInterval`    | `number`             | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
+| `sseMaxReconnectAttempts` | `number`             | No       | `10`                             | Maximum SSE reconnection attempts                   |
 
 #### Example
 
@@ -82,12 +82,12 @@ interface CreateInboxOptions {
 }
 ```
 
-| Property       | Type                         | Description                                                                                |
-| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
-| `ttl`          | `number`                     | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
-| `emailAddress` | `string`                     | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
-| `emailAuth`    | `boolean`                    | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
-| `encryption`   | `'encrypted' \| 'plain'`     | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
+| Property       | Type                     | Description                                                                                |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
+| `ttl`          | `number`                 | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
+| `emailAddress` | `string`                 | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| `emailAuth`    | `boolean`                | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
+| `encryption`   | `'encrypted' \| 'plain'` | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
 
 #### Returns
 
@@ -231,12 +231,12 @@ interface ServerInfo {
 
 #### Encryption Policy
 
-| Policy     | Default Encryption | Per-Inbox Override |
-| ---------- | ------------------ | ------------------ |
-| `always`   | Encrypted          | No - all inboxes encrypted |
-| `enabled`  | Encrypted          | Yes - can request `plain` |
+| Policy     | Default Encryption | Per-Inbox Override            |
+| ---------- | ------------------ | ----------------------------- |
+| `always`   | Encrypted          | No - all inboxes encrypted    |
+| `enabled`  | Encrypted          | Yes - can request `plain`     |
 | `disabled` | Plain              | Yes - can request `encrypted` |
-| `never`    | Plain              | No - all inboxes plain |
+| `never`    | Plain              | No - all inboxes plain        |
 
 #### Example
 

@@ -32,8 +32,8 @@ services:
   gateway:
     image: vaultsandbox/gateway:latest
     ports:
-      - '127.0.0.1:2525:25'   # SMTP
-      - '127.0.0.1:8080:80'   # HTTP API + Web UI
+      - '127.0.0.1:2525:25' # SMTP
+      - '127.0.0.1:8080:80' # HTTP API + Web UI
     volumes:
       - gateway-data:/app/data
 
@@ -194,9 +194,9 @@ services:
   gateway:
     image: vaultsandbox/gateway:latest
     ports:
-      - '127.0.0.1:2525:25'   # SMTP
-      - '127.0.0.1:8080:80'   # HTTP
-      - '127.0.0.1:8443:443'  # HTTPS
+      - '127.0.0.1:2525:25' # SMTP
+      - '127.0.0.1:8080:80' # HTTP
+      - '127.0.0.1:8443:443' # HTTPS
     environment:
       VSB_CERT_ENABLED: 'true'
       VSB_TLS_CERT_PATH: '/certs/localhost.pem'

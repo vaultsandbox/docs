@@ -194,12 +194,12 @@ if reverse_dns:
 
 ### Reverse DNS Status Values
 
-| Status    | Meaning                                          |
-| --------- | ------------------------------------------------ |
-| `PASS`    | IP resolves to hostname matching sender domain   |
-| `FAIL`    | IP doesn't resolve or hostname doesn't match     |
-| `NONE`    | No reverse DNS record found                      |
-| `SKIPPED` | Check was skipped (see below)                    |
+| Status    | Meaning                                        |
+| --------- | ---------------------------------------------- |
+| `PASS`    | IP resolves to hostname matching sender domain |
+| `FAIL`    | IP doesn't resolve or hostname doesn't match   |
+| `NONE`    | No reverse DNS record found                    |
+| `SKIPPED` | Check was skipped (see below)                  |
 
 ### Reverse DNS Example
 
@@ -223,12 +223,14 @@ if email.auth_results.reverse_dns:
 **Breaking Change in 0.7.0**: The `verified` boolean field has been replaced with `result` string field.
 
 **Before (< 0.7.0)**:
+
 ```python
 if reverse_dns.verified:  # True/False
     print("Verified")
 ```
 
 **After (0.7.0+)**:
+
 ```python
 from vaultsandbox.types import ReverseDNSStatus
 

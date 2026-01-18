@@ -46,6 +46,7 @@ export default defineConfig({
 						{ label: 'Configuration Reference', link: '/gateway/configuration/' },
 						{ label: 'Web Interface', link: '/gateway/webui/' },
 						{ label: 'API Keys & Authentication', link: '/gateway/api-keys/' },
+						{ label: 'Webhooks', link: '/gateway/webhooks/' },
 						{ label: 'Security & Encryption', link: '/gateway/security/' },
 						{ label: 'API Reference', link: '/gateway/api-reference/' },
 					],
@@ -64,6 +65,7 @@ export default defineConfig({
 							items: [
 								{ label: 'Inbox', link: '/cli/commands/inbox/' },
 								{ label: 'Email', link: '/cli/commands/email/' },
+								{ label: 'Webhook', link: '/cli/commands/webhook/' },
 								{ label: 'Wait', link: '/cli/commands/wait/' },
 								{ label: 'Export & Import', link: '/cli/commands/data/' },
 							],
@@ -95,6 +97,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-node/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-node/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-node/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-node/guides/webhooks/' },
 							],
 						},
 						{
@@ -151,6 +154,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-python/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-python/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-python/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-python/guides/webhooks/' },
 							],
 						},
 						{
@@ -207,6 +211,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-java/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-java/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-java/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-java/guides/webhooks/' },
 							],
 						},
 						{
@@ -263,6 +268,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-go/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-go/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-go/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-go/guides/webhooks/' },
 							],
 						},
 						{
@@ -319,6 +325,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-dotnet/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-dotnet/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-dotnet/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-dotnet/guides/webhooks/' },
 							],
 						},
 						{
@@ -355,6 +362,7 @@ export default defineConfig({
 					collapsed: true,
 					items: [
 						{ label: 'Client SDK Specification', link: '/sdk/client-spec/' },
+						{ label: 'Webhook SDK Specification', link: '/sdk/webhook-spec/' },
 						{ label: 'Cryptographic Protocol', link: '/sdk/crypto-spec/' },
 						{ label: 'Test Specification', link: '/sdk/tests-spec/' },
 					],

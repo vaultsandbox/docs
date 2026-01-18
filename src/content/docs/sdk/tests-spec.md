@@ -503,10 +503,10 @@ When `VSB_SDK_DEVELOPMENT=true` is set on the gateway, a test endpoint becomes a
 
 ### 9.1 Endpoint Overview
 
-| Property       | Value                            |
-| -------------- | -------------------------------- |
-| Endpoint       | `POST /api/test/emails`          |
-| Authentication | API Key (`X-API-Key` header)     |
+| Property       | Value                                |
+| -------------- | ------------------------------------ |
+| Endpoint       | `POST /api/test/emails`              |
+| Authentication | API Key (`X-API-Key` header)         |
 | Availability   | Only when `VSB_SDK_DEVELOPMENT=true` |
 
 ### 9.2 Request Schema

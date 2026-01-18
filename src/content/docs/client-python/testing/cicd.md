@@ -372,11 +372,11 @@ Set these environment variables in your CI platform:
 
 ### Optional Variables
 
-| Variable                        | Description           | Default   |
-| ------------------------------- | --------------------- | --------- |
-| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `sse`     |
-| `VAULTSANDBOX_TIMEOUT`          | Default timeout (ms)  | `30000`   |
-| `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval (ms) | `2000`    |
+| Variable                        | Description           | Default |
+| ------------------------------- | --------------------- | ------- |
+| `VAULTSANDBOX_STRATEGY`         | Delivery strategy     | `sse`   |
+| `VAULTSANDBOX_TIMEOUT`          | Default timeout (ms)  | `30000` |
+| `VAULTSANDBOX_POLLING_INTERVAL` | Polling interval (ms) | `2000`  |
 
 ### Configuration Helper
 

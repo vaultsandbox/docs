@@ -58,24 +58,24 @@ strategy: sse
 
 ### Config File Options
 
-| Key              | Description                          | Default  |
-| ---------------- | ------------------------------------ | -------- |
-| `api_key`        | Your VaultSandbox API key            | -        |
-| `base_url`       | Gateway server URL                   | -        |
-| `default_output` | Output format (`pretty` or `json`)   | `pretty` |
+| Key              | Description                            | Default  |
+| ---------------- | -------------------------------------- | -------- |
+| `api_key`        | Your VaultSandbox API key              | -        |
+| `base_url`       | Gateway server URL                     | -        |
+| `default_output` | Output format (`pretty` or `json`)     | `pretty` |
 | `strategy`       | Delivery strategy (`sse` or `polling`) | `sse`    |
 
 Note: `default_output` can only be set by editing the config file directly. The `vsb config set` command supports `api-key`, `base-url`, and `strategy`.
 
 ## Environment Variables
 
-| Variable         | Description                          |
-| ---------------- | ------------------------------------ |
-| `VSB_API_KEY`    | Your VaultSandbox API key            |
-| `VSB_BASE_URL`   | Gateway URL                          |
+| Variable         | Description                            |
+| ---------------- | -------------------------------------- |
+| `VSB_API_KEY`    | Your VaultSandbox API key              |
+| `VSB_BASE_URL`   | Gateway URL                            |
 | `VSB_STRATEGY`   | Delivery strategy (`sse` or `polling`) |
-| `VSB_CONFIG_DIR` | Override config directory            |
-| `VSB_OUTPUT`     | Default output format                |
+| `VSB_CONFIG_DIR` | Override config directory              |
+| `VSB_OUTPUT`     | Default output format                  |
 
 Example:
 
@@ -90,10 +90,10 @@ vsb inbox create
 
 The delivery strategy controls how the CLI receives email updates from the gateway.
 
-| Strategy  | Description                                           |
-| --------- | ----------------------------------------------------- |
+| Strategy  | Description                                                   |
+| --------- | ------------------------------------------------------------- |
 | `sse`     | Server-Sent Events for real-time push notifications (default) |
-| `polling` | Periodic API calls with exponential backoff           |
+| `polling` | Periodic API calls with exponential backoff                   |
 
 **When to use each:**
 

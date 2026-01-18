@@ -15,6 +15,7 @@ A web application provides a rich user interface for the VaultSandbox Gateway SM
 - **Custom Inboxes**: Create and manage multiple virtual inboxes
 - **Real-Time Updates**: Server-Sent Events (SSE) for live email notifications
 - **Gateway Metrics**: Monitor SMTP server performance and health
+- **Webhooks**: Configure HTTP notifications for email events (global or per-inbox)
 - **Dark/Light Theme**: Automatic theme switching based on system preferences
 - **Quantum-Safe Decryption**: Support for ML-KEM-768 encrypted email payloads
 - **Responsive Design**: Mobile-friendly interface built with PrimeNG and Tailwind CSS
@@ -146,6 +147,7 @@ The web interface provides comprehensive visualization of email authentication:
 
 :::tip[When "Skipped" appears]
 Authentication checks show "Skipped" when:
+
 - The inbox was created with `emailAuth: false`
 - The server has that specific check disabled globally
 - The master switch `VSB_EMAIL_AUTH_ENABLED=false` is set
@@ -187,6 +189,7 @@ Click the menu icon in the top-left corner of the interface to access additional
 - **Import Inbox**: Import a previously exported inbox
 - **Metrics**: Open the metrics dashboard to monitor SMTP server performance, connection statistics
 - **Console**: Access the Server-Sent Events (SSE) console for debugging real-time notifications and monitoring event streams
+- **Webhooks**: Configure global webhooks that apply to all inboxes
 - **Settings**: Configure application preferences
 - **Light Mode**: Toggle between light and dark themes
 - **Logout**: Clear your API key and log out of the application
@@ -243,6 +246,33 @@ Choose between 24-hour and 12-hour time display format throughout the applicatio
 #### Danger Zone
 
 **Delete All Inboxes**: Permanently delete all inboxes and emails from the server. This action cannot be undone and will remove all data immediately.
+
+## Webhooks
+
+Configure webhooks to receive HTTP notifications when email events occur.
+
+### Global Webhooks
+
+![Global Webhooks](/images/gateway/webui/global-webhooks.png)
+
+Access global webhooks from the application menu. These webhooks apply to all inboxes.
+
+### Inbox Webhooks
+
+![Inbox Webhooks](/images/gateway/webui/inbox-webhooks.png)
+
+Right-click an inbox in the sidebar and select **Webhooks** to configure webhooks for that specific inbox only.
+
+### Creating a Webhook
+
+![Webhook Creation](/images/gateway/webui/webhook-creation.png)
+
+- **Webhook URL**: The endpoint that will receive POST requests
+- **Description**: Optional description for the webhook
+- **Events**: Select which events trigger the webhook (Email Received, Email Stored, Email Deleted)
+- **Payload Template**: Choose the payload format (Default Raw JSON or custom templates)
+- **Filters**: Add rules to filter which emails trigger the webhook
+- **Require email authentication**: Only trigger for emails that pass SPF/DKIM/DMARC checks
 
 ## Theme Management
 

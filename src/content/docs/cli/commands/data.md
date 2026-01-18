@@ -67,9 +67,9 @@ The export file is a JSON document containing:
 }
 ```
 
-| Field       | Description                                                     |
-| ----------- | --------------------------------------------------------------- |
-| `encrypted` | Whether the inbox uses end-to-end encryption                    |
+| Field       | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `encrypted` | Whether the inbox uses end-to-end encryption                         |
 | `emailAuth` | Whether email authentication checks (SPF/DKIM/DMARC/PTR) are enabled |
 
 :::caution

@@ -80,15 +80,15 @@ public sealed record SpfResult
 
 ### SpfStatus Enum
 
-| Status      | Description                                              |
-| ----------- | -------------------------------------------------------- |
-| `Pass`      | Sending server is authorized                             |
-| `Fail`      | Sending server is NOT authorized                         |
-| `SoftFail`  | Probably not authorized (policy says ~all)               |
-| `Neutral`   | Domain makes no assertion                                |
-| `None`      | No SPF record found                                      |
-| `TempError` | Temporary error during check                             |
-| `PermError` | Permanent error in SPF record                            |
+| Status      | Description                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| `Pass`      | Sending server is authorized                                        |
+| `Fail`      | Sending server is NOT authorized                                    |
+| `SoftFail`  | Probably not authorized (policy says ~all)                          |
+| `Neutral`   | Domain makes no assertion                                           |
+| `None`      | No SPF record found                                                 |
+| `TempError` | Temporary error during check                                        |
+| `PermError` | Permanent error in SPF record                                       |
 | `Skipped`   | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### SPF Example
@@ -127,11 +127,11 @@ public sealed record DkimResult
 
 ### DkimStatus Enum
 
-| Status    | Description                                              |
-| --------- | -------------------------------------------------------- |
-| `Pass`    | Signature is valid                                       |
-| `Fail`    | Signature is invalid                                     |
-| `None`    | No DKIM signature found                                  |
+| Status    | Description                                                         |
+| --------- | ------------------------------------------------------------------- |
+| `Pass`    | Signature is valid                                                  |
+| `Fail`    | Signature is invalid                                                |
+| `None`    | No DKIM signature found                                             |
 | `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### DKIM Example
@@ -171,11 +171,11 @@ public sealed record DmarcResult
 
 ### DmarcStatus Enum
 
-| Status    | Description                                              |
-| --------- | -------------------------------------------------------- |
-| `Pass`    | DMARC check passed (SPF or DKIM aligned)                 |
-| `Fail`    | DMARC check failed                                       |
-| `None`    | No DMARC policy found                                    |
+| Status    | Description                                                         |
+| --------- | ------------------------------------------------------------------- |
+| `Pass`    | DMARC check passed (SPF or DKIM aligned)                            |
+| `Fail`    | DMARC check failed                                                  |
+| `None`    | No DMARC policy found                                               |
 | `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### DmarcPolicy Enum
@@ -221,11 +221,11 @@ public sealed record ReverseDnsResult
 
 ### ReverseDnsStatus Enum
 
-| Status    | Description                                              |
-| --------- | -------------------------------------------------------- |
-| `Pass`    | PTR record exists and matches                            |
-| `Fail`    | PTR record doesn't match or lookup failed                |
-| `None`    | No PTR record found                                      |
+| Status    | Description                                                         |
+| --------- | ------------------------------------------------------------------- |
+| `Pass`    | PTR record exists and matches                                       |
+| `Fail`    | PTR record doesn't match or lookup failed                           |
+| `None`    | No PTR record found                                                 |
 | `Skipped` | Check was skipped (inbox has `EmailAuth: false` or server disabled) |
 
 ### Reverse DNS Example
@@ -248,6 +248,7 @@ if (email.AuthResults?.ReverseDns is not null)
 **Version 0.7.0** changed `ReverseDns.Verified` (boolean) to `ReverseDns.Result` (enum).
 
 **Before (v0.6.x):**
+
 ```csharp
 if (email.AuthResults?.ReverseDns?.Verified == true)
 {
@@ -256,6 +257,7 @@ if (email.AuthResults?.ReverseDns?.Verified == true)
 ```
 
 **After (v0.7.0+):**
+
 ```csharp
 if (email.AuthResults?.ReverseDns?.Result == ReverseDnsStatus.Pass)
 {

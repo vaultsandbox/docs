@@ -64,12 +64,12 @@ inbox, err := client.CreateInbox(ctx,
 
 ### Inbox Creation Options
 
-| Option             | Type             | Description                                                            |
-| ------------------ | ---------------- | ---------------------------------------------------------------------- |
-| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)    |
-| `WithEmailAddress` | `string`         | Request a specific email address                                       |
-| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)        |
-| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox                                       |
+| Option             | Type             | Description                                                         |
+| ------------------ | ---------------- | ------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour) |
+| `WithEmailAddress` | `string`         | Request a specific email address                                    |
+| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)     |
+| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox                                    |
 
 ### Encryption Mode
 
@@ -1216,12 +1216,12 @@ const (
 )
 ```
 
-| Policy     | Default Encryption | Per-Inbox Override |
-|------------|-------------------|-------------------|
-| `always`   | Encrypted         | No - all inboxes encrypted |
-| `enabled`  | Encrypted         | Yes - can request plain |
-| `disabled` | Plain             | Yes - can request encrypted |
-| `never`    | Plain             | No - all inboxes plain |
+| Policy     | Default Encryption | Per-Inbox Override          |
+| ---------- | ------------------ | --------------------------- |
+| `always`   | Encrypted          | No - all inboxes encrypted  |
+| `enabled`  | Encrypted          | Yes - can request plain     |
+| `disabled` | Plain              | Yes - can request encrypted |
+| `never`    | Plain              | No - all inboxes plain      |
 
 **Helper Methods:**
 

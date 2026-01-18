@@ -705,10 +705,10 @@ void shouldHandleOptionalConfirmationEmail() {
 
 ### Difference from waitForEmail()
 
-| Method           | On Timeout            | Use Case                          |
-| ---------------- | --------------------- | --------------------------------- |
+| Method           | On Timeout                | Use Case                          |
+| ---------------- | ------------------------- | --------------------------------- |
 | `waitForEmail()` | Throws `TimeoutException` | Required emails that must arrive  |
-| `awaitEmail()`   | Returns `null`        | Optional emails that may not come |
+| `awaitEmail()`   | Returns `null`            | Optional emails that may not come |
 
 ## Retrieving Inboxes
 

@@ -639,12 +639,12 @@ System.out.println("Default encrypted: " + info.isDefaultEncrypted());
 
 ### Encryption Policies
 
-| Policy     | Default Behavior | Can Override?                          |
-| ---------- | ---------------- | -------------------------------------- |
-| `always`   | Encrypted        | No - all inboxes are always encrypted  |
-| `enabled`  | Encrypted        | Yes - can request `plain`              |
-| `disabled` | Plain            | Yes - can request `encrypted`          |
-| `never`    | Plain            | No - all inboxes are always plain      |
+| Policy     | Default Behavior | Can Override?                         |
+| ---------- | ---------------- | ------------------------------------- |
+| `always`   | Encrypted        | No - all inboxes are always encrypted |
+| `enabled`  | Encrypted        | Yes - can request `plain`             |
+| `disabled` | Plain            | Yes - can request `encrypted`         |
+| `never`    | Plain            | No - all inboxes are always plain     |
 
 ### Example: Conditional Inbox Creation
 

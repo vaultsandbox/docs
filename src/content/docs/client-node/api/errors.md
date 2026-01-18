@@ -16,6 +16,7 @@ VaultSandboxError (base class)
 ├── TimeoutError
 ├── InboxNotFoundError
 ├── EmailNotFoundError
+├── WebhookNotFoundError
 ├── InboxAlreadyExistsError
 ├── InvalidImportDataError
 ├── DecryptionError
@@ -148,11 +149,11 @@ try {
 
 #### Common API Error Messages
 
-| Status | Message | Cause |
-| ------ | ------- | ----- |
-| `400` | `clientKemPk is required when encryption is enabled` | Encryption is enabled but the SDK failed to provide a KEM public key (internal SDK error) |
-| `409` | `An inbox with the same client KEM public key already exists` | Attempting to create an encrypted inbox with a key that's already in use |
-| `409` | `An inbox with this email address already exists` | Attempting to create an inbox with an email address that's already taken |
+| Status | Message                                                       | Cause                                                                                     |
+| ------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `400`  | `clientKemPk is required when encryption is enabled`          | Encryption is enabled but the SDK failed to provide a KEM public key (internal SDK error) |
+| `409`  | `An inbox with the same client KEM public key already exists` | Attempting to create an encrypted inbox with a key that's already in use                  |
+| `409`  | `An inbox with this email address already exists`             | Attempting to create an inbox with an email address that's already taken                  |
 
 ---
 
@@ -269,6 +270,39 @@ try {
 	}
 }
 ```
+
+---
+
+### WebhookNotFoundError
+
+Thrown when a webhook does not exist or has been deleted.
+
+```typescript
+class WebhookNotFoundError extends VaultSandboxError {
+	message: string;
+}
+```
+
+#### Example
+
+```javascript
+import { WebhookNotFoundError } from '@vaultsandbox/client';
+
+try {
+	const webhook = await inbox.getWebhook('non-existent-id');
+} catch (error) {
+	if (error instanceof WebhookNotFoundError) {
+		console.error('Webhook not found');
+		console.error('It may have been deleted or the ID is invalid');
+	}
+}
+```
+
+#### Common Scenarios
+
+- Webhook was deleted by another process
+- Webhook ID is invalid or malformed
+- Inbox was deleted (webhooks are deleted with the inbox)
 
 ---
 

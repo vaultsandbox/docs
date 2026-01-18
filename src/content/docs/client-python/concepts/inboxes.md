@@ -120,6 +120,7 @@ print(inbox.encrypted)  # True or False
 - `False` - Emails are stored in plain text (Base64-encoded JSON)
 
 The encryption state is determined by:
+
 1. Server's `encryption_policy` setting
 2. The `encryption` option passed during inbox creation (when policy allows)
 

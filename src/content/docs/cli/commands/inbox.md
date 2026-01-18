@@ -261,8 +261,272 @@ vsb inbox delete abc123 -l
 Deleting an inbox removes all associated emails and encryption keys. This action cannot be undone unless you have an export.
 :::
 
+---
+
+## Inbox Webhooks
+
+Inbox webhooks receive notifications only for emails sent to a specific inbox. They work the same as [global webhooks](/cli/commands/webhook/) but are scoped to one inbox.
+
+### vsb inbox webhook create
+
+Create a webhook for a specific inbox.
+
+```bash
+vsb inbox webhook create <url> [flags]
+```
+
+#### Arguments
+
+| Argument | Description              |
+| -------- | ------------------------ |
+| `url`    | The webhook endpoint URL |
+
+#### Flags
+
+| Flag                        | Description                                               | Required |
+| --------------------------- | --------------------------------------------------------- | -------- |
+| `--event`                   | Event type to subscribe to (repeatable)                   | Yes      |
+| `--inbox`                   | Inbox to attach webhook to (uses active if omitted)       | No       |
+| `--template`                | Built-in template: `slack`, `discord`, `teams`, `generic` | No       |
+| `--custom-template`         | Path to custom Go template file                           | No       |
+| `--content-type`            | Content-Type for custom template                          | No       |
+| `--description`             | Optional description                                      | No       |
+| `--filter-from`             | Filter by sender email/pattern                            | No       |
+| `--filter-to`               | Filter by recipient email/pattern                         | No       |
+| `--filter-subject`          | Exact subject match                                       | No       |
+| `--filter-subject-contains` | Subject contains text                                     | No       |
+| `--filter-subject-regex`    | Subject regex pattern                                     | No       |
+| `--filter-domain`           | Filter by sender domain                                   | No       |
+| `--filter-mode`             | Filter logic: `all` (AND) or `any` (OR)                   | No       |
+| `--require-auth`            | Require email passes SPF/DKIM/DMARC                       | No       |
+
+#### Examples
+
+```bash
+# Create webhook for active inbox
+vsb inbox webhook create https://example.com/webhook --event email.received
+
+# Create webhook for specific inbox
+vsb inbox webhook create https://example.com/webhook \
+  --event email.received \
+  --inbox test@abc123.vsx.email
+
+# Create Slack webhook with filters
+vsb inbox webhook create https://hooks.slack.com/services/xxx \
+  --event email.received \
+  --template slack \
+  --filter-subject-contains "verify"
+```
+
+---
+
+### vsb inbox webhook list
+
+List webhooks for an inbox.
+
+```bash
+vsb inbox webhook list [flags]
+vsb inbox webhook ls [flags]
+```
+
+#### Flags
+
+| Flag      | Description                                  |
+| --------- | -------------------------------------------- |
+| `--inbox` | Specify inbox (uses active inbox if omitted) |
+
+#### Examples
+
+```bash
+# List webhooks for active inbox
+vsb inbox webhook list
+
+# List webhooks for specific inbox
+vsb inbox webhook list --inbox test@abc123.vsx.email
+
+# Output as JSON
+vsb inbox webhook list -o json
+```
+
+---
+
+### vsb inbox webhook get
+
+Get detailed information about an inbox webhook.
+
+```bash
+vsb inbox webhook get <webhook-id> [flags]
+```
+
+#### Arguments
+
+| Argument     | Description |
+| ------------ | ----------- |
+| `webhook-id` | Webhook ID  |
+
+#### Flags
+
+| Flag      | Description                                  |
+| --------- | -------------------------------------------- |
+| `--inbox` | Specify inbox (uses active inbox if omitted) |
+
+#### Examples
+
+```bash
+vsb inbox webhook get wh_abc123
+vsb inbox webhook get wh_abc123 -o json
+```
+
+---
+
+### vsb inbox webhook update
+
+Update an inbox webhook.
+
+```bash
+vsb inbox webhook update <webhook-id> [flags]
+```
+
+#### Arguments
+
+| Argument     | Description |
+| ------------ | ----------- |
+| `webhook-id` | Webhook ID  |
+
+#### Flags
+
+| Flag                        | Description                                  |
+| --------------------------- | -------------------------------------------- |
+| `--inbox`                   | Specify inbox (uses active inbox if omitted) |
+| `--url`                     | Change webhook endpoint URL                  |
+| `--event`                   | Replace events (repeatable)                  |
+| `--template`                | Change to built-in template                  |
+| `--custom-template`         | Change to custom template                    |
+| `--content-type`            | Content-Type for custom template             |
+| `--description`             | Update description                           |
+| `--enable`                  | Enable webhook                               |
+| `--disable`                 | Disable webhook                              |
+| `--clear-filters`           | Remove all filters                           |
+| `--filter-from`             | Filter by sender email/pattern               |
+| `--filter-to`               | Filter by recipient email/pattern            |
+| `--filter-subject`          | Exact subject match                          |
+| `--filter-subject-contains` | Subject contains text                        |
+| `--filter-subject-regex`    | Subject regex pattern                        |
+| `--filter-domain`           | Filter by sender domain                      |
+| `--filter-mode`             | Filter logic: `all` (AND) or `any` (OR)      |
+| `--require-auth`            | Require email passes SPF/DKIM/DMARC          |
+
+#### Examples
+
+```bash
+# Disable webhook
+vsb inbox webhook update wh_abc123 --disable
+
+# Change URL and add filter
+vsb inbox webhook update wh_abc123 \
+  --url https://new-endpoint.com \
+  --filter-subject-contains "important"
+```
+
+---
+
+### vsb inbox webhook delete
+
+Delete an inbox webhook.
+
+```bash
+vsb inbox webhook delete <webhook-id> [flags]
+vsb inbox webhook rm <webhook-id> [flags]
+```
+
+#### Arguments
+
+| Argument     | Description |
+| ------------ | ----------- |
+| `webhook-id` | Webhook ID  |
+
+#### Flags
+
+| Flag          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `--inbox`     | Specify inbox (uses active inbox if omitted) |
+| `-f, --force` | Skip confirmation prompt                     |
+
+#### Examples
+
+```bash
+vsb inbox webhook delete wh_abc123
+vsb inbox webhook rm wh_abc123 -f
+```
+
+---
+
+### vsb inbox webhook rotate
+
+Rotate the signing secret for an inbox webhook.
+
+```bash
+vsb inbox webhook rotate <webhook-id> [flags]
+```
+
+#### Arguments
+
+| Argument     | Description |
+| ------------ | ----------- |
+| `webhook-id` | Webhook ID  |
+
+#### Flags
+
+| Flag          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `--inbox`     | Specify inbox (uses active inbox if omitted) |
+| `-f, --force` | Skip confirmation prompt                     |
+
+#### Examples
+
+```bash
+vsb inbox webhook rotate wh_abc123
+vsb inbox webhook rotate wh_abc123 -f
+```
+
+:::note
+The previous secret remains valid for 24 hours after rotation.
+:::
+
+---
+
+### vsb inbox webhook test
+
+Test an inbox webhook endpoint.
+
+```bash
+vsb inbox webhook test <webhook-id> [flags]
+```
+
+#### Arguments
+
+| Argument     | Description |
+| ------------ | ----------- |
+| `webhook-id` | Webhook ID  |
+
+#### Flags
+
+| Flag      | Description                                  |
+| --------- | -------------------------------------------- |
+| `--inbox` | Specify inbox (uses active inbox if omitted) |
+
+#### Examples
+
+```bash
+vsb inbox webhook test wh_abc123
+vsb inbox webhook test wh_abc123 -o json
+```
+
+---
+
 ## Next Steps
 
 - [Email Commands](/cli/commands/email/) - Work with emails in your inboxes
+- [Webhook Commands](/cli/commands/webhook/) - Global webhooks for all inboxes
 - [Wait Command](/cli/commands/wait/) - Script email verification
 - [Export/Import](/cli/commands/data/) - Back up and restore inboxes

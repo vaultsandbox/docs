@@ -589,6 +589,289 @@ fs.writeFileSync('inbox-backup.json', JSON.stringify(data, null, 2));
 
 Exported data contains private encryption keys. Store securely!
 
+## Webhook Methods
+
+The Inbox class provides methods for managing webhooks that receive HTTP callbacks when events occur.
+
+### createWebhook()
+
+Creates a new webhook for this inbox.
+
+```typescript
+createWebhook(options: CreateWebhookOptions): Promise<WebhookData>
+```
+
+#### Parameters
+
+```typescript
+interface CreateWebhookOptions {
+	url: string;
+	events: WebhookEventType[];
+	template?: 'slack' | 'discord' | 'teams' | 'simple' | 'notification' | 'zapier' | 'default' | CustomTemplate;
+	filter?: FilterConfig;
+	description?: string;
+}
+
+type WebhookEventType = 'email.received' | 'email.stored' | 'email.deleted';
+```
+
+#### Returns
+
+`Promise<WebhookData>` - The created webhook including the secret for signature verification
+
+#### Example
+
+```javascript
+const webhook = await inbox.createWebhook({
+	url: 'https://your-app.com/webhook/emails',
+	events: ['email.received'],
+	description: 'Production email notifications',
+});
+
+console.log(`Webhook ID: ${webhook.id}`);
+console.log(`Secret: ${webhook.secret}`); // Save this!
+```
+
+---
+
+### listWebhooks()
+
+Lists all webhooks for this inbox.
+
+```typescript
+listWebhooks(): Promise<WebhookListResponse>
+```
+
+#### Returns
+
+`Promise<WebhookListResponse>` - List of webhooks and total count
+
+```typescript
+interface WebhookListResponse {
+	webhooks: WebhookData[];
+	total: number;
+}
+```
+
+#### Example
+
+```javascript
+const { webhooks, total } = await inbox.listWebhooks();
+
+console.log(`Total webhooks: ${total}`);
+webhooks.forEach((wh) => {
+	console.log(`- ${wh.id}: ${wh.url}`);
+});
+```
+
+---
+
+### getWebhook()
+
+Retrieves a specific webhook by ID.
+
+```typescript
+getWebhook(webhookId: string): Promise<WebhookData>
+```
+
+#### Parameters
+
+- `webhookId`: The unique identifier for the webhook
+
+#### Returns
+
+`Promise<WebhookData>` - The webhook data
+
+```typescript
+interface WebhookData {
+	id: string;
+	url: string;
+	events: WebhookEventType[];
+	scope: 'global' | 'inbox';
+	inboxEmail?: string;
+	enabled: boolean;
+	secret?: string;
+	template?: unknown;
+	filter?: FilterConfig;
+	description?: string;
+	createdAt: string;
+	updatedAt?: string;
+	lastDeliveryAt?: string;
+	lastDeliveryStatus?: 'success' | 'failed';
+	stats?: WebhookStats;
+}
+```
+
+#### Example
+
+```javascript
+const webhook = await inbox.getWebhook('webhook-id');
+
+console.log(`URL: ${webhook.url}`);
+console.log(`Enabled: ${webhook.enabled}`);
+console.log(`Last delivery: ${webhook.lastDeliveryAt || 'Never'}`);
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+### updateWebhook()
+
+Updates a specific webhook.
+
+```typescript
+updateWebhook(webhookId: string, options: UpdateWebhookOptions): Promise<WebhookData>
+```
+
+#### Parameters
+
+- `webhookId`: The unique identifier for the webhook
+
+```typescript
+interface UpdateWebhookOptions {
+	url?: string;
+	events?: WebhookEventType[];
+	template?: string | CustomTemplate | null;
+	filter?: FilterConfig | null;
+	description?: string;
+	enabled?: boolean;
+}
+```
+
+#### Returns
+
+`Promise<WebhookData>` - The updated webhook data
+
+#### Example
+
+```javascript
+const updated = await inbox.updateWebhook('webhook-id', {
+	url: 'https://your-app.com/webhook/v2/emails',
+	enabled: false,
+});
+
+console.log(`Updated URL: ${updated.url}`);
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+### deleteWebhook()
+
+Deletes a specific webhook.
+
+```typescript
+deleteWebhook(webhookId: string): Promise<void>
+```
+
+#### Parameters
+
+- `webhookId`: The unique identifier for the webhook
+
+#### Example
+
+```javascript
+await inbox.deleteWebhook('webhook-id');
+console.log('Webhook deleted');
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+### testWebhook()
+
+Tests a webhook by sending a test payload.
+
+```typescript
+testWebhook(webhookId: string): Promise<TestWebhookResponse>
+```
+
+#### Parameters
+
+- `webhookId`: The unique identifier for the webhook
+
+#### Returns
+
+`Promise<TestWebhookResponse>` - The test result
+
+```typescript
+interface TestWebhookResponse {
+	success: boolean;
+	statusCode?: number;
+	responseTime?: number;
+	responseBody?: string;
+	error?: string;
+	payloadSent?: unknown;
+}
+```
+
+#### Example
+
+```javascript
+const result = await inbox.testWebhook('webhook-id');
+
+if (result.success) {
+	console.log(`Test passed! Status: ${result.statusCode}`);
+	console.log(`Response time: ${result.responseTime}ms`);
+} else {
+	console.error(`Test failed: ${result.error}`);
+}
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
+### rotateWebhookSecret()
+
+Rotates the secret for a webhook. The old secret remains valid for a grace period.
+
+```typescript
+rotateWebhookSecret(webhookId: string): Promise<RotateSecretResponse>
+```
+
+#### Parameters
+
+- `webhookId`: The unique identifier for the webhook
+
+#### Returns
+
+`Promise<RotateSecretResponse>` - The new secret and grace period
+
+```typescript
+interface RotateSecretResponse {
+	id: string;
+	secret: string;
+	previousSecretValidUntil: string;
+}
+```
+
+#### Example
+
+```javascript
+const result = await inbox.rotateWebhookSecret('webhook-id');
+
+console.log(`New secret: ${result.secret}`);
+console.log(`Old secret valid until: ${result.previousSecretValidUntil}`);
+```
+
+#### Errors
+
+- `WebhookNotFoundError` - Webhook does not exist
+
+---
+
 ## InboxMonitor
 
 The `InboxMonitor` class allows you to monitor multiple inboxes simultaneously.
@@ -743,5 +1026,6 @@ completeInboxExample().catch(console.error);
 
 - [Email API Reference](/client-node/api/email/) - Work with email objects
 - [VaultSandboxClient API](/client-node/api/client/) - Learn about client methods
+- [Webhooks Guide](/client-node/guides/webhooks/) - Set up webhook notifications
 - [Waiting for Emails Guide](/client-node/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-node/guides/real-time/) - Advanced monitoring patterns

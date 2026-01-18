@@ -180,18 +180,18 @@ public sealed class CreateInboxOptions
 }
 ```
 
-| Property       | Type              | Description                                                          |
-| -------------- | ----------------- | -------------------------------------------------------------------- |
-| `Ttl`          | `TimeSpan?`       | Time-to-live for the inbox (min: 60s, max: 7 days)                   |
-| `EmailAddress` | `string?`         | Request a specific email address (max 254 chars)                     |
-| `EmailAuth`    | `bool?`           | Enable/disable SPF/DKIM/DMARC/PTR checks. Omit for server default    |
-| `Encryption`   | `InboxEncryption?` | Request `Encrypted` or `Plain` inbox. Omit for server default        |
+| Property       | Type               | Description                                                       |
+| -------------- | ------------------ | ----------------------------------------------------------------- |
+| `Ttl`          | `TimeSpan?`        | Time-to-live for the inbox (min: 60s, max: 7 days)                |
+| `EmailAddress` | `string?`          | Request a specific email address (max 254 chars)                  |
+| `EmailAuth`    | `bool?`            | Enable/disable SPF/DKIM/DMARC/PTR checks. Omit for server default |
+| `Encryption`   | `InboxEncryption?` | Request `Encrypted` or `Plain` inbox. Omit for server default     |
 
 #### InboxEncryption Enum
 
-| Value       | Description                    |
-| ----------- | ------------------------------ |
-| `Encrypted` | Request an encrypted inbox     |
+| Value       | Description                         |
+| ----------- | ----------------------------------- |
+| `Encrypted` | Request an encrypted inbox          |
 | `Plain`     | Request a plain (unencrypted) inbox |
 
 #### Returns
@@ -334,12 +334,12 @@ public sealed record ServerInfo
 
 #### EncryptionPolicy Enum
 
-| Policy     | Default Encryption | Per-Inbox Override                    |
-| ---------- | ------------------ | ------------------------------------- |
-| `Always`   | Encrypted          | No - all inboxes encrypted            |
-| `Enabled`  | Encrypted          | Yes - can request `Plain`             |
-| `Disabled` | Plain              | Yes - can request `Encrypted`         |
-| `Never`    | Plain              | No - all inboxes plain (unencrypted)  |
+| Policy     | Default Encryption | Per-Inbox Override                   |
+| ---------- | ------------------ | ------------------------------------ |
+| `Always`   | Encrypted          | No - all inboxes encrypted           |
+| `Enabled`  | Encrypted          | Yes - can request `Plain`            |
+| `Disabled` | Plain              | Yes - can request `Encrypted`        |
+| `Never`    | Plain              | No - all inboxes plain (unencrypted) |
 
 #### Example
 
