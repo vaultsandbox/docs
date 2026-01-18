@@ -11,7 +11,8 @@ All SDK exceptions extend `VaultSandboxException`, which is a `RuntimeException`
 VaultSandboxException (base - extends RuntimeException)
 ├── ApiException (has statusCode)
 │   ├── InboxNotFoundException (404)
-│   └── EmailNotFoundException (404)
+│   ├── EmailNotFoundException (404)
+│   └── WebhookNotFoundException (404)
 ├── NetworkException
 ├── TimeoutException
 ├── DecryptionException
@@ -147,6 +148,27 @@ try {
 } catch (EmailNotFoundException e) {
     System.out.println("Email not found: " + e.getMessage());
     // Email may have been deleted
+}
+```
+
+## WebhookNotFoundException
+
+Thrown when a webhook doesn't exist. Extends `ApiException` with status code 404.
+
+```java
+public class WebhookNotFoundException extends ApiException {
+    // Constructor sets message to "Webhook not found: {webhookId}"
+}
+```
+
+### Example
+
+```java
+try {
+    WebhookData webhook = inbox.getWebhook("whk_nonexistent");
+} catch (WebhookNotFoundException e) {
+    System.out.println("Webhook not found: " + e.getMessage());
+    // Webhook may have been deleted
 }
 ```
 

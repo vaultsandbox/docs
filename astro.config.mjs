@@ -210,6 +210,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-java/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-java/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-java/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-java/guides/webhooks/' },
 							],
 						},
 						{

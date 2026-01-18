@@ -678,6 +678,216 @@ Inbox restoredInbox = client.importInbox(loaded);
 Email email = restoredInbox.waitForEmail();
 ```
 
+## Webhook Methods
+
+### createWebhook(String url, List&lt;WebhookEventType&gt; events)
+
+Creates a webhook for this inbox.
+
+```java
+public WebhookData createWebhook(String url, List<WebhookEventType> events)
+```
+
+**Parameters:**
+
+- `url` - Target URL (HTTPS required in production)
+- `events` - Event types to subscribe to
+
+**Returns:** `WebhookData` including the signing secret
+
+**Throws:**
+
+- `ApiException` - on API errors
+- `NetworkException` - on network issues
+
+**Example:**
+
+```java
+WebhookData webhook = inbox.createWebhook(
+    "https://your-app.com/webhook",
+    List.of(WebhookEventType.EMAIL_RECEIVED)
+);
+System.out.println("Secret: " + webhook.getSecret());
+```
+
+### createWebhook(CreateWebhookRequest request)
+
+Creates a webhook with additional options.
+
+```java
+public WebhookData createWebhook(CreateWebhookRequest request)
+```
+
+**Parameters:**
+
+- `request` - Webhook creation request with url, events, template, filter, and description
+
+**Returns:** `WebhookData` including the signing secret
+
+**Example:**
+
+```java
+CreateWebhookRequest request = CreateWebhookRequest.builder()
+    .url("https://your-app.com/webhook")
+    .events(WebhookEventType.EMAIL_RECEIVED)
+    .template("slack")
+    .description("Slack notifications")
+    .build();
+
+WebhookData webhook = inbox.createWebhook(request);
+```
+
+### listWebhooks()
+
+Lists all webhooks for this inbox.
+
+```java
+public List<WebhookData> listWebhooks()
+```
+
+**Returns:** List of webhooks (note: `secret` field is excluded from list responses)
+
+**Example:**
+
+```java
+List<WebhookData> webhooks = inbox.listWebhooks();
+for (WebhookData webhook : webhooks) {
+    System.out.printf("%s: %s%n", webhook.getId(), webhook.getUrl());
+}
+```
+
+### getWebhook(String webhookId)
+
+Retrieves a webhook by ID.
+
+```java
+public WebhookData getWebhook(String webhookId)
+```
+
+**Parameters:**
+
+- `webhookId` - Webhook ID (whk_ prefix)
+
+**Returns:** `WebhookData` including secret and stats
+
+**Throws:**
+
+- `WebhookNotFoundException` - if webhook doesn't exist
+
+**Example:**
+
+```java
+WebhookData webhook = inbox.getWebhook("whk_abc123");
+System.out.println("Stats: " + webhook.getStats().getSuccessRate() + "% success");
+```
+
+### updateWebhook(String webhookId, UpdateWebhookRequest request)
+
+Updates a webhook.
+
+```java
+public WebhookData updateWebhook(String webhookId, UpdateWebhookRequest request)
+```
+
+**Parameters:**
+
+- `webhookId` - Webhook ID (whk_ prefix)
+- `request` - Update request with optional url, events, template, filter, description, enabled
+
+**Returns:** Updated `WebhookData`
+
+**Throws:**
+
+- `WebhookNotFoundException` - if webhook doesn't exist
+
+**Example:**
+
+```java
+UpdateWebhookRequest update = UpdateWebhookRequest.builder()
+    .enabled(false)
+    .description("Disabled for maintenance")
+    .build();
+
+WebhookData updated = inbox.updateWebhook("whk_abc123", update);
+```
+
+### deleteWebhook(String webhookId)
+
+Deletes a webhook.
+
+```java
+public void deleteWebhook(String webhookId)
+```
+
+**Parameters:**
+
+- `webhookId` - Webhook ID (whk_ prefix)
+
+**Throws:**
+
+- `WebhookNotFoundException` - if webhook doesn't exist
+
+**Example:**
+
+```java
+inbox.deleteWebhook("whk_abc123");
+```
+
+### testWebhook(String webhookId)
+
+Sends a test event to the webhook endpoint.
+
+```java
+public TestWebhookResponse testWebhook(String webhookId)
+```
+
+**Parameters:**
+
+- `webhookId` - Webhook ID (whk_ prefix)
+
+**Returns:** `TestWebhookResponse` with success status, statusCode, responseTime, and error
+
+**Throws:**
+
+- `WebhookNotFoundException` - if webhook doesn't exist
+
+**Example:**
+
+```java
+TestWebhookResponse result = inbox.testWebhook("whk_abc123");
+if (result.isSuccess()) {
+    System.out.println("Test succeeded: " + result.getStatusCode());
+} else {
+    System.err.println("Test failed: " + result.getError());
+}
+```
+
+### rotateWebhookSecret(String webhookId)
+
+Rotates a webhook's signing secret.
+
+```java
+public RotateSecretResponse rotateWebhookSecret(String webhookId)
+```
+
+**Parameters:**
+
+- `webhookId` - Webhook ID (whk_ prefix)
+
+**Returns:** `RotateSecretResponse` with new secret and grace period info
+
+**Throws:**
+
+- `WebhookNotFoundException` - if webhook doesn't exist
+
+**Example:**
+
+```java
+RotateSecretResponse result = inbox.rotateWebhookSecret("whk_abc123");
+System.out.println("New secret: " + result.getSecret());
+System.out.println("Old secret valid until: " + result.getPreviousSecretValidUntil());
+```
+
 ## Thread Safety
 
 The `Inbox` class is thread-safe:
@@ -693,3 +903,4 @@ The `Inbox` class is thread-safe:
 - [Email API](/client-java/api/email/) - Email class reference
 - [Waiting for Emails](/client-java/guides/waiting-for-emails/) - Wait patterns
 - [Real-time Subscriptions](/client-java/guides/real-time/) - Subscription patterns
+- [Webhooks](/client-java/guides/webhooks/) - Webhook setup and management
