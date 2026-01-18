@@ -322,6 +322,7 @@ export default defineConfig({
 								{ label: 'Working with Attachments', link: '/client-dotnet/guides/attachments/' },
 								{ label: 'Email Authentication', link: '/client-dotnet/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-dotnet/guides/real-time/' },
+								{ label: 'Webhooks', link: '/client-dotnet/guides/webhooks/' },
 							],
 						},
 						{

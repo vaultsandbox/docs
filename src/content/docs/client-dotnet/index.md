@@ -9,6 +9,7 @@ The official .NET SDK for VaultSandbox Gateway. It handles quantum-safe encrypti
 
 - **Automatic Encryption**: ML-KEM-768 key encapsulation + AES-256-GCM encryption handled transparently
 - **Real-Time Delivery**: SSE-based email delivery with smart polling fallback
+- **Webhooks**: HTTP callbacks for email events with filtering and templates
 - **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
 - **Full Email Access**: Decrypted content, headers, links, and attachments
 - **Dependency Injection**: First-class ASP.NET Core `IServiceCollection` integration
@@ -64,4 +65,5 @@ await client.DisposeAsync();
 - [Installation](/client-dotnet/installation/) - Install the SDK
 - [Configuration](/client-dotnet/configuration/) - Client options and setup
 - [Core Concepts](/client-dotnet/concepts/inboxes/) - Inboxes, emails, and authentication
+- [Webhooks](/client-dotnet/guides/webhooks/) - Set up webhook notifications
 - [API Reference](/client-dotnet/api/client/) - Full API documentation
