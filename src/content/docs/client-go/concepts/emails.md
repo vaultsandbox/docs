@@ -13,17 +13,18 @@ if err != nil {
     log.Fatal(err)
 }
 
-fmt.Println(email.ID)          // "email_abc123"
-fmt.Println(email.From)        // "sender@example.com"
-fmt.Println(email.To)          // ["recipient@mail.example.com"]
-fmt.Println(email.Subject)     // "Welcome to our service"
-fmt.Println(email.Text)        // Plain text content
-fmt.Println(email.HTML)        // HTML content
-fmt.Println(email.ReceivedAt)  // time.Time
-fmt.Println(email.IsRead)      // false
-fmt.Println(email.Links)       // ["https://example.com/verify"]
-fmt.Println(email.Attachments) // []Attachment
-fmt.Println(email.AuthResults) // SPF/DKIM/DMARC results
+fmt.Println(email.ID)           // "email_abc123"
+fmt.Println(email.From)         // "sender@example.com"
+fmt.Println(email.To)           // ["recipient@mail.example.com"]
+fmt.Println(email.Subject)      // "Welcome to our service"
+fmt.Println(email.Text)         // Plain text content
+fmt.Println(email.HTML)         // HTML content
+fmt.Println(email.ReceivedAt)   // time.Time
+fmt.Println(email.IsRead)       // false
+fmt.Println(email.Links)        // ["https://example.com/verify"]
+fmt.Println(email.Attachments)  // []Attachment
+fmt.Println(email.AuthResults)  // SPF/DKIM/DMARC results
+fmt.Println(email.SpamAnalysis) // Spam analysis results (if enabled)
 ```
 
 ## Core Properties
@@ -239,6 +240,27 @@ if !validation.Passed {
 ```
 
 See [Authentication Results](/client-go/concepts/auth-results/) for details.
+
+### SpamAnalysis
+
+**Type**: `*spamanalysis.SpamAnalysis`
+
+Spam analysis results from Rspamd integration (when enabled).
+
+```go
+if email.SpamAnalysis != nil && email.SpamAnalysis.WasAnalyzed() {
+    fmt.Printf("Score: %.2f\n", *email.SpamAnalysis.Score)
+    fmt.Printf("Is spam: %v\n", *email.SpamAnalysis.IsSpam)
+    fmt.Printf("Action: %s\n", email.SpamAnalysis.Action)
+
+    // Check triggered rules
+    for _, symbol := range email.SpamAnalysis.Symbols {
+        fmt.Printf("  %s: %.2f\n", symbol.Name, symbol.Score)
+    }
+}
+```
+
+See [Spam Analysis](/client-go/concepts/spam-analysis/) for details.
 
 ### Headers
 
@@ -705,6 +727,7 @@ if err != nil {
 ## Next Steps
 
 - **[Authentication Results](/client-go/concepts/auth-results/)** - Email authentication details
+- **[Spam Analysis](/client-go/concepts/spam-analysis/)** - Spam detection and scoring
 - **[Working with Attachments](/client-go/guides/attachments/)** - Handle email attachments
 - **[Email Authentication](/client-go/guides/authentication/)** - Test SPF/DKIM/DMARC
 - **[API Reference: Email](/client-go/api/email/)** - Complete API documentation

@@ -21,6 +21,9 @@ print(email.is_read)      # False
 print(email.links)        # ["https://example.com/verify"]
 print(email.attachments)  # List of Attachment objects
 print(email.auth_results) # SPF/DKIM/DMARC results
+print(email.spam_analysis) # Spam analysis results (if enabled)
+print(email.is_spam)      # Quick spam check (True/False/None)
+print(email.spam_score)   # Spam score (float or None)
 ```
 
 ## Core Properties
@@ -209,6 +212,36 @@ if not validation.passed:
 ```
 
 See [Authentication Results](/client-python/concepts/auth-results/) for details.
+
+### spam_analysis
+
+**Type**: `SpamAnalysisResult | None`
+
+Spam analysis results from Rspamd (if enabled on the server and inbox).
+
+```python
+from vaultsandbox.types import SpamAnalysisStatus
+
+if email.spam_analysis:
+    print(email.spam_analysis.status)  # SpamAnalysisStatus.ANALYZED
+    print(email.spam_analysis.score)   # 5.2
+    print(email.spam_analysis.is_spam) # False
+    print(email.spam_analysis.action)  # SpamAction.ADD_HEADER
+
+    # Check triggered rules
+    for symbol in email.spam_analysis.symbols:
+        print(f"{symbol.name}: {symbol.score}")
+```
+
+**Convenience Properties**:
+
+```python
+# Quick access (returns None if not analyzed)
+print(email.is_spam)      # True/False/None
+print(email.spam_score)   # float or None
+```
+
+See [Spam Analysis](/client-python/concepts/spam-analysis/) for details.
 
 ### headers
 
@@ -540,6 +573,7 @@ except DecryptionError:
 ## Next Steps
 
 - **[Authentication Results](/client-python/concepts/auth-results/)** - Email authentication details
+- **[Spam Analysis](/client-python/concepts/spam-analysis/)** - Spam detection and scoring
 - **[Working with Attachments](/client-python/guides/attachments/)** - Handle email attachments
 - **[Email Authentication](/client-python/guides/authentication/)** - Test SPF/DKIM/DMARC
 - **[API Reference: Email](/client-python/api/email/)** - Complete API documentation

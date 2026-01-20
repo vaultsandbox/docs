@@ -72,6 +72,28 @@ if (canOverride)
 }
 ```
 
+### With Spam Analysis
+
+```csharp
+// Check if spam analysis is available
+var serverInfo = await client.GetServerInfoAsync();
+
+if (serverInfo.SpamAnalysisEnabled)
+{
+    var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+    {
+        SpamAnalysis = true
+    });
+
+    // Emails received will include spam analysis results
+    Console.WriteLine($"Inbox created: {inbox.EmailAddress}");
+}
+```
+
+If not specified, inboxes use the server's default setting (`VSB_SPAM_ANALYSIS_INBOX_DEFAULT`).
+
+See [Spam Analysis](/client-dotnet/concepts/spam-analysis/) for details on working with spam results.
+
 ## Inbox Properties
 
 ### EmailAddress
@@ -615,6 +637,7 @@ catch (InboxNotFoundException)
 ## Next Steps
 
 - **[Email Objects](/client-dotnet/concepts/emails/)** - Learn about email structure
+- **[Spam Analysis](/client-dotnet/concepts/spam-analysis/)** - Rspamd integration and spam detection
 - **[Managing Inboxes](/client-dotnet/guides/managing-inboxes/)** - Common inbox operations
 - **[Import/Export](/client-dotnet/advanced/import-export/)** - Advanced inbox persistence
 - **[API Reference: Inbox](/client-dotnet/api/inbox/)** - Complete API documentation

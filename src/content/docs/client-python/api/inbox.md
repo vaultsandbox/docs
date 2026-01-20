@@ -749,7 +749,7 @@ async def get_webhook(self, webhook_id: str) -> Webhook
 
 #### Parameters
 
-- `webhook_id`: The webhook ID (whk\_ prefix)
+- `webhook_id`: The webhook ID (whk_ prefix)
 
 #### Returns
 
@@ -805,7 +805,7 @@ async def delete_webhook(self, webhook_id: str) -> None
 
 #### Parameters
 
-- `webhook_id`: The webhook ID (whk\_ prefix)
+- `webhook_id`: The webhook ID (whk_ prefix)
 
 #### Example
 

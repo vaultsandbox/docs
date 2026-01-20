@@ -553,6 +553,7 @@ for failure in validation.failures:
 ## Next Steps
 
 - **[Email Authentication Guide](/client-python/guides/authentication/)** - Testing authentication in depth
+- **[Spam Analysis](/client-python/concepts/spam-analysis/)** - Spam detection and scoring
 - **[Email Objects](/client-python/concepts/emails/)** - Understanding email structure
 - **[Testing Patterns](/client-python/testing/password-reset/)** - Real-world testing examples
 - **[Gateway Security](/gateway/security/)** - Understanding the security model

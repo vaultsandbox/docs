@@ -374,6 +374,65 @@ if (email.metadata) {
 }
 ```
 
+---
+
+### spamAnalysis
+
+```typescript
+spamAnalysis?: SpamAnalysisResult;
+```
+
+Spam analysis results for the email. This property is only present when spam analysis is enabled on the server and for the inbox.
+
+```typescript
+interface SpamAnalysisResult {
+	status: 'analyzed' | 'skipped' | 'error';
+	score?: number;
+	requiredScore?: number;
+	action?: SpamAction;
+	isSpam?: boolean;
+	symbols?: SpamSymbol[];
+	processingTimeMs?: number;
+	info?: string;
+}
+
+type SpamAction = 'no action' | 'greylist' | 'add header' | 'rewrite subject' | 'soft reject' | 'reject';
+
+interface SpamSymbol {
+	name: string;
+	score: number;
+	description?: string;
+	options?: string[];
+}
+```
+
+#### Example
+
+```javascript
+const email = await inbox.waitForEmail({ timeout: 10000 });
+
+if (email.spamAnalysis) {
+	console.log(`Status: ${email.spamAnalysis.status}`);
+
+	if (email.spamAnalysis.status === 'analyzed') {
+		console.log(`Spam score: ${email.spamAnalysis.score}`);
+		console.log(`Required score: ${email.spamAnalysis.requiredScore}`);
+		console.log(`Is spam: ${email.spamAnalysis.isSpam}`);
+		console.log(`Action: ${email.spamAnalysis.action}`);
+
+		// View triggered rules
+		if (email.spamAnalysis.symbols) {
+			console.log('Triggered rules:');
+			email.spamAnalysis.symbols.forEach((symbol) => {
+				console.log(`  ${symbol.name}: ${symbol.score} - ${symbol.description || ''}`);
+			});
+		}
+	}
+}
+```
+
+See the [Spam Analysis Guide](/client-node/concepts/spam-analysis/) for more details.
+
 ## Methods
 
 ### markAsRead()
@@ -455,6 +514,79 @@ console.log(raw.raw);
 
 // Save to .eml file
 fs.writeFileSync(`email-${email.id}.eml`, raw.raw);
+```
+
+---
+
+### isSpam()
+
+Returns whether the email is classified as spam based on spam analysis.
+
+```typescript
+isSpam(): boolean | null
+```
+
+#### Returns
+
+- `true` - Email is classified as spam
+- `false` - Email is not spam
+- `null` - Spam analysis not available (status !== 'analyzed')
+
+#### Example
+
+```javascript
+const email = await inbox.waitForEmail({ timeout: 10000 });
+
+const spamStatus = email.isSpam();
+
+if (spamStatus === true) {
+	console.log('This email is spam!');
+} else if (spamStatus === false) {
+	console.log('This email is not spam');
+} else {
+	console.log('Spam analysis not available');
+}
+
+// Use in tests
+expect(email.isSpam()).toBe(false);
+```
+
+---
+
+### getSpamScore()
+
+Returns the spam score for the email.
+
+```typescript
+getSpamScore(): number | null
+```
+
+#### Returns
+
+- `number` - The spam score (positive = more spammy, negative = more legitimate)
+- `null` - Spam analysis not available (status !== 'analyzed')
+
+#### Example
+
+```javascript
+const email = await inbox.waitForEmail({ timeout: 10000 });
+
+const score = email.getSpamScore();
+
+if (score !== null) {
+	console.log(`Spam score: ${score}`);
+
+	// Typical thresholds:
+	// < 0: Very likely legitimate
+	// 0-5: Probably legitimate
+	// 5-10: Suspicious
+	// > 10: Very likely spam
+}
+
+// Use in tests
+const spamScore = email.getSpamScore();
+expect(spamScore).not.toBeNull();
+expect(spamScore).toBeLessThan(5);
 ```
 
 ## AuthResults
@@ -656,6 +788,19 @@ async function completeEmailExample() {
 			console.log('Failures:', validation.failures);
 		}
 
+		// Spam Analysis
+		console.log('\n=== Spam Analysis ===');
+		if (email.spamAnalysis) {
+			console.log(`Status: ${email.spamAnalysis.status}`);
+			if (email.spamAnalysis.status === 'analyzed') {
+				console.log(`Score: ${email.spamAnalysis.score}`);
+				console.log(`Is Spam: ${email.isSpam()}`);
+				console.log(`Action: ${email.spamAnalysis.action}`);
+			}
+		} else {
+			console.log('Spam analysis not available');
+		}
+
 		// Mark as read
 		await email.markAsRead();
 		console.log('\nMarked as read');
@@ -680,4 +825,5 @@ completeEmailExample().catch(console.error);
 - [Inbox API Reference](/client-node/api/inbox/) - Learn about inbox methods
 - [Attachments Guide](/client-node/guides/attachments/) - Working with attachments
 - [Authentication Guide](/client-node/guides/authentication/) - Email authentication testing
+- [Spam Analysis Guide](/client-node/concepts/spam-analysis/) - Understanding spam detection
 - [Waiting for Emails](/client-node/guides/waiting-for-emails/) - Best practices for email waiting

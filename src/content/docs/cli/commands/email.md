@@ -162,6 +162,13 @@ DKIM:  PASS (selector: default, domain: myapp.com)
 DMARC: PASS (policy: reject)
 PTR:   PASS (hostname: mail.myapp.com)
 
+SPAM ANALYSIS
+Status: analyzed
+Score: 2.1 / 15.0
+Is Spam: NO
+Action: no action
+Processing: 45ms
+
 TRANSPORT SECURITY
 TLS Version: TLS 1.3
 Cipher Suite: TLS_AES_256_GCM_SHA384
@@ -191,6 +198,38 @@ Each authentication check can return one of the following statuses:
 | `FAIL`    | Check failed                                                      |
 | `NONE`    | No policy record found or check not applicable                    |
 | `SKIPPED` | Check was skipped (e.g., inbox created with `--email-auth=false`) |
+
+### Spam Analysis Results
+
+When spam analysis is enabled for an inbox, the audit includes:
+
+| Field      | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `Status`   | `analyzed`, `skipped`, or `error`                  |
+| `Score`    | Spam score / required threshold                    |
+| `Is Spam`  | Whether the email exceeds the spam threshold       |
+| `Action`   | Recommended action (no action, add header, reject) |
+
+JSON output includes full spam analysis details:
+
+```json
+{
+  "spamAnalysis": {
+    "status": "analyzed",
+    "score": 2.1,
+    "requiredScore": 15.0,
+    "action": "no action",
+    "isSpam": false,
+    "processingTimeMs": 45,
+    "symbols": [
+      {
+        "name": "DKIM_SIGNED",
+        "score": -0.1,
+        "description": "Message has a DKIM signature"
+      }
+    ]
+  }
+}
 
 ---
 

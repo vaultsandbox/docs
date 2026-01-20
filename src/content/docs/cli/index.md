@@ -13,6 +13,7 @@ The official command-line interface for VaultSandbox. Monitor incoming emails in
 - **Multi-Inbox Watching**: Monitor all your inboxes simultaneously with configurable delivery (SSE or polling)
 - **Webhooks**: Receive real-time notifications via HTTP when emails arrive, with built-in templates for Slack, Discord, and Teams
 - **Email Authentication**: View SPF, DKIM, DMARC, and PTR verification results
+- **Spam Analysis**: View spam scores, verdicts, and triggered detection rules (when enabled on the gateway)
 - **Link & Attachment Inspection**: Extract URLs and preview attachments directly from the terminal
 - **CI/CD Ready**: Script email verification with the `wait` command for automated testing
 - **Portable Inboxes**: Export and import inboxes with encryption keys for sharing or backup

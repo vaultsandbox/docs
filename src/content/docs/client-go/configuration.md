@@ -260,6 +260,73 @@ inbox, err := client.CreateInbox(ctx,
 )
 ```
 
+#### WithEmailAuth
+
+**Signature**: `WithEmailAuth(enabled bool) InboxOption`
+
+**Default**: Server default
+
+**Description**: Enable or disable email authentication (SPF/DKIM/DMARC) validation for this inbox
+
+**Example**:
+
+```go
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithEmailAuth(true),
+)
+```
+
+#### WithEncryption
+
+**Signature**: `WithEncryption(mode EncryptionMode) InboxOption`
+
+**Default**: `EncryptionModeDefault`
+
+**Description**: Set the encryption mode for the inbox
+
+**Options**:
+
+- `EncryptionModeDefault` - Use server default
+- `EncryptionModeEncrypted` - Request encrypted inbox
+- `EncryptionModePlain` - Request unencrypted inbox
+
+**Example**:
+
+```go
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithEncryption(vaultsandbox.EncryptionModeEncrypted),
+)
+```
+
+#### WithSpamAnalysis
+
+**Signature**: `WithSpamAnalysis(enabled bool) InboxOption`
+
+**Default**: Server default (`VSB_SPAM_ANALYSIS_INBOX_DEFAULT`)
+
+**Description**: Enable or disable spam analysis (Rspamd integration) for this inbox. When enabled, incoming emails are analyzed for spam and results are included in the `SpamAnalysis` field of the email.
+
+**Requirements**: The server must have spam analysis enabled (`VSB_SPAM_ANALYSIS_ENABLED=true`). Check `client.ServerInfo().SpamAnalysisEnabled` to verify availability.
+
+**Example**:
+
+```go
+// Enable spam analysis for this inbox
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithSpamAnalysis(true),
+)
+
+// Disable spam analysis for this inbox
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithSpamAnalysis(false),
+)
+
+// Check if server supports spam analysis
+if client.ServerInfo().SpamAnalysisEnabled {
+	inbox, err := client.CreateInbox(ctx, vaultsandbox.WithSpamAnalysis(true))
+}
+```
+
 ## Wait Options
 
 Options passed to `WaitForEmail()` and `WaitForEmailCount()`.
@@ -561,6 +628,8 @@ fmt.Printf("Allowed domains: %v\n", info.AllowedDomains)
 - `AllowedDomains []string` - Email domains the server accepts
 - `MaxTTL time.Duration` - Maximum inbox TTL allowed
 - `DefaultTTL time.Duration` - Default inbox TTL
+- `EncryptionPolicy EncryptionPolicy` - Server encryption policy
+- `SpamAnalysisEnabled bool` - Whether spam analysis is available
 
 ### CheckKey()
 
@@ -843,18 +912,19 @@ Represents a decrypted email:
 
 ```go
 type Email struct {
-	ID          string
-	From        string
-	To          []string
-	Subject     string
-	Text        string
-	HTML        string
-	ReceivedAt  time.Time
-	Headers     map[string]string
-	Attachments []Attachment
-	Links       []string
-	AuthResults *authresults.AuthResults
-	IsRead      bool
+	ID           string
+	From         string
+	To           []string
+	Subject      string
+	Text         string
+	HTML         string
+	ReceivedAt   time.Time
+	Headers      map[string]string
+	Attachments  []Attachment
+	Links        []string
+	AuthResults  *authresults.AuthResults
+	SpamAnalysis *spamanalysis.SpamAnalysis
+	IsRead       bool
 }
 ```
 
@@ -880,9 +950,11 @@ Contains server configuration:
 
 ```go
 type ServerInfo struct {
-	AllowedDomains []string
-	MaxTTL         time.Duration
-	DefaultTTL     time.Duration
+	AllowedDomains      []string
+	MaxTTL              time.Duration
+	DefaultTTL          time.Duration
+	EncryptionPolicy    EncryptionPolicy
+	SpamAnalysisEnabled bool
 }
 ```
 

@@ -406,6 +406,53 @@ See the [Authentication Guide](/client-dotnet/guides/authentication/) for more d
 
 ---
 
+### SpamAnalysis
+
+```csharp
+SpamAnalysisResult? SpamAnalysis { get; }
+```
+
+Spam analysis results from Rspamd integration. May be `null` if spam analysis is not enabled.
+
+#### Example
+
+```csharp
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(10)
+});
+
+if (email.SpamAnalysis is not null)
+{
+    Console.WriteLine($"Status: {email.SpamAnalysis.Status}");
+
+    if (email.SpamAnalysis.Status == SpamAnalysisStatus.Analyzed)
+    {
+        Console.WriteLine($"Score: {email.SpamAnalysis.Score} / {email.SpamAnalysis.RequiredScore}");
+        Console.WriteLine($"Is Spam: {email.SpamAnalysis.IsSpam}");
+        Console.WriteLine($"Action: {email.SpamAnalysis.Action}");
+
+        // Check triggered rules
+        if (email.SpamAnalysis.Symbols is { Count: > 0 })
+        {
+            Console.WriteLine("Triggered rules:");
+            foreach (var symbol in email.SpamAnalysis.Symbols)
+            {
+                Console.WriteLine($"  {symbol.Name}: {symbol.Score}");
+            }
+        }
+    }
+}
+
+// Use helper methods for quick checks
+bool? isSpam = email.GetIsSpam();    // true, false, or null
+double? score = email.GetSpamScore(); // score or null
+```
+
+See the [Spam Analysis Guide](/client-dotnet/concepts/spam-analysis/) for more details.
+
+---
+
 ### Metadata
 
 ```csharp
@@ -518,6 +565,87 @@ await File.WriteAllTextAsync($"email-{email.Id}.eml", raw);
 
 // Equivalent to:
 // var raw = await inbox.GetEmailRawAsync(email.Id);
+```
+
+---
+
+### GetIsSpam
+
+Returns whether the email is classified as spam.
+
+```csharp
+bool? GetIsSpam()
+```
+
+#### Returns
+
+`bool?` - `true` if spam, `false` if not spam, or `null` if not analyzed
+
+#### Example
+
+```csharp
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(10)
+});
+
+var isSpam = email.GetIsSpam();
+
+if (isSpam == true)
+{
+    Console.WriteLine("Email is spam");
+}
+else if (isSpam == false)
+{
+    Console.WriteLine("Email is not spam");
+}
+else
+{
+    Console.WriteLine("Spam analysis not available");
+}
+```
+
+---
+
+### GetSpamScore
+
+Returns the spam score from analysis.
+
+```csharp
+double? GetSpamScore()
+```
+
+#### Returns
+
+`double?` - The spam score, or `null` if not analyzed
+
+#### Example
+
+```csharp
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(10)
+});
+
+var score = email.GetSpamScore();
+
+if (score is not null)
+{
+    Console.WriteLine($"Spam score: {score}");
+
+    if (score < 5)
+    {
+        Console.WriteLine("Low spam score - likely legitimate");
+    }
+    else if (score < 10)
+    {
+        Console.WriteLine("Medium spam score - suspicious");
+    }
+    else
+    {
+        Console.WriteLine("High spam score - likely spam");
+    }
+}
 ```
 
 ---
@@ -656,10 +784,10 @@ SPF (Sender Policy Framework) validation result.
 ```csharp
 public sealed record SpfResult
 {
-    public required SpfStatus Status { get; init; }
+    public SpfStatus Result { get; init; }
     public string? Domain { get; init; }
     public string? Ip { get; init; }
-    public string? Info { get; init; }
+    public string? Details { get; init; }
 }
 
 public enum SpfStatus
@@ -670,7 +798,8 @@ public enum SpfStatus
     Neutral,
     None,
     TempError,
-    PermError
+    PermError,
+    Skipped
 }
 ```
 
@@ -681,17 +810,18 @@ DKIM (DomainKeys Identified Mail) validation result.
 ```csharp
 public sealed record DkimResult
 {
-    public required DkimStatus Status { get; init; }
+    public DkimStatus Result { get; init; }
     public string? Domain { get; init; }
     public string? Selector { get; init; }
-    public string? Info { get; init; }
+    public string? Signature { get; init; }
 }
 
 public enum DkimStatus
 {
     Pass,
     Fail,
-    None
+    None,
+    Skipped
 }
 ```
 
@@ -702,18 +832,18 @@ DMARC (Domain-based Message Authentication) validation result.
 ```csharp
 public sealed record DmarcResult
 {
-    public required DmarcStatus Status { get; init; }
+    public DmarcStatus Result { get; init; }
     public DmarcPolicy? Policy { get; init; }
     public bool? Aligned { get; init; }
     public string? Domain { get; init; }
-    public string? Info { get; init; }
 }
 
 public enum DmarcStatus
 {
     Pass,
     Fail,
-    None
+    None,
+    Skipped
 }
 
 public enum DmarcPolicy
@@ -731,17 +861,17 @@ Reverse DNS lookup result.
 ```csharp
 public sealed record ReverseDnsResult
 {
-    public required ReverseDnsStatus Status { get; init; }
+    public ReverseDnsStatus Result { get; init; }
     public string? Ip { get; init; }
     public string? Hostname { get; init; }
-    public string? Info { get; init; }
 }
 
 public enum ReverseDnsStatus
 {
     Pass,
     Fail,
-    None
+    None,
+    Skipped
 }
 ```
 
@@ -784,6 +914,115 @@ if (email.AuthResults is not null)
         foreach (var failure in validation.Failures)
         {
             Console.WriteLine($"  - {failure}");
+        }
+    }
+}
+```
+
+## SpamAnalysisResult Record
+
+Spam analysis results from Rspamd.
+
+```csharp
+public sealed record SpamAnalysisResult
+{
+    public required SpamAnalysisStatus Status { get; init; }
+    public double? Score { get; init; }
+    public double? RequiredScore { get; init; }
+    public SpamAction? Action { get; init; }
+    public bool? IsSpam { get; init; }
+    public IReadOnlyList<SpamSymbol>? Symbols { get; init; }
+    public int? ProcessingTimeMs { get; init; }
+    public string? Info { get; init; }
+}
+```
+
+### Properties
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `Status` | `SpamAnalysisStatus` | Analysis status (`Analyzed`, `Skipped`, or `Error`) |
+| `Score` | `double?` | Spam score (higher = more likely spam) |
+| `RequiredScore` | `double?` | Threshold score for spam classification |
+| `Action` | `SpamAction?` | Recommended action based on score |
+| `IsSpam` | `bool?` | Whether email is classified as spam |
+| `Symbols` | `IReadOnlyList<SpamSymbol>?` | Triggered spam detection rules |
+| `ProcessingTimeMs` | `int?` | Analysis processing time in milliseconds |
+| `Info` | `string?` | Additional info (e.g., error details) |
+
+### SpamAnalysisStatus Enum
+
+```csharp
+public enum SpamAnalysisStatus
+{
+    Analyzed,  // Successfully analyzed
+    Skipped,   // Analysis skipped (disabled)
+    Error      // Analysis failed
+}
+```
+
+### SpamAction Enum
+
+```csharp
+public enum SpamAction
+{
+    NoAction,       // Email is likely legitimate
+    Greylist,       // Temporary rejection recommended
+    AddHeader,      // Add spam header but deliver
+    RewriteSubject, // Modify subject to indicate spam
+    SoftReject,     // Temporary rejection
+    Reject          // Permanently reject
+}
+```
+
+### SpamSymbol Record
+
+Individual spam detection rule that triggered.
+
+```csharp
+public sealed record SpamSymbol
+{
+    public required string Name { get; init; }
+    public required double Score { get; init; }
+    public string? Description { get; init; }
+    public IReadOnlyList<string>? Options { get; init; }
+}
+```
+
+| Property | Type | Description |
+| -------- | ---- | ----------- |
+| `Name` | `string` | Rule identifier (e.g., `BAYES_SPAM`, `DKIM_SIGNED`) |
+| `Score` | `double` | Score contribution (positive = spam, negative = ham) |
+| `Description` | `string?` | Human-readable rule description |
+| `Options` | `IReadOnlyList<string>?` | Additional context or parameters |
+
+### Example
+
+```csharp
+var email = await inbox.WaitForEmailAsync(new WaitForEmailOptions
+{
+    Timeout = TimeSpan.FromSeconds(10)
+});
+
+if (email.SpamAnalysis?.Status == SpamAnalysisStatus.Analyzed)
+{
+    Console.WriteLine($"Spam Score: {email.SpamAnalysis.Score}");
+    Console.WriteLine($"Required Score: {email.SpamAnalysis.RequiredScore}");
+    Console.WriteLine($"Is Spam: {email.SpamAnalysis.IsSpam}");
+    Console.WriteLine($"Recommended Action: {email.SpamAnalysis.Action}");
+
+    // List triggered rules sorted by score impact
+    if (email.SpamAnalysis.Symbols is { Count: > 0 })
+    {
+        Console.WriteLine("\nTriggered Rules:");
+        foreach (var symbol in email.SpamAnalysis.Symbols.OrderByDescending(s => Math.Abs(s.Score)))
+        {
+            var sign = symbol.Score >= 0 ? "+" : "";
+            Console.WriteLine($"  {symbol.Name}: {sign}{symbol.Score}");
+            if (symbol.Description is not null)
+            {
+                Console.WriteLine($"    {symbol.Description}");
+            }
         }
     }
 }
@@ -904,6 +1143,7 @@ async Task CompleteEmailExample(CancellationToken cancellationToken)
 ## Next Steps
 
 - [IInbox API Reference](/client-dotnet/api/inbox/) - Learn about inbox methods
+- [Spam Analysis](/client-dotnet/concepts/spam-analysis/) - Rspamd integration guide
 - [Attachments Guide](/client-dotnet/guides/attachments/) - Working with attachments
 - [Authentication Guide](/client-dotnet/guides/authentication/) - Email authentication testing
 - [Waiting for Emails](/client-dotnet/guides/waiting-for-emails/) - Best practices for email waiting

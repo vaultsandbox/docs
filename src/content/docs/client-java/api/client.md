@@ -131,6 +131,7 @@ Inbox inbox = client.createInbox(options);
 | `emailAddress` | `String`   | auto-generated | Custom email address or domain                              |
 | `ttl`          | `Duration` | server default | Inbox time-to-live                                          |
 | `emailAuth`    | `Boolean`  | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                    |
+| `spamAnalysis` | `Boolean`  | server default | Enable/disable Rspamd spam analysis for this inbox          |
 | `encryption`   | `String`   | server default | Request `"encrypted"` or `"plain"` inbox (if policy allows) |
 
 **Convenience Methods:**
@@ -163,12 +164,20 @@ Inbox inbox = client.createInbox(
 // Or use convenience method
 Inbox inbox = client.createInbox(CreateInboxOptions.plain());
 
+// Enable spam analysis
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .spamAnalysis(true)
+        .build()
+);
+
 // Combine options
 Inbox inbox = client.createInbox(
     CreateInboxOptions.builder()
         .emailAddress("test@yourdomain.com")
         .ttl(Duration.ofHours(1))
         .emailAuth(false)
+        .spamAnalysis(true)
         .encryption("plain")
         .build()
 );
@@ -414,19 +423,20 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 
 ### ServerInfo Properties
 
-| Property           | Type           | Description                                                        |
-| ------------------ | -------------- | ------------------------------------------------------------------ |
-| `serverSigPk`      | `String`       | Server's public signing key                                        |
-| `context`          | `String`       | Server context identifier                                          |
-| `maxTtl`           | `int`          | Maximum inbox TTL in seconds                                       |
-| `defaultTtl`       | `int`          | Default inbox TTL in seconds                                       |
-| `sseConsole`       | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`)          |
-| `allowedDomains`   | `List<String>` | Allowed email domains                                              |
-| `algs`             | `Algorithms`   | Supported cryptographic algorithms                                 |
-| `version`          | `String`       | Server version                                                     |
-| `domain`           | `String`       | Server domain                                                      |
-| `limits`           | `Limits`       | Rate limits and constraints                                        |
-| `encryptionPolicy` | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never` |
+| Property              | Type           | Description                                                        |
+| --------------------- | -------------- | ------------------------------------------------------------------ |
+| `serverSigPk`         | `String`       | Server's public signing key                                        |
+| `context`             | `String`       | Server context identifier                                          |
+| `maxTtl`              | `int`          | Maximum inbox TTL in seconds                                       |
+| `defaultTtl`          | `int`          | Default inbox TTL in seconds                                       |
+| `sseConsole`          | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`)          |
+| `spamAnalysisEnabled` | `boolean`      | Whether spam analysis is available (getter: `isSpamAnalysisEnabled()`) |
+| `allowedDomains`      | `List<String>` | Allowed email domains                                              |
+| `algs`                | `Algorithms`   | Supported cryptographic algorithms                                 |
+| `version`             | `String`       | Server version                                                     |
+| `domain`              | `String`       | Server domain                                                      |
+| `limits`              | `Limits`       | Rate limits and constraints                                        |
+| `encryptionPolicy`    | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never` |
 
 ### Encryption Policy
 
@@ -453,6 +463,27 @@ boolean defaultEncrypted = info.isDefaultEncrypted();  // true if "always" or "e
 System.out.println("Policy: " + info.getEncryptionPolicy());
 System.out.println("Can override: " + canOverride);
 System.out.println("Default encrypted: " + defaultEncrypted);
+```
+
+### Spam Analysis Availability
+
+Check if the server supports spam analysis:
+
+```java
+ServerInfo info = client.getServerInfo();
+
+if (info.isSpamAnalysisEnabled()) {
+    System.out.println("Spam analysis is available");
+
+    // Create inbox with spam analysis enabled
+    Inbox inbox = client.createInbox(
+        CreateInboxOptions.builder()
+            .spamAnalysis(true)
+            .build()
+    );
+} else {
+    System.out.println("Spam analysis is not enabled on this server");
+}
 ```
 
 ### Algorithms Properties
@@ -738,5 +769,6 @@ try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
 - [Configuration](/client-java/configuration/) - Configuration options
 - [Inbox API](/client-java/api/inbox/) - Inbox class reference
 - [Email API](/client-java/api/email/) - Email class reference
+- [Spam Analysis](/client-java/concepts/spam-analysis/) - Working with spam analysis results
 - [Error Handling](/client-java/api/errors/) - Exception reference
 - [Delivery Strategies](/client-java/advanced/strategies/) - SSE vs Polling

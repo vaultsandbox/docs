@@ -24,6 +24,7 @@ Console.WriteLine(email.IsRead);       // false
 Console.WriteLine(email.Links);        // ["https://example.com/verify"]
 Console.WriteLine(email.Attachments);  // IReadOnlyList<EmailAttachment>
 Console.WriteLine(email.AuthResults);  // SPF/DKIM/DMARC results
+Console.WriteLine(email.SpamAnalysis); // Rspamd spam analysis results
 ```
 
 ## Core Properties
@@ -225,6 +226,28 @@ if (email.AuthResults is not null)
 ```
 
 See [Authentication Results](/client-dotnet/concepts/auth-results/) for details.
+
+### SpamAnalysis
+
+**Type**: `SpamAnalysisResult?`
+
+Spam analysis results from Rspamd integration.
+
+```csharp
+if (email.SpamAnalysis is not null)
+{
+    Console.WriteLine($"Status: {email.SpamAnalysis.Status}");
+    Console.WriteLine($"Score: {email.SpamAnalysis.Score}");
+    Console.WriteLine($"Is spam: {email.SpamAnalysis.IsSpam}");
+    Console.WriteLine($"Action: {email.SpamAnalysis.Action}");
+
+    // Use helper methods
+    bool? isSpam = email.GetIsSpam();  // true, false, or null if not analyzed
+    double? score = email.GetSpamScore();  // score or null if not analyzed
+}
+```
+
+See [Spam Analysis](/client-dotnet/concepts/spam-analysis/) for details.
 
 ### Headers
 
@@ -660,6 +683,7 @@ catch (DecryptionException)
 ## Next Steps
 
 - **[Authentication Results](/client-dotnet/concepts/auth-results/)** - Email authentication details
+- **[Spam Analysis](/client-dotnet/concepts/spam-analysis/)** - Rspamd integration and spam detection
 - **[Working with Attachments](/client-dotnet/guides/attachments/)** - Handle email attachments
 - **[Email Authentication](/client-dotnet/guides/authentication/)** - Test SPF/DKIM/DMARC
 - **[API Reference: Email](/client-dotnet/api/email/)** - Complete API documentation

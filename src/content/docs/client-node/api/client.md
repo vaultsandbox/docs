@@ -79,6 +79,7 @@ interface CreateInboxOptions {
 	emailAddress?: string;
 	emailAuth?: boolean;
 	encryption?: 'encrypted' | 'plain';
+	spamAnalysis?: boolean;
 }
 ```
 
@@ -88,6 +89,7 @@ interface CreateInboxOptions {
 | `emailAddress` | `string`                 | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
 | `emailAuth`    | `boolean`                | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
 | `encryption`   | `'encrypted' \| 'plain'` | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
+| `spamAnalysis` | `boolean`                | Enable (`true`) or disable (`false`) spam analysis for this inbox. Omit to use server default |
 
 #### Returns
 
@@ -114,11 +116,15 @@ const inbox = await client.createInbox({ emailAuth: false });
 // Create plain text inbox (when encryption policy allows)
 const inbox = await client.createInbox({ encryption: 'plain' });
 
+// Create inbox with spam analysis enabled
+const inbox = await client.createInbox({ spamAnalysis: true });
+
 // Combine options
 const inbox = await client.createInbox({
 	ttl: 3600,
 	emailAuth: false,
 	encryption: 'plain',
+	spamAnalysis: true,
 });
 ```
 
@@ -211,23 +217,25 @@ interface ServerInfo {
 	sseConsole: boolean;
 	allowedDomains: string[];
 	encryptionPolicy: 'always' | 'enabled' | 'disabled' | 'never';
+	spamAnalysisEnabled?: boolean;
 }
 ```
 
-| Property           | Type       | Description                                               |
-| ------------------ | ---------- | --------------------------------------------------------- |
-| `serverSigPk`      | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`             | `object`   | Cryptographic algorithms supported by the server          |
-| `algs.kem`         | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
-| `algs.sig`         | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
-| `algs.aead`        | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
-| `algs.kdf`         | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
-| `context`          | `string`   | Context string for the encryption scheme                  |
-| `maxTtl`           | `number`   | Maximum time-to-live for inboxes in seconds               |
-| `defaultTtl`       | `number`   | Default time-to-live for inboxes in seconds               |
-| `sseConsole`       | `boolean`  | Whether the server SSE console is enabled                 |
-| `allowedDomains`   | `string[]` | List of domains allowed for inbox creation                |
-| `encryptionPolicy` | `string`   | Server encryption policy (see table below)                |
+| Property              | Type       | Description                                               |
+| --------------------- | ---------- | --------------------------------------------------------- |
+| `serverSigPk`         | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`                | `object`   | Cryptographic algorithms supported by the server          |
+| `algs.kem`            | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
+| `algs.sig`            | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
+| `algs.aead`           | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
+| `algs.kdf`            | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
+| `context`             | `string`   | Context string for the encryption scheme                  |
+| `maxTtl`              | `number`   | Maximum time-to-live for inboxes in seconds               |
+| `defaultTtl`          | `number`   | Default time-to-live for inboxes in seconds               |
+| `sseConsole`          | `boolean`  | Whether the server SSE console is enabled                 |
+| `allowedDomains`      | `string[]` | List of domains allowed for inbox creation                |
+| `encryptionPolicy`    | `string`   | Server encryption policy (see table below)                |
+| `spamAnalysisEnabled` | `boolean`  | Whether spam analysis (Rspamd) is enabled on this server  |
 
 #### Encryption Policy
 
@@ -254,6 +262,14 @@ const defaultEncrypted = ['always', 'enabled'].includes(info.encryptionPolicy);
 
 console.log(`Default encrypted: ${defaultEncrypted}`);
 console.log(`Can override: ${canOverride}`);
+
+// Check spam analysis availability
+console.log(`Spam analysis enabled: ${info.spamAnalysisEnabled}`);
+
+if (info.spamAnalysisEnabled) {
+	// Spam analysis is available on this server
+	const inbox = await client.createInbox({ spamAnalysis: true });
+}
 ```
 
 ---

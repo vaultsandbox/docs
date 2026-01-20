@@ -33,21 +33,21 @@ webhook = await inbox.create_webhook(
 )
 ```
 
-| Parameter     | Type                    | Required | Description                             |
-| ------------- | ----------------------- | -------- | --------------------------------------- |
-| `url`         | `str`                   | Yes      | The URL to send webhook requests to     |
-| `events`      | `list[str]`             | Yes      | Events that trigger the webhook         |
-| `template`    | `str \| CustomTemplate` | No       | Payload format template                 |
-| `filter`      | `FilterConfig`          | No       | Filter which emails trigger the webhook |
-| `description` | `str`                   | No       | Human-readable description              |
+| Parameter     | Type                       | Required | Description                                    |
+| ------------- | -------------------------- | -------- | ---------------------------------------------- |
+| `url`         | `str`                      | Yes      | The URL to send webhook requests to            |
+| `events`      | `list[str]`                | Yes      | Events that trigger the webhook                |
+| `template`    | `str \| CustomTemplate`    | No       | Payload format template                        |
+| `filter`      | `FilterConfig`             | No       | Filter which emails trigger the webhook        |
+| `description` | `str`                      | No       | Human-readable description                     |
 
 ### Event Types
 
-| Event            | Description                  |
-| ---------------- | ---------------------------- |
-| `email.received` | Email received by the inbox  |
-| `email.stored`   | Email successfully stored    |
-| `email.deleted`  | Email deleted from the inbox |
+| Event            | Description                           |
+| ---------------- | ------------------------------------- |
+| `email.received` | Email received by the inbox           |
+| `email.stored`   | Email successfully stored             |
+| `email.deleted`  | Email deleted from the inbox          |
 
 ## Managing Webhooks
 
@@ -154,28 +154,28 @@ webhook = await inbox.create_webhook(
 
 ### Filterable Fields
 
-| Field          | Description                      |
-| -------------- | -------------------------------- |
-| `subject`      | Email subject line               |
-| `from.address` | Sender email address             |
-| `from.name`    | Sender display name              |
-| `to.address`   | Recipient email address          |
-| `to.name`      | Recipient display name           |
-| `body.text`    | Plain text body                  |
-| `body.html`    | HTML body                        |
-| `header.X-*`   | Custom email headers (see below) |
+| Field          | Description                     |
+| -------------- | ------------------------------- |
+| `subject`      | Email subject line              |
+| `from.address` | Sender email address            |
+| `from.name`    | Sender display name             |
+| `to.address`   | Recipient email address         |
+| `to.name`      | Recipient display name          |
+| `body.text`    | Plain text body                 |
+| `body.html`    | HTML body                       |
+| `header.X-*`   | Custom email headers (see below)|
 
 ### Filter Operators
 
-| Operator      | Description                   | Example                                                                            |
-| ------------- | ----------------------------- | ---------------------------------------------------------------------------------- |
-| `equals`      | Exact match                   | `FilterRule(field="from.address", operator="equals", value="noreply@example.com")` |
-| `contains`    | Contains substring            | `FilterRule(field="subject", operator="contains", value="Reset")`                  |
-| `starts_with` | Starts with string            | `FilterRule(field="subject", operator="starts_with", value="RE:")`                 |
-| `ends_with`   | Ends with string              | `FilterRule(field="from.address", operator="ends_with", value="@company.com")`     |
-| `domain`      | Email domain match            | `FilterRule(field="from.address", operator="domain", value="example.com")`         |
-| `regex`       | Regular expression match      | `FilterRule(field="subject", operator="regex", value=r"Order #\d+")`               |
-| `exists`      | Field exists and is non-empty | `FilterRule(field="attachments", operator="exists", value="true")`                 |
+| Operator      | Description                            | Example                                              |
+| ------------- | -------------------------------------- | ---------------------------------------------------- |
+| `equals`      | Exact match                            | `FilterRule(field="from.address", operator="equals", value="noreply@example.com")` |
+| `contains`    | Contains substring                     | `FilterRule(field="subject", operator="contains", value="Reset")` |
+| `starts_with` | Starts with string                     | `FilterRule(field="subject", operator="starts_with", value="RE:")` |
+| `ends_with`   | Ends with string                       | `FilterRule(field="from.address", operator="ends_with", value="@company.com")` |
+| `domain`      | Email domain match                     | `FilterRule(field="from.address", operator="domain", value="example.com")` |
+| `regex`       | Regular expression match               | `FilterRule(field="subject", operator="regex", value=r"Order #\d+")` |
+| `exists`      | Field exists and is non-empty          | `FilterRule(field="attachments", operator="exists", value="true")` |
 
 ### Custom Header Filters
 
@@ -247,15 +247,15 @@ Templates control the webhook payload format:
 
 ### Built-in Templates
 
-| Template       | Description                                |
-| -------------- | ------------------------------------------ |
-| `default`      | Full email data in standard JSON format    |
-| `slack`        | Slack-compatible message blocks            |
-| `discord`      | Discord webhook embed format               |
-| `teams`        | Microsoft Teams adaptive card              |
-| `simple`       | Minimal payload with essential fields only |
-| `notification` | Push notification-friendly compact format  |
-| `zapier`       | Zapier-optimized flat structure            |
+| Template       | Description                                      |
+| -------------- | ------------------------------------------------ |
+| `default`      | Full email data in standard JSON format          |
+| `slack`        | Slack-compatible message blocks                  |
+| `discord`      | Discord webhook embed format                     |
+| `teams`        | Microsoft Teams adaptive card                    |
+| `simple`       | Minimal payload with essential fields only       |
+| `notification` | Push notification-friendly compact format        |
+| `zapier`       | Zapier-optimized flat structure                  |
 
 ```python
 # Slack-formatted payload
@@ -363,12 +363,12 @@ print(f"Old secret valid until: {result.previous_secret_valid_until}")
 
 Always verify webhook signatures in your endpoint. Webhooks include the following headers:
 
-| Header              | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `X-Vault-Signature` | HMAC-SHA256 signature (format: `sha256=<hex>`) |
-| `X-Vault-Timestamp` | Unix timestamp                                 |
-| `X-Vault-Event`     | Event type                                     |
-| `X-Vault-Delivery`  | Unique delivery ID                             |
+| Header              | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| `X-Vault-Signature` | HMAC-SHA256 signature (format: `sha256=<hex>`)   |
+| `X-Vault-Timestamp` | Unix timestamp                                   |
+| `X-Vault-Event`     | Event type                                       |
+| `X-Vault-Delivery`  | Unique delivery ID                               |
 
 The signature is computed over `{timestamp}.{raw_request_body}` and sent with a `sha256=` prefix:
 
@@ -596,14 +596,14 @@ asyncio.run(setup_webhooks())
 
 ## Webhook vs SSE vs Polling
 
-| Feature           | Webhooks               | SSE                 | Polling             |
-| ----------------- | ---------------------- | ------------------- | ------------------- |
-| Delivery          | Push to your server    | Push to client      | Pull from client    |
-| Connection        | None required          | Persistent          | Repeated requests   |
-| Latency           | Near real-time         | Real-time           | Depends on interval |
-| Server required   | Yes (webhook endpoint) | No                  | No                  |
-| Firewall friendly | Yes                    | Usually             | Yes                 |
-| Best for          | Server-to-server       | Browser/client apps | Simple integrations |
+| Feature           | Webhooks                  | SSE                       | Polling                   |
+| ----------------- | ------------------------- | ------------------------- | ------------------------- |
+| Delivery          | Push to your server       | Push to client            | Pull from client          |
+| Connection        | None required             | Persistent                | Repeated requests         |
+| Latency           | Near real-time            | Real-time                 | Depends on interval       |
+| Server required   | Yes (webhook endpoint)    | No                        | No                        |
+| Firewall friendly | Yes                       | Usually                   | Yes                       |
+| Best for          | Server-to-server          | Browser/client apps       | Simple integrations       |
 
 ## Next Steps
 

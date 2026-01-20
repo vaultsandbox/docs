@@ -58,13 +58,14 @@ public String getHtml()    // May return null
 
 ## Advanced Properties
 
-| Property      | Type                  | Description                 |
-| ------------- | --------------------- | --------------------------- |
-| `links`       | `List<String>`        | URLs extracted from content |
-| `attachments` | `List<Attachment>`    | File attachments            |
-| `authResults` | `AuthResults`         | SPF/DKIM/DMARC results      |
-| `headers`     | `Map<String, String>` | Raw email headers           |
-| `metadata`    | `Map<String, Object>` | Additional metadata         |
+| Property       | Type                  | Description                 |
+| -------------- | --------------------- | --------------------------- |
+| `links`        | `List<String>`        | URLs extracted from content |
+| `attachments`  | `List<Attachment>`    | File attachments            |
+| `authResults`  | `AuthResults`         | SPF/DKIM/DMARC results      |
+| `spamAnalysis` | `SpamAnalysisResult`  | Spam analysis results       |
+| `headers`      | `Map<String, String>` | Raw email headers           |
+| `metadata`     | `Map<String, Object>` | Additional metadata         |
 
 ### Getters
 
@@ -72,8 +73,16 @@ public String getHtml()    // May return null
 public List<String> getLinks()
 public List<Attachment> getAttachments()
 public AuthResults getAuthResults()        // May return null
+public SpamAnalysisResult getSpamAnalysis() // May return null
 public Map<String, String> getHeaders()
 public Map<String, Object> getMetadata()
+```
+
+### Spam Analysis Helper Methods
+
+```java
+public Boolean isSpam()       // Returns true/false if analyzed, null if not
+public Double getSpamScore()  // Returns score if analyzed, null if not
 ```
 
 ## Methods
@@ -527,6 +536,145 @@ System.out.println("Raw email length: " + raw.length() + " bytes");
 // MimeMessage message = new MimeMessage(session, new ByteArrayInputStream(raw.getBytes()));
 ```
 
+## SpamAnalysisResult Class
+
+Spam analysis results from Rspamd integration.
+
+```java
+public class SpamAnalysisResult
+```
+
+### Properties
+
+| Property          | Type                 | Description                                    |
+| ----------------- | -------------------- | ---------------------------------------------- |
+| `status`          | `SpamAnalysisStatus` | Analysis status (ANALYZED, SKIPPED, ERROR)     |
+| `score`           | `Double`             | Overall spam score (null if not analyzed)      |
+| `requiredScore`   | `Double`             | Threshold for spam classification              |
+| `action`          | `SpamAction`         | Recommended action                             |
+| `isSpam`          | `Boolean`            | Whether email is classified as spam            |
+| `symbols`         | `List<SpamSymbol>`   | Individual triggered rules                     |
+| `processingTimeMs`| `Long`               | Analysis time in milliseconds                  |
+| `info`            | `String`             | Additional info (skip reason or error message) |
+
+### Methods
+
+| Method                     | Return Type        | Description                                          |
+| -------------------------- | ------------------ | ---------------------------------------------------- |
+| `getStatus()`              | `SpamAnalysisStatus`| Returns the analysis status                         |
+| `getScore()`               | `Double`           | Returns spam score (null if not analyzed)            |
+| `getRequiredScore()`       | `Double`           | Returns threshold score                              |
+| `getAction()`              | `SpamAction`       | Returns recommended action                           |
+| `isSpam()`                 | `Boolean`          | Returns true if spam, false if ham, null if unknown  |
+| `getSymbols()`             | `List<SpamSymbol>` | Returns triggered rules (never null)                 |
+| `getProcessingTimeMs()`    | `Long`             | Returns processing time in milliseconds              |
+| `getInfo()`                | `String`           | Returns info message (skip/error reason)             |
+| `isAnalyzed()`             | `boolean`          | Returns true if status is ANALYZED                   |
+| `getSpamIndicators()`      | `List<SpamSymbol>` | Returns positive-score symbols (spam indicators)     |
+| `getLegitimacyIndicators()`| `List<SpamSymbol>` | Returns negative-score symbols (ham indicators)      |
+
+### Example
+
+```java
+SpamAnalysisResult spam = email.getSpamAnalysis();
+
+if (spam != null && spam.isAnalyzed()) {
+    System.out.println("Score: " + spam.getScore() + " / " + spam.getRequiredScore());
+    System.out.println("Is spam: " + spam.isSpam());
+    System.out.println("Action: " + spam.getAction());
+
+    // Show top spam indicators
+    for (SpamSymbol symbol : spam.getSpamIndicators()) {
+        System.out.printf("  %s: +%.1f%n", symbol.getName(), symbol.getScore());
+    }
+}
+```
+
+## SpamAnalysisStatus Enum
+
+Status of spam analysis.
+
+```java
+public enum SpamAnalysisStatus
+```
+
+| Value     | Description                                            |
+| --------- | ------------------------------------------------------ |
+| `ANALYZED`| Email was successfully analyzed by Rspamd              |
+| `SKIPPED` | Analysis was skipped (disabled globally or per-inbox)  |
+| `ERROR`   | Analysis failed (Rspamd unavailable, timeout, etc.)    |
+
+## SpamAction Enum
+
+Recommended action from Rspamd based on spam score thresholds.
+
+```java
+public enum SpamAction
+```
+
+| Value            | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `NO_ACTION`      | Email is clean, deliver normally               |
+| `GREYLIST`       | Temporarily reject and retry later             |
+| `ADD_HEADER`     | Add spam headers but deliver the email         |
+| `REWRITE_SUBJECT`| Modify subject to indicate spam                |
+| `SOFT_REJECT`    | Temporary rejection (4xx SMTP code)            |
+| `REJECT`         | Permanent rejection (5xx SMTP code)            |
+
+## SpamSymbol Class
+
+Represents an individual spam rule/symbol that triggered during analysis.
+
+```java
+public class SpamSymbol
+```
+
+### Properties
+
+| Property      | Type           | Description                                      |
+| ------------- | -------------- | ------------------------------------------------ |
+| `name`        | `String`       | Rule identifier (e.g., `DKIM_SIGNED`)            |
+| `score`       | `double`       | Score contribution (positive = spam, negative = ham) |
+| `description` | `String`       | Human-readable explanation (may be null)         |
+| `options`     | `List<String>` | Additional context or matched values             |
+
+### Methods
+
+| Method           | Return Type    | Description                              |
+| ---------------- | -------------- | ---------------------------------------- |
+| `getName()`      | `String`       | Returns the rule identifier              |
+| `getScore()`     | `double`       | Returns the score contribution           |
+| `getDescription()`| `String`      | Returns description (may be null)        |
+| `getOptions()`   | `List<String>` | Returns options (never null)             |
+
+### Common Symbols
+
+| Symbol          | Typical Score | Meaning                          |
+| --------------- | ------------- | -------------------------------- |
+| `DKIM_SIGNED`   | -0.1          | Email has valid DKIM signature   |
+| `SPF_ALLOW`     | -0.2          | SPF check passed                 |
+| `FORGED_SENDER` | +3.0          | Sender address appears forged    |
+| `RCVD_IN_SBL`   | +6.5          | Sender in Spamhaus blocklist     |
+
+### Example
+
+```java
+SpamAnalysisResult spam = email.getSpamAnalysis();
+
+if (spam != null && spam.getSymbols() != null) {
+    System.out.println("Triggered rules:");
+    for (SpamSymbol symbol : spam.getSymbols()) {
+        String sign = symbol.getScore() >= 0 ? "+" : "";
+        System.out.printf("  %s: %s%.1f%n",
+            symbol.getName(), sign, symbol.getScore());
+
+        if (symbol.getDescription() != null) {
+            System.out.println("    " + symbol.getDescription());
+        }
+    }
+}
+```
+
 ## Thread Safety
 
 - Email objects are largely immutable after construction
@@ -539,4 +687,5 @@ System.out.println("Raw email length: " + raw.length() + " bytes");
 - [Inbox API](/client-java/api/inbox/) - Inbox class reference
 - [Attachments Guide](/client-java/guides/attachments/) - Working with attachments
 - [Authentication Results](/client-java/concepts/auth-results/) - SPF/DKIM/DMARC validation
+- [Spam Analysis](/client-java/concepts/spam-analysis/) - Working with spam analysis results
 - [Waiting for Emails](/client-java/guides/waiting-for-emails/) - Email retrieval patterns

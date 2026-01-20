@@ -85,6 +85,28 @@ if (['enabled', 'disabled'].includes(info.encryptionPolicy)) {
 }
 ```
 
+### With Spam Analysis
+
+Enable spam analysis to get spam scores and classification for received emails.
+
+```javascript
+// Check if spam analysis is available on the server
+const info = await client.getServerInfo();
+console.log(`Spam analysis enabled: ${info.spamAnalysisEnabled}`);
+
+// Create inbox with spam analysis enabled
+const inbox = await client.createInbox({ spamAnalysis: true });
+console.log(`Spam analysis: ${inbox.spamAnalysis}`); // true
+
+// Emails will now include spam analysis results
+const email = await inbox.waitForEmail({ timeout: 10000 });
+
+if (email.spamAnalysis?.status === 'analyzed') {
+	console.log(`Spam score: ${email.getSpamScore()}`);
+	console.log(`Is spam: ${email.isSpam()}`);
+}
+```
+
 ### Combining Options
 
 ```javascript
@@ -93,12 +115,14 @@ const inbox = await client.createInbox({
 	ttl: 3600, // 1 hour
 	emailAuth: false, // Skip auth checks
 	encryption: 'plain', // No encryption (when allowed)
+	spamAnalysis: true, // Enable spam analysis
 });
 
 console.log(`Address: ${inbox.emailAddress}`);
 console.log(`Expires: ${inbox.expiresAt}`);
 console.log(`Auth enabled: ${inbox.emailAuth}`);
 console.log(`Encrypted: ${inbox.encrypted}`);
+console.log(`Spam analysis: ${inbox.spamAnalysis}`);
 ```
 
 ## Listing Emails

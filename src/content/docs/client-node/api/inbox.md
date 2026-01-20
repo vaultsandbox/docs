@@ -104,6 +104,36 @@ if (inbox.encrypted) {
 }
 ```
 
+---
+
+### spamAnalysis
+
+```typescript
+spamAnalysis?: boolean;
+```
+
+Whether spam analysis is enabled for this inbox. This property reflects the spam analysis setting that was requested at inbox creation time.
+
+- `true` - Spam analysis is enabled for emails to this inbox
+- `false` - Spam analysis is disabled for this inbox
+- `undefined` - Using server default setting
+
+#### Example
+
+```javascript
+// Create inbox with spam analysis enabled
+const inbox = await client.createInbox({ spamAnalysis: true });
+console.log(`Spam analysis enabled: ${inbox.spamAnalysis}`); // true
+
+// Check if spam analysis is active
+if (inbox.spamAnalysis) {
+	const email = await inbox.waitForEmail({ timeout: 10000 });
+	if (email.spamAnalysis?.status === 'analyzed') {
+		console.log(`Spam score: ${email.getSpamScore()}`);
+	}
+}
+```
+
 ## Methods
 
 ### listEmails()

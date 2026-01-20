@@ -698,6 +698,24 @@ await File.WriteAllTextAsync("inbox-backup.json", json);
 
 Exported data contains private encryption keys. Store securely!
 
+---
+
+## Webhook Methods
+
+The `IInbox` interface also includes methods for managing webhooks:
+
+| Method | Description |
+| ------ | ----------- |
+| `CreateWebhookAsync(options)` | Create a webhook for this inbox |
+| `ListWebhooksAsync()` | List all webhooks for this inbox |
+| `GetWebhookAsync(webhookId)` | Get a specific webhook by ID |
+| `UpdateWebhookAsync(webhookId, options)` | Update a webhook |
+| `DeleteWebhookAsync(webhookId)` | Delete a webhook |
+| `TestWebhookAsync(webhookId)` | Send a test event to a webhook |
+| `RotateWebhookSecretAsync(webhookId)` | Rotate the signing secret |
+
+For complete documentation including filtering, templates, and signature verification, see the [Webhooks Guide](/client-dotnet/guides/webhooks/).
+
 ## Complete Inbox Example
 
 ```csharp
@@ -769,6 +787,7 @@ async Task CompleteInboxExample(CancellationToken cancellationToken)
 ## Next Steps
 
 - [Email API Reference](/client-dotnet/api/email/) - Work with email records
+- [Spam Analysis](/client-dotnet/concepts/spam-analysis/) - Rspamd integration and spam detection
 - [IVaultSandboxClient API](/client-dotnet/api/client/) - Learn about client methods
 - [Waiting for Emails Guide](/client-dotnet/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-dotnet/guides/real-time/) - IAsyncEnumerable patterns

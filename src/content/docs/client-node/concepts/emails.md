@@ -21,6 +21,7 @@ console.log(email.isRead); // false
 console.log(email.links); // ["https://example.com/verify"]
 console.log(email.attachments); // Array of attachments
 console.log(email.authResults); // SPF/DKIM/DMARC results
+console.log(email.spamAnalysis); // Spam analysis results
 ```
 
 ## Core Properties
@@ -205,6 +206,26 @@ if (!validation.passed) {
 
 See [Authentication Results](/client-node/concepts/auth-results/) for details.
 
+### spamAnalysis
+
+**Type**: `SpamAnalysisResult | undefined`
+
+Spam analysis results from Rspamd. Only present when spam analysis is enabled on the server and for the inbox.
+
+```javascript
+if (email.spamAnalysis) {
+	console.log(email.spamAnalysis.status); // "analyzed", "skipped", or "error"
+	console.log(email.spamAnalysis.score); // Spam score (positive = more spammy)
+	console.log(email.spamAnalysis.isSpam); // true if classified as spam
+
+	// Use helper methods
+	console.log(email.isSpam()); // true, false, or null
+	console.log(email.getSpamScore()); // number or null
+}
+```
+
+See [Spam Analysis](/client-node/concepts/spam-analysis/) for details.
+
 ### headers
 
 **Type**: `Record<string, unknown>`
@@ -280,6 +301,35 @@ const raw = await email.getRaw();
 console.log(raw.id); // Email ID
 console.log(raw.raw);
 // "From: sender@example.com\r\nTo: recipient@example.com\r\n..."
+```
+
+### isSpam()
+
+Check if the email is classified as spam.
+
+```javascript
+const spamStatus = email.isSpam();
+
+if (spamStatus === true) {
+	console.log('This email is spam');
+} else if (spamStatus === false) {
+	console.log('This email is not spam');
+} else {
+	console.log('Spam analysis not available');
+}
+```
+
+### getSpamScore()
+
+Get the spam score for the email.
+
+```javascript
+const score = email.getSpamScore();
+
+if (score !== null) {
+	console.log(`Spam score: ${score}`);
+	// Negative scores = legitimate, positive = spammy
+}
 ```
 
 ## Common Patterns
@@ -512,6 +562,7 @@ try {
 ## Next Steps
 
 - **[Authentication Results](/client-node/concepts/auth-results/)** - Email authentication details
+- **[Spam Analysis](/client-node/concepts/spam-analysis/)** - Spam detection and scoring
 - **[Working with Attachments](/client-node/guides/attachments/)** - Handle email attachments
 - **[Email Authentication](/client-node/guides/authentication/)** - Test SPF/DKIM/DMARC
 - **[API Reference: Email](/client-node/api/email/)** - Complete API documentation

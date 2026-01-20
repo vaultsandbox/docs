@@ -392,6 +392,136 @@ See the [Authentication Guide](/client-python/guides/authentication/) for more d
 
 ---
 
+### spam_analysis
+
+```python
+spam_analysis: SpamAnalysisResult | None
+```
+
+Spam analysis results from Rspamd (if enabled on the server and inbox).
+
+```python
+@dataclass
+class SpamAnalysisResult:
+    status: SpamAnalysisStatus
+    score: float | None = None
+    required_score: float | None = None
+    action: SpamAction | None = None
+    is_spam: bool | None = None
+    symbols: list[SpamSymbol] = field(default_factory=list)
+    processing_time_ms: int | None = None
+    info: str | None = None
+
+class SpamAnalysisStatus(str, Enum):
+    ANALYZED = "analyzed"
+    SKIPPED = "skipped"
+    ERROR = "error"
+
+class SpamAction(str, Enum):
+    NO_ACTION = "no action"
+    GREYLIST = "greylist"
+    ADD_HEADER = "add header"
+    REWRITE_SUBJECT = "rewrite subject"
+    SOFT_REJECT = "soft reject"
+    REJECT = "reject"
+
+@dataclass
+class SpamSymbol:
+    name: str
+    score: float
+    description: str | None = None
+    options: list[str] | None = None
+```
+
+| Property             | Type                 | Description                                          |
+| -------------------- | -------------------- | ---------------------------------------------------- |
+| `status`             | `SpamAnalysisStatus` | Analysis status (analyzed, skipped, error)           |
+| `score`              | `float \| None`      | Overall spam score (positive = more spammy)          |
+| `required_score`     | `float \| None`      | Threshold for spam classification                    |
+| `action`             | `SpamAction \| None` | Recommended action from Rspamd                       |
+| `is_spam`            | `bool \| None`       | Whether score >= required_score                      |
+| `symbols`            | `list[SpamSymbol]`   | List of triggered rules with their scores            |
+| `processing_time_ms` | `int \| None`        | Time taken for analysis in milliseconds              |
+| `info`               | `str \| None`        | Additional info (error message or skip reason)       |
+
+#### Example
+
+```python
+from vaultsandbox.types import SpamAnalysisStatus, SpamAction
+
+email = await inbox.wait_for_email()
+
+if email.spam_analysis and email.spam_analysis.status == SpamAnalysisStatus.ANALYZED:
+    print(f"Spam Score: {email.spam_analysis.score}")
+    print(f"Is Spam: {email.spam_analysis.is_spam}")
+    print(f"Action: {email.spam_analysis.action.value if email.spam_analysis.action else 'none'}")
+
+    # Check triggered rules
+    for symbol in email.spam_analysis.symbols:
+        print(f"  {symbol.name}: {symbol.score:+.1f}")
+```
+
+See the [Spam Analysis Guide](/client-python/concepts/spam-analysis/) for more details.
+
+---
+
+### is_spam
+
+```python
+@property
+def is_spam(self) -> bool | None
+```
+
+Convenience property to check if the email is classified as spam.
+
+#### Returns
+
+- `True` - Email is classified as spam
+- `False` - Email is not spam
+- `None` - Spam analysis was not performed or status is not `ANALYZED`
+
+#### Example
+
+```python
+email = await inbox.wait_for_email()
+
+if email.is_spam:
+    print("This email is spam")
+elif email.is_spam is False:
+    print("This email is not spam")
+else:
+    print("Spam analysis not available")
+```
+
+---
+
+### spam_score
+
+```python
+@property
+def spam_score(self) -> float | None
+```
+
+Convenience property to get the spam score.
+
+#### Returns
+
+- `float` - The spam score (positive values indicate more spam-like content)
+- `None` - Spam analysis was not performed or status is not `ANALYZED`
+
+#### Example
+
+```python
+email = await inbox.wait_for_email()
+
+if email.spam_score is not None:
+    print(f"Spam score: {email.spam_score}")
+    if email.spam_score > 5:
+        print("High spam score!")
+```
+
+---
+
 ### metadata
 
 ```python
@@ -605,9 +735,15 @@ Reverse DNS lookup result.
 ```python
 @dataclass
 class ReverseDNSResult:
-    verified: bool
+    result: ReverseDNSStatus
     ip: str | None = None
     hostname: str | None = None
+
+class ReverseDNSStatus(str, Enum):
+    PASS = "pass"
+    FAIL = "fail"
+    NONE = "none"
+    SKIPPED = "skipped"
 ```
 
 ### Methods
@@ -745,4 +881,5 @@ asyncio.run(complete_email_example())
 - [Inbox API Reference](/client-python/api/inbox/) - Learn about inbox methods
 - [Attachments Guide](/client-python/guides/attachments/) - Working with attachments
 - [Authentication Guide](/client-python/guides/authentication/) - Email authentication testing
+- [Spam Analysis Guide](/client-python/concepts/spam-analysis/) - Spam detection and scoring
 - [Waiting for Emails](/client-python/guides/waiting-for-emails/) - Best practices for email waiting

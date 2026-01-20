@@ -177,6 +177,7 @@ public sealed class CreateInboxOptions
     public TimeSpan? Ttl { get; set; }
     public bool? EmailAuth { get; set; }
     public InboxEncryption? Encryption { get; set; }
+    public bool? SpamAnalysis { get; set; }
 }
 ```
 
@@ -186,6 +187,7 @@ public sealed class CreateInboxOptions
 | `EmailAddress` | `string?`          | Request a specific email address (max 254 chars)                  |
 | `EmailAuth`    | `bool?`            | Enable/disable SPF/DKIM/DMARC/PTR checks. Omit for server default |
 | `Encryption`   | `InboxEncryption?` | Request `Encrypted` or `Plain` inbox. Omit for server default     |
+| `SpamAnalysis` | `bool?`            | Enable/disable Rspamd spam analysis. Omit for server default      |
 
 #### InboxEncryption Enum
 
@@ -228,13 +230,17 @@ var inbox = await client.CreateInboxAsync(new CreateInboxOptions
 {
     Encryption = InboxEncryption.Plain
 });
+
+// Create inbox with spam analysis enabled
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    SpamAnalysis = true
+});
 ```
 
 #### Errors
 
-- `ApiException` - API-level error (invalid request, permission denied)
-- `NetworkException` - Network connection failure
-- `InboxAlreadyExistsException` - Requested email address or KEM public key is already in use
+- `ApiException` - API-level error (invalid request, permission denied, or duplicate inbox)
 
 ---
 
@@ -319,18 +325,20 @@ public sealed record ServerInfo
     public required bool SseConsole { get; init; }
     public required IReadOnlyList<string> AllowedDomains { get; init; }
     public required EncryptionPolicy EncryptionPolicy { get; init; }
+    public bool SpamAnalysisEnabled { get; init; }
 }
 ```
 
-| Property           | Type                    | Description                                               |
-| ------------------ | ----------------------- | --------------------------------------------------------- |
-| `ServerSigPk`      | `string`                | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `Context`          | `string`                | Context string for the encryption scheme                  |
-| `MaxTtl`           | `int`                   | Maximum time-to-live for inboxes in seconds               |
-| `DefaultTtl`       | `int`                   | Default time-to-live for inboxes in seconds               |
-| `SseConsole`       | `bool`                  | Whether the server SSE console is enabled                 |
-| `AllowedDomains`   | `IReadOnlyList<string>` | List of domains allowed for inbox creation                |
-| `EncryptionPolicy` | `EncryptionPolicy`      | Server's encryption policy for inbox creation             |
+| Property              | Type                    | Description                                               |
+| --------------------- | ----------------------- | --------------------------------------------------------- |
+| `ServerSigPk`         | `string`                | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `Context`             | `string`                | Context string for the encryption scheme                  |
+| `MaxTtl`              | `int`                   | Maximum time-to-live for inboxes in seconds               |
+| `DefaultTtl`          | `int`                   | Default time-to-live for inboxes in seconds               |
+| `SseConsole`          | `bool`                  | Whether the server SSE console is enabled                 |
+| `AllowedDomains`      | `IReadOnlyList<string>` | List of domains allowed for inbox creation                |
+| `EncryptionPolicy`    | `EncryptionPolicy`      | Server's encryption policy for inbox creation             |
+| `SpamAnalysisEnabled` | `bool`                  | Whether Rspamd spam analysis is available on the server   |
 
 #### EncryptionPolicy Enum
 
@@ -349,10 +357,20 @@ Console.WriteLine($"Server: {info.Context}");
 Console.WriteLine($"Max TTL: {info.MaxTtl}s, Default TTL: {info.DefaultTtl}s");
 Console.WriteLine($"Allowed domains: {string.Join(", ", info.AllowedDomains)}");
 Console.WriteLine($"Encryption policy: {info.EncryptionPolicy}");
+Console.WriteLine($"Spam analysis: {(info.SpamAnalysisEnabled ? "Available" : "Not available")}");
 
 // Check if encryption can be overridden per-inbox
 var canOverride = info.EncryptionPolicy is EncryptionPolicy.Enabled or EncryptionPolicy.Disabled;
 var defaultEncrypted = info.EncryptionPolicy is EncryptionPolicy.Always or EncryptionPolicy.Enabled;
+
+// Check if spam analysis is available
+if (info.SpamAnalysisEnabled)
+{
+    var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+    {
+        SpamAnalysis = true
+    });
+}
 ```
 
 ---
@@ -469,8 +487,7 @@ var emails = await inbox.GetEmailsAsync();
 
 #### Errors
 
-- `InboxAlreadyExistsException` - Inbox is already imported in this client
-- `InvalidImportDataException` - Import data is invalid or corrupted
+- `InvalidImportDataException` - Import data is invalid, corrupted, or expired
 - `ApiException` - Server rejected the import (inbox may not exist)
 
 ---
@@ -707,5 +724,6 @@ async Task Main(CancellationToken cancellationToken)
 
 - [IInbox API Reference](/client-dotnet/api/inbox/) - Learn about inbox methods
 - [Email API Reference](/client-dotnet/api/email/) - Work with email records
+- [Spam Analysis](/client-dotnet/concepts/spam-analysis/) - Rspamd integration and spam detection
 - [Error Handling](/client-dotnet/api/errors/) - Handle exceptions gracefully
 - [Import/Export Guide](/client-dotnet/advanced/import-export/) - Advanced import/export usage

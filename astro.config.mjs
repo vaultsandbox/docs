@@ -47,6 +47,7 @@ export default defineConfig({
 						{ label: 'Web Interface', link: '/gateway/webui/' },
 						{ label: 'API Keys & Authentication', link: '/gateway/api-keys/' },
 						{ label: 'Webhooks', link: '/gateway/webhooks/' },
+						{ label: 'Spam Analysis', link: '/gateway/spam-analysis/' },
 						{ label: 'Security & Encryption', link: '/gateway/security/' },
 						{ label: 'API Reference', link: '/gateway/api-reference/' },
 					],
@@ -86,6 +87,7 @@ export default defineConfig({
 								{ label: 'Inboxes', link: '/client-node/concepts/inboxes/' },
 								{ label: 'Email Objects', link: '/client-node/concepts/emails/' },
 								{ label: 'Authentication Results', link: '/client-node/concepts/auth-results/' },
+								{ label: 'Spam Analysis', link: '/client-node/concepts/spam-analysis/' },
 							],
 						},
 						{
@@ -143,6 +145,7 @@ export default defineConfig({
 								{ label: 'Inboxes', link: '/client-python/concepts/inboxes/' },
 								{ label: 'Email Objects', link: '/client-python/concepts/emails/' },
 								{ label: 'Authentication Results', link: '/client-python/concepts/auth-results/' },
+								{ label: 'Spam Analysis', link: '/client-python/concepts/spam-analysis/' },
 							],
 						},
 						{
@@ -200,6 +203,7 @@ export default defineConfig({
 								{ label: 'Inboxes', link: '/client-java/concepts/inboxes/' },
 								{ label: 'Email Objects', link: '/client-java/concepts/emails/' },
 								{ label: 'Authentication Results', link: '/client-java/concepts/auth-results/' },
+								{ label: 'Spam Analysis', link: '/client-java/concepts/spam-analysis/' },
 							],
 						},
 						{
@@ -257,6 +261,7 @@ export default defineConfig({
 								{ label: 'Inboxes', link: '/client-go/concepts/inboxes/' },
 								{ label: 'Email Objects', link: '/client-go/concepts/emails/' },
 								{ label: 'Authentication Results', link: '/client-go/concepts/auth-results/' },
+								{ label: 'Spam Analysis', link: '/client-go/concepts/spam-analysis/' },
 							],
 						},
 						{
@@ -314,6 +319,7 @@ export default defineConfig({
 								{ label: 'Inboxes', link: '/client-dotnet/concepts/inboxes/' },
 								{ label: 'Email Objects', link: '/client-dotnet/concepts/emails/' },
 								{ label: 'Authentication Results', link: '/client-dotnet/concepts/auth-results/' },
+								{ label: 'Spam Analysis', link: '/client-dotnet/concepts/spam-analysis/' },
 							],
 						},
 						{

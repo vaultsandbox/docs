@@ -75,6 +75,33 @@ Inbox inbox = client.createInbox(
 System.out.println("Email auth: " + inbox.isEmailAuth());  // false
 ```
 
+### With Spam Analysis
+
+Enable Rspamd spam analysis for incoming emails:
+
+```java
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .spamAnalysis(true)
+        .build()
+);
+
+// Check spam analysis status
+System.out.println("Spam analysis: " + inbox.isSpamAnalysis());  // true
+```
+
+If not specified, inboxes use the server's default setting (`VSB_SPAM_ANALYSIS_INBOX_DEFAULT`).
+
+:::note
+Spam analysis requires the server to have Rspamd configured. Check availability with:
+```java
+ServerInfo info = client.getServerInfo();
+if (info.isSpamAnalysisEnabled()) {
+    // Spam analysis is available
+}
+```
+:::
+
 ### With Encryption Options
 
 Request a specific encryption mode (when server policy allows):
@@ -116,6 +143,7 @@ if (info.canOverrideEncryption()) {
 | `emailAddress` | `String`  | The inbox email address                         |
 | `expiresAt`    | `Instant` | When the inbox expires                          |
 | `emailAuth`    | `boolean` | Whether email authentication checks are enabled |
+| `spamAnalysis` | `boolean` | Whether spam analysis is enabled for this inbox |
 | `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption   |
 
 ```java
@@ -124,6 +152,7 @@ Inbox inbox = client.createInbox();
 String address = inbox.getEmailAddress();  // "abc123@vaultsandbox.com"
 Instant expires = inbox.getExpiresAt();    // 2024-01-15T12:00:00Z
 boolean auth = inbox.isEmailAuth();        // true (default)
+boolean spam = inbox.isSpamAnalysis();     // depends on server default
 boolean encrypted = inbox.isEncrypted();   // depends on server policy
 ```
 
@@ -767,5 +796,6 @@ try (VaultSandboxClient client = VaultSandboxClient.create(config)) {
 ## Next Steps
 
 - [Waiting for Emails](/client-java/guides/waiting-for-emails/) - Delivery strategies and filters
+- [Spam Analysis](/client-java/concepts/spam-analysis/) - Working with spam analysis results
 - [Import & Export](/client-java/advanced/import-export/) - Persist inbox credentials
 - [API Reference: Inbox](/client-java/api/inbox/) - Complete Inbox API documentation

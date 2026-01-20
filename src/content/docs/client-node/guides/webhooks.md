@@ -33,21 +33,21 @@ interface CreateWebhookOptions {
 }
 ```
 
-| Property      | Type                 | Required | Description                             |
-| ------------- | -------------------- | -------- | --------------------------------------- |
-| `url`         | `string`             | Yes      | The URL to send webhook requests to     |
-| `events`      | `WebhookEventType[]` | Yes      | Events that trigger the webhook         |
-| `template`    | `string \| object`   | No       | Payload format template                 |
-| `filter`      | `FilterConfig`       | No       | Filter which emails trigger the webhook |
-| `description` | `string`             | No       | Human-readable description              |
+| Property      | Type                 | Required | Description                                    |
+| ------------- | -------------------- | -------- | ---------------------------------------------- |
+| `url`         | `string`             | Yes      | The URL to send webhook requests to            |
+| `events`      | `WebhookEventType[]` | Yes      | Events that trigger the webhook                |
+| `template`    | `string \| object`   | No       | Payload format template                        |
+| `filter`      | `FilterConfig`       | No       | Filter which emails trigger the webhook        |
+| `description` | `string`             | No       | Human-readable description                     |
 
 ### Event Types
 
-| Event            | Description                  |
-| ---------------- | ---------------------------- |
-| `email.received` | Email received by the inbox  |
-| `email.stored`   | Email successfully stored    |
-| `email.deleted`  | Email deleted from the inbox |
+| Event            | Description                           |
+| ---------------- | ------------------------------------- |
+| `email.received` | Email received by the inbox           |
+| `email.stored`   | Email successfully stored             |
+| `email.deleted`  | Email deleted from the inbox          |
 
 ## Managing Webhooks
 
@@ -114,15 +114,15 @@ const webhook = await inbox.createWebhook({
 
 ### Filter Operators
 
-| Operator      | Description                   | Example                                                               |
-| ------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `equals`      | Exact match                   | `{ field: 'from', operator: 'equals', value: 'noreply@example.com' }` |
-| `contains`    | Contains substring            | `{ field: 'subject', operator: 'contains', value: 'Reset' }`          |
-| `starts_with` | Starts with string            | `{ field: 'subject', operator: 'starts_with', value: 'RE:' }`         |
-| `ends_with`   | Ends with string              | `{ field: 'from', operator: 'ends_with', value: '@company.com' }`     |
-| `domain`      | Email domain match            | `{ field: 'from', operator: 'domain', value: 'example.com' }`         |
-| `regex`       | Regular expression match      | `{ field: 'subject', operator: 'regex', value: 'Order #\\d+' }`       |
-| `exists`      | Field exists and is non-empty | `{ field: 'attachments', operator: 'exists', value: 'true' }`         |
+| Operator      | Description                            | Example                                              |
+| ------------- | -------------------------------------- | ---------------------------------------------------- |
+| `equals`      | Exact match                            | `{ field: 'from', operator: 'equals', value: 'noreply@example.com' }` |
+| `contains`    | Contains substring                     | `{ field: 'subject', operator: 'contains', value: 'Reset' }` |
+| `starts_with` | Starts with string                     | `{ field: 'subject', operator: 'starts_with', value: 'RE:' }` |
+| `ends_with`   | Ends with string                       | `{ field: 'from', operator: 'ends_with', value: '@company.com' }` |
+| `domain`      | Email domain match                     | `{ field: 'from', operator: 'domain', value: 'example.com' }` |
+| `regex`       | Regular expression match               | `{ field: 'subject', operator: 'regex', value: 'Order #\\d+' }` |
+| `exists`      | Field exists and is non-empty          | `{ field: 'attachments', operator: 'exists', value: 'true' }` |
 
 ### Case Sensitivity
 
@@ -255,12 +255,12 @@ console.log(`Old secret valid until: ${result.previousSecretValidUntil}`);
 
 Always verify webhook signatures in your endpoint. Webhooks include the following headers:
 
-| Header              | Description           |
-| ------------------- | --------------------- |
-| `X-Vault-Signature` | HMAC-SHA256 signature |
-| `X-Vault-Timestamp` | Unix timestamp        |
-| `X-Vault-Event`     | Event type            |
-| `X-Vault-Delivery`  | Unique delivery ID    |
+| Header              | Description                |
+| ------------------- | -------------------------- |
+| `X-Vault-Signature` | HMAC-SHA256 signature      |
+| `X-Vault-Timestamp` | Unix timestamp             |
+| `X-Vault-Event`     | Event type                 |
+| `X-Vault-Delivery`  | Unique delivery ID         |
 
 The signature is computed over `${timestamp}.${raw_request_body}`:
 
@@ -269,9 +269,14 @@ import crypto from 'crypto';
 
 function verifyWebhookSignature(rawBody, signature, timestamp, secret) {
 	const signedPayload = `${timestamp}.${rawBody}`;
-	const expectedSignature = 'sha256=' + crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
+	const expectedSignature =
+		'sha256=' +
+		crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
 
-	return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
+	return crypto.timingSafeEqual(
+		Buffer.from(signature),
+		Buffer.from(expectedSignature)
+	);
 }
 
 // In your webhook handler (using express.raw() to get the raw body)
@@ -372,14 +377,14 @@ setupWebhooks().catch(console.error);
 
 ## Webhook vs SSE vs Polling
 
-| Feature           | Webhooks               | SSE                 | Polling             |
-| ----------------- | ---------------------- | ------------------- | ------------------- |
-| Delivery          | Push to your server    | Push to client      | Pull from client    |
-| Connection        | None required          | Persistent          | Repeated requests   |
-| Latency           | Near real-time         | Real-time           | Depends on interval |
-| Server required   | Yes (webhook endpoint) | No                  | No                  |
-| Firewall friendly | Yes                    | Usually             | Yes                 |
-| Best for          | Server-to-server       | Browser/client apps | Simple integrations |
+| Feature           | Webhooks                  | SSE                       | Polling                   |
+| ----------------- | ------------------------- | ------------------------- | ------------------------- |
+| Delivery          | Push to your server       | Push to client            | Pull from client          |
+| Connection        | None required             | Persistent                | Repeated requests         |
+| Latency           | Near real-time            | Real-time                 | Depends on interval       |
+| Server required   | Yes (webhook endpoint)    | No                        | No                        |
+| Firewall friendly | Yes                       | Usually                   | Yes                       |
+| Best for          | Server-to-server          | Browser/client apps       | Simple integrations       |
 
 ## Next Steps
 

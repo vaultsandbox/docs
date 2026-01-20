@@ -33,15 +33,15 @@ The dashboard automatically watches all stored inboxes and displays incoming ema
 
 ### Actions
 
-| Key | Action                                 |
-| --- | -------------------------------------- |
-| `n` | Create new inbox                       |
-| `d` | Delete selected email                  |
-| `o` | Open first link in browser (list view) |
-| `v` | Open HTML email in browser             |
-| `/` | Filter emails                          |
-| `?` | Show all keyboard shortcuts            |
-| `q` | Quit dashboard                         |
+| Key          | Action                                 |
+| ------------ | -------------------------------------- |
+| `n`          | Create new inbox                       |
+| `d`          | Delete selected email                  |
+| `o`          | Open first link in browser (list view) |
+| `v`          | Open HTML email in browser             |
+| `/`          | Filter emails                          |
+| `?`          | Show all keyboard shortcuts            |
+| `q`/`Ctrl+C` | Quit dashboard                         |
 
 ### Tab Navigation (Detail View)
 
@@ -62,12 +62,13 @@ The email body displayed as plain text or rendered HTML. Shows sender, recipient
 
 ### 2. Security
 
-Email authentication results:
+Email authentication and spam analysis results:
 
 - **SPF** - Sender Policy Framework verification
 - **DKIM** - DomainKeys Identified Mail signature validation
 - **DMARC** - Domain-based Message Authentication alignment
 - **TLS** - Transport Layer Security status
+- **Spam Analysis** - Spam score, verdict, and recommended action (when enabled)
 
 ### 3. Links
 

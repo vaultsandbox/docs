@@ -43,7 +43,37 @@ Running `vsb config set strategy` without a value opens an interactive selector.
 vsb config show
 ```
 
-The API key is masked in the output for security.
+The API key is masked in the output for security. When connected to a server, this also displays server capabilities including spam analysis status and allowed domains.
+
+Example output:
+
+```
+api-key: vsb_*****
+base-url: https://your-gateway.vsx.email
+strategy: sse
+
+Server capabilities:
+  spam-analysis: enabled
+  domains: example.com, test.com
+```
+
+JSON output includes a `server` object with capability details:
+
+```bash
+vsb config show -o json
+```
+
+```json
+{
+  "apiKey": "vsb_*****",
+  "baseUrl": "https://your-gateway.vsx.email",
+  "strategy": "sse",
+  "server": {
+    "spamAnalysisEnabled": true,
+    "allowedDomains": ["example.com", "test.com"]
+  }
+}
+```
 
 ## Config File
 

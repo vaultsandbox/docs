@@ -74,10 +74,16 @@ All environment variables at a glance. See sections below for details.
 | `VSB_WEBHOOK_MAX_RETRIES`            | `5`               | Max retry attempts                 |
 | `VSB_WEBHOOK_ALLOW_HTTP`             | `false`           | Allow HTTP URLs (dev only)         |
 | `VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT`   | `false`           | Default requireAuth filter value   |
+| **Spam Analysis**                    |                   |                                    |
+| `VSB_SPAM_ANALYSIS_ENABLED`          | `false`           | Enable spam analysis (Rspamd)      |
+| `VSB_RSPAMD_URL`                     | `localhost:11333` | Rspamd worker API URL              |
+| `VSB_RSPAMD_TIMEOUT_MS`              | `5000`            | Rspamd request timeout (ms)        |
+| `VSB_RSPAMD_PASSWORD`                | —                 | Rspamd authentication password     |
+| `VSB_SPAM_ANALYSIS_INBOX_DEFAULT`    | `true`            | Default spam analysis for inboxes  |
 | **Other**                            |                   |                                    |
 | `NODE_ENV`                           | `production`      | Environment                        |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
-| `VSB_SDK_DEVELOPMENT`                | `false`           | Enable dev mode (test endpoints)   |
+| `VSB_SDK_DEVELOPMENT`                    | `false`           | Enable dev mode (test endpoints)   |
 
 ## Configuration Methods
 
@@ -151,7 +157,6 @@ VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS=mail.example.com,sandbox.example.com
 
 :::tip[Dev Mode]
 When this variable is not set (or empty), the gateway automatically enters **dev mode**:
-
 - Defaults to `localhost` for easy local testing
 - Email authentication checks are disabled by default
 - API key is displayed in startup logs
@@ -275,10 +280,10 @@ Configure TLS/SSL for secure SMTP connections. TLS can be enabled via automatic 
 
 If not using automatic certificate management, provide paths to your certificate files:
 
-| Variable            | Default | Description                                    |
-| :------------------ | :------ | :--------------------------------------------- |
-| `VSB_TLS_CERT_PATH` | (empty) | Path to the TLS certificate file (PEM format). |
-| `VSB_TLS_KEY_PATH`  | (empty) | Path to the TLS private key file (PEM format). |
+| Variable                 | Default | Description                                    |
+| :----------------------- | :------ | :--------------------------------------------- |
+| `VSB_TLS_CERT_PATH`      | (empty) | Path to the TLS certificate file (PEM format). |
+| `VSB_TLS_KEY_PATH`       | (empty) | Path to the TLS private key file (PEM format). |
 
 **Note**: Both paths must be provided together. For automatic certificate management, use `VSB_CERT_ENABLED=true` instead.
 
@@ -344,14 +349,14 @@ VSB_LOCAL_API_KEY=your-secure-random-key-minimum-32-chars
 
 ### Inbox & Cleanup (Local Mode)
 
-| Variable                            | Default  | Description                                                                           |
-| :---------------------------------- | :------- | :------------------------------------------------------------------------------------ |
-| `VSB_LOCAL_INBOX_DEFAULT_TTL`       | `3600`   | Default time-to-live (seconds) for new inboxes (1 hour).                              |
-| `VSB_LOCAL_INBOX_MAX_TTL`           | `604800` | Maximum allowed TTL (seconds) for any inbox (7 days).                                 |
-| `VSB_LOCAL_CLEANUP_INTERVAL`        | `300`    | Interval (seconds) for the background cleanup task (5 mins).                          |
-| `VSB_INBOX_ALIAS_RANDOM_BYTES`      | `4`      | Number of random bytes for inbox alias generation (4-32). Produces 2x hex characters. |
-| `VSB_SMTP_HARD_MODE_REJECT_CODE`    | `421`    | SMTP code used when rejecting emails in "hard mode".                                  |
-| `VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES` | `true`   | Allow DELETE /api/inboxes endpoint.                                                   |
+| Variable                         | Default  | Description                                                                           |
+| :------------------------------- | :------- | :------------------------------------------------------------------------------------ |
+| `VSB_LOCAL_INBOX_DEFAULT_TTL`    | `3600`   | Default time-to-live (seconds) for new inboxes (1 hour).                              |
+| `VSB_LOCAL_INBOX_MAX_TTL`        | `604800` | Maximum allowed TTL (seconds) for any inbox (7 days).                                 |
+| `VSB_LOCAL_CLEANUP_INTERVAL`     | `300`    | Interval (seconds) for the background cleanup task (5 mins).                          |
+| `VSB_INBOX_ALIAS_RANDOM_BYTES`   | `4`      | Number of random bytes for inbox alias generation (4-32). Produces 2x hex characters. |
+| `VSB_SMTP_HARD_MODE_REJECT_CODE` | `421`    | SMTP code used when rejecting emails in "hard mode".                                  |
+| `VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES` | `true` | Allow DELETE /api/inboxes endpoint.                                                   |
 
 ### VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES
 
@@ -527,7 +532,7 @@ If `VSB_GATEWAY_MODE` is `backend`, or if `VSB_ORCHESTRATION_ENABLED` is `true`,
 | :------------------------ | :----------- | :--------------------------------------------------------------------------- |
 | `NODE_ENV`                | `production` | Application environment (`development` or `production`).                     |
 | `VSB_SSE_CONSOLE_ENABLED` | `true`       | Enable Server-Sent Events console for real-time logs.                        |
-| `VSB_SDK_DEVELOPMENT`     | `false`      | Enable development mode. Exposes test endpoints for SDK testing (see below). |
+| `VSB_SDK_DEVELOPMENT`         | `false`      | Enable development mode. Exposes test endpoints for SDK testing (see below). |
 
 ### VSB_SDK_DEVELOPMENT
 
@@ -560,18 +565,17 @@ Control whether emails are stored encrypted or in plain text.
 **Description**: Encryption policy for email storage. Controls whether inboxes use quantum-safe encryption (ML-KEM-768 + AES-256-GCM) or store emails in plain text.
 
 **Default**:
-
 - `disabled` in dev mode (plain by default, but can request encrypted inboxes)
 - `always` in production mode (secure by default)
 
 **Values**:
 
-| Policy     | Default Encryption | Per-Inbox Override             |
-| :--------- | :----------------- | :----------------------------- |
-| `always`   | Encrypted          | **No** - all inboxes encrypted |
-| `enabled`  | Encrypted          | Yes - can request `plain`      |
-| `disabled` | Plain              | Yes - can request `encrypted`  |
-| `never`    | Plain              | **No** - all inboxes plain     |
+| Policy     | Default Encryption | Per-Inbox Override                  |
+| :--------- | :----------------- | :---------------------------------- |
+| `always`   | Encrypted          | **No** - all inboxes encrypted      |
+| `enabled`  | Encrypted          | Yes - can request `plain`           |
+| `disabled` | Plain              | Yes - can request `encrypted`       |
+| `never`    | Plain              | **No** - all inboxes plain          |
 
 **Example**:
 
@@ -609,7 +613,6 @@ Control SPF, DKIM, DMARC, and reverse DNS validation for incoming emails.
 **Description**: Master switch for all email authentication checks. When `false`, all checks are skipped globally and return `status: 'skipped'`.
 
 **Default**:
-
 - `false` in dev mode (when `VSB_SMTP_ALLOWED_RECIPIENT_DOMAINS` is not set)
 - `true` in production mode (when a domain is configured)
 
@@ -628,12 +631,12 @@ In dev mode, email authentication is disabled by default because SPF/DKIM/DMARC 
 
 When the master switch is enabled, each authentication method can be enabled or disabled independently:
 
-| Variable                             | Default | Description                                |
-| :----------------------------------- | :------ | :----------------------------------------- |
-| `VSB_EMAIL_AUTH_SPF_ENABLED`         | `true`  | SPF (Sender Policy Framework) verification |
-| `VSB_EMAIL_AUTH_DKIM_ENABLED`        | `true`  | DKIM signature verification                |
-| `VSB_EMAIL_AUTH_DMARC_ENABLED`       | `true`  | DMARC policy verification                  |
-| `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true`  | Reverse DNS (PTR record) verification      |
+| Variable                           | Default | Description                                |
+| :--------------------------------- | :------ | :----------------------------------------- |
+| `VSB_EMAIL_AUTH_SPF_ENABLED`       | `true`  | SPF (Sender Policy Framework) verification |
+| `VSB_EMAIL_AUTH_DKIM_ENABLED`      | `true`  | DKIM signature verification                |
+| `VSB_EMAIL_AUTH_DMARC_ENABLED`     | `true`  | DMARC policy verification                  |
+| `VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED` | `true` | Reverse DNS (PTR record) verification      |
 
 **Example**:
 
@@ -650,7 +653,6 @@ VSB_EMAIL_AUTH_REVERSE_DNS_ENABLED=false
 **Description**: Default `emailAuth` setting for new inboxes when clients don't specify a preference.
 
 **Default**:
-
 - `false` in dev mode (no auth checks on new inboxes by default)
 - `true` in production mode (auth checks enabled by default)
 
@@ -681,15 +683,15 @@ Per-inbox settings (`emailAuth: false`) only affect that specific inbox. Global 
 
 Configure real-time HTTP notifications for email events. See the [Webhooks documentation](/gateway/webhooks/) for full details on usage.
 
-| Variable                           | Default | Description                             |
-| :--------------------------------- | :------ | :-------------------------------------- |
-| `VSB_WEBHOOK_ENABLED`              | `true`  | Enable/disable the webhook system       |
-| `VSB_WEBHOOK_MAX_GLOBAL`           | `100`   | Maximum global webhooks per account     |
-| `VSB_WEBHOOK_MAX_INBOX`            | `50`    | Maximum webhooks per inbox              |
-| `VSB_WEBHOOK_TIMEOUT`              | `10000` | Delivery timeout in milliseconds        |
-| `VSB_WEBHOOK_MAX_RETRIES`          | `5`     | Maximum retry attempts before disabling |
-| `VSB_WEBHOOK_ALLOW_HTTP`           | `false` | Allow HTTP URLs (development only)      |
-| `VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT` | `false` | Default `requireAuth` filter value      |
+| Variable | Default | Description |
+| :------- | :------ | :---------- |
+| `VSB_WEBHOOK_ENABLED` | `true` | Enable/disable the webhook system |
+| `VSB_WEBHOOK_MAX_GLOBAL` | `100` | Maximum global webhooks per account |
+| `VSB_WEBHOOK_MAX_INBOX` | `50` | Maximum webhooks per inbox |
+| `VSB_WEBHOOK_TIMEOUT` | `10000` | Delivery timeout in milliseconds |
+| `VSB_WEBHOOK_MAX_RETRIES` | `5` | Maximum retry attempts before disabling |
+| `VSB_WEBHOOK_ALLOW_HTTP` | `false` | Allow HTTP URLs (development only) |
+| `VSB_WEBHOOK_REQUIRE_AUTH_DEFAULT` | `false` | Default `requireAuth` filter value |
 
 ### VSB_WEBHOOK_ENABLED
 
@@ -712,6 +714,18 @@ Never enable `VSB_WEBHOOK_ALLOW_HTTP` in production. Webhook payloads may contai
 **Description**: Default value for the `requireAuth` filter option when creating webhooks. When `true`, webhooks only fire for emails that pass SPF/DKIM/DMARC authentication.
 
 **Default**: `false`
+
+## Spam Analysis
+
+Configure Rspamd integration for spam detection. See the [Spam Analysis documentation](/gateway/spam-analysis/) for full details on setup and usage.
+
+| Variable | Default | Description |
+| :------- | :------ | :---------- |
+| `VSB_SPAM_ANALYSIS_ENABLED` | `false` | Enable spam analysis globally |
+| `VSB_RSPAMD_URL` | `http://localhost:11333` | Rspamd worker API URL |
+| `VSB_RSPAMD_TIMEOUT_MS` | `5000` | Request timeout in milliseconds |
+| `VSB_RSPAMD_PASSWORD` | — | Password for Rspamd authentication (optional) |
+| `VSB_SPAM_ANALYSIS_INBOX_DEFAULT` | `true` | Default spam analysis setting for new inboxes |
 
 ## Crypto / Signing
 

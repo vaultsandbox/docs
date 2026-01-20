@@ -22,6 +22,7 @@ An inbox has a unique email address that can receive emails. Emails are end-to-e
 | `expiresAt`    | `Instant` | When the inbox expires                                              |
 | `serverSigPk`  | `String`  | Server's signature public key (only present when `encrypted: true`) |
 | `emailAuth`    | `boolean` | Whether email authentication checks are enabled                     |
+| `spamAnalysis` | `boolean` | Whether spam analysis is enabled for this inbox                     |
 | `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption                       |
 
 ### Getters
@@ -32,6 +33,7 @@ public String getHash()
 public Instant getExpiresAt()
 public String getServerSigPk()  // null when encrypted is false
 public boolean isEmailAuth()
+public boolean isSpamAnalysis()
 public boolean isEncrypted()
 ```
 
@@ -902,5 +904,6 @@ The `Inbox` class is thread-safe:
 - [VaultSandboxClient API](/client-java/api/client/) - Creating inboxes
 - [Email API](/client-java/api/email/) - Email class reference
 - [Waiting for Emails](/client-java/guides/waiting-for-emails/) - Wait patterns
+- [Spam Analysis](/client-java/concepts/spam-analysis/) - Working with spam analysis results
 - [Real-time Subscriptions](/client-java/guides/real-time/) - Subscription patterns
 - [Webhooks](/client-java/guides/webhooks/) - Webhook setup and management

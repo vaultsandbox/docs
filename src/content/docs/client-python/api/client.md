@@ -92,6 +92,7 @@ class CreateInboxOptions:
     email_address: str | None = None
     email_auth: bool | None = None
     encryption: str | None = None
+    spam_analysis: bool | None = None
 ```
 
 | Property        | Type           | Description                                                                                |
@@ -100,6 +101,7 @@ class CreateInboxOptions:
 | `email_address` | `str \| None`  | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
 | `email_auth`    | `bool \| None` | Enable/disable SPF/DKIM/DMARC/PTR checks (default: server setting)                         |
 | `encryption`    | `str \| None`  | Request encryption mode: `"encrypted"` or `"plain"` (default: server policy)               |
+| `spam_analysis` | `bool \| None` | Enable/disable spam analysis for this inbox (default: server setting)                      |
 
 ##### Email Authentication (`email_auth`)
 
@@ -114,6 +116,14 @@ class CreateInboxOptions:
 - Omit - Use server default based on `encryption_policy`
 
 **Note**: The server may reject the encryption request based on its `encryption_policy`. Use `get_server_info()` to check the policy before creating inboxes.
+
+##### Spam Analysis (`spam_analysis`)
+
+- `True` - Enable spam analysis (Rspamd) for incoming emails
+- `False` - Disable spam analysis for this inbox
+- Omit - Use server default (`VSB_SPAM_ANALYSIS_INBOX_DEFAULT`)
+
+**Note**: Spam analysis requires the server to have Rspamd enabled (`VSB_SPAM_ANALYSIS_ENABLED=true`). Use `get_server_info()` to check if spam analysis is available.
 
 #### Returns
 
@@ -142,12 +152,18 @@ inbox = await client.create_inbox(CreateInboxOptions(email_auth=False))
 # Create a plain (unencrypted) inbox (when server policy allows)
 inbox = await client.create_inbox(CreateInboxOptions(encryption="plain"))
 
+# Create inbox with spam analysis enabled
+inbox = await client.create_inbox(CreateInboxOptions(spam_analysis=True))
+
+# Create inbox with spam analysis disabled
+inbox = await client.create_inbox(CreateInboxOptions(spam_analysis=False))
+
 # Create with multiple options
 inbox = await client.create_inbox(
     CreateInboxOptions(
         ttl=3600,
-        email_auth=False,
-        encryption="plain",
+        email_auth=True,
+        spam_analysis=True,
     )
 )
 ```
@@ -218,18 +234,20 @@ class ServerInfo:
     sse_console: bool
     allowed_domains: list[str]
     encryption_policy: str
+    spam_analysis_enabled: bool
 ```
 
-| Property            | Type             | Description                                               |
-| ------------------- | ---------------- | --------------------------------------------------------- |
-| `server_sig_pk`     | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`              | `dict[str, str]` | Cryptographic algorithms supported by the server          |
-| `context`           | `str`            | Context string for the encryption scheme                  |
-| `max_ttl`           | `int`            | Maximum time-to-live for inboxes in seconds               |
-| `default_ttl`       | `int`            | Default time-to-live for inboxes in seconds               |
-| `sse_console`       | `bool`           | Whether the server SSE console is enabled                 |
-| `allowed_domains`   | `list[str]`      | List of domains allowed for inbox creation                |
-| `encryption_policy` | `str`            | Server encryption policy (see below)                      |
+| Property                | Type             | Description                                               |
+| ----------------------- | ---------------- | --------------------------------------------------------- |
+| `server_sig_pk`         | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`                  | `dict[str, str]` | Cryptographic algorithms supported by the server          |
+| `context`               | `str`            | Context string for the encryption scheme                  |
+| `max_ttl`               | `int`            | Maximum time-to-live for inboxes in seconds               |
+| `default_ttl`           | `int`            | Default time-to-live for inboxes in seconds               |
+| `sse_console`           | `bool`           | Whether the server SSE console is enabled                 |
+| `allowed_domains`       | `list[str]`      | List of domains allowed for inbox creation                |
+| `encryption_policy`     | `str`            | Server encryption policy (see below)                      |
+| `spam_analysis_enabled` | `bool`           | Whether spam analysis (Rspamd) is enabled on this server  |
 
 #### Encryption Policy
 
@@ -255,6 +273,9 @@ print(f"Encryption policy: {info.encryption_policy}")
 can_override = info.encryption_policy in ["enabled", "disabled"]
 default_encrypted = info.encryption_policy in ["always", "enabled"]
 print(f"Can override: {can_override}, Default encrypted: {default_encrypted}")
+
+# Check spam analysis availability
+print(f"Spam analysis enabled: {info.spam_analysis_enabled}")
 ```
 
 ---
@@ -358,16 +379,18 @@ def export_inbox(self, inbox_or_email: Inbox | str) -> ExportedInbox
 ```python
 @dataclass
 class ExportedInbox:
-    version: int            # Export format version (always 1)
+    version: int                    # Export format version (always 1)
     email_address: str
     expires_at: str
     inbox_hash: str
-    server_sig_pk: str      # Base64url-encoded
-    secret_key: str         # Base64url-encoded (SENSITIVE!)
+    encrypted: bool                 # Whether the inbox uses encryption
+    email_auth: bool                # Whether email authentication checks are enabled
     exported_at: str
+    server_sig_pk: str | None = None  # Base64url-encoded (only for encrypted inboxes)
+    secret_key: str | None = None     # Base64url-encoded, SENSITIVE! (only for encrypted inboxes)
 ```
 
-Note: The public key is derived from the secret key during import.
+Note: The public key is derived from the secret key during import. The `server_sig_pk` and `secret_key` fields are only present for encrypted inboxes.
 
 #### Example
 
