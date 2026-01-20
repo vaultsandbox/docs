@@ -24,7 +24,8 @@
 	"scripts": {
 		"dev": "astro dev",
 		"start": "astro dev",
-		"build": "astro build",
+		"build": "node scripts/generate-llms-txt.js && astro build",
+		"build:llms": "node scripts/generate-llms-txt.js",
 		"preview": "astro preview",
 		"astro": "astro",
 		"format": "prettier --write .",

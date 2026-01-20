@@ -1,6 +1,9 @@
 # build output
 dist/
 
+# generated LLM documentation files
+public/llms/
+
 # reference folder (other documentation only for reference while working)
 # _reference/
 

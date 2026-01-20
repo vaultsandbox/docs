@@ -1,0 +1,124 @@
+# VaultSandbox
+
+> Self-hosted email testing platform for developers
+
+VaultSandbox is a self-hosted email testing platform that lets you validate your complete email stack—including SMTP, TLS, DNS, and authentication—inside your own infrastructure. It replaces fake SMTP servers and public testing services with real mail delivery that behaves exactly like production, without exposing customer data.
+
+## Core Components
+
+- **Gateway**: Go-based SMTP server with REST API, Web UI, real-time SSE notifications, and email authentication (SPF, DKIM, DMARC)
+- **CLI**: Command-line interface for managing inboxes and emails
+- **SDKs**: Client libraries for Node.js, Python, Java, Go, and .NET
+
+## Deployment Options
+
+VaultSandbox supports three deployment modes:
+
+- **Localhost** (no public IP required): /deployment/local-development/
+  - Run entirely on localhost for development and testing
+  - HTTP only, ports 2525 (SMTP) and 8080 (HTTP)
+  - Zero configuration needed
+
+- **VSX DNS (Auto Domain)**: /getting-started/quickstart/
+  - Automatic domain assignment (e.g., `1mzhr2y.vsx.email`)
+  - Zero DNS configuration required
+  - Automatic TLS certificates via Let's Encrypt
+
+- **Custom Domain**: /getting-started/quickstart-custom-domain/
+  - Use your own domain for branding or compliance
+  - Requires DNS configuration (A and MX records)
+  - Automatic TLS certificates via Let's Encrypt
+
+
+
+
+## Section-Specific Documentation
+
+For detailed documentation, use these focused files:
+
+### Core
+- /llms/llms-core.txt - Overview, architecture, getting started, deployment
+
+### Gateway
+- /llms/llms-gateway.txt - Gateway configuration, API, webhooks, security
+
+### CLI
+- /llms/llms-cli.txt - Command-line interface
+
+### SDKs
+
+#### Node.js SDK
+  - /llms/llms-sdk-node-quickstart.txt - Quick Start
+  - /llms/llms-sdk-node-concepts.txt - Concepts
+  - /llms/llms-sdk-node-api.txt - API Reference
+  - /llms/llms-sdk-node-guides.txt - Guides
+  - /llms/llms-sdk-node-testing.txt - Testing
+  - /llms/llms-sdk-node-advanced.txt - Advanced
+
+#### Python SDK
+  - /llms/llms-sdk-python-quickstart.txt - Quick Start
+  - /llms/llms-sdk-python-concepts.txt - Concepts
+  - /llms/llms-sdk-python-api.txt - API Reference
+  - /llms/llms-sdk-python-guides.txt - Guides
+  - /llms/llms-sdk-python-testing.txt - Testing
+  - /llms/llms-sdk-python-advanced.txt - Advanced
+
+#### Java SDK
+  - /llms/llms-sdk-java-quickstart.txt - Quick Start
+  - /llms/llms-sdk-java-concepts.txt - Concepts
+  - /llms/llms-sdk-java-api.txt - API Reference
+  - /llms/llms-sdk-java-guides.txt - Guides
+  - /llms/llms-sdk-java-testing.txt - Testing
+  - /llms/llms-sdk-java-advanced.txt - Advanced
+
+#### Go SDK
+  - /llms/llms-sdk-go-quickstart.txt - Quick Start
+  - /llms/llms-sdk-go-concepts.txt - Concepts
+  - /llms/llms-sdk-go-api.txt - API Reference
+  - /llms/llms-sdk-go-guides.txt - Guides
+  - /llms/llms-sdk-go-testing.txt - Testing
+  - /llms/llms-sdk-go-advanced.txt - Advanced
+
+#### .NET SDK
+  - /llms/llms-sdk-dotnet-quickstart.txt - Quick Start
+  - /llms/llms-sdk-dotnet-concepts.txt - Concepts
+  - /llms/llms-sdk-dotnet-api.txt - API Reference
+  - /llms/llms-sdk-dotnet-guides.txt - Guides
+  - /llms/llms-sdk-dotnet-testing.txt - Testing
+  - /llms/llms-sdk-dotnet-advanced.txt - Advanced
+
+## Documentation Sections
+
+- Getting Started: /getting-started/
+- Deployment: /deployment/
+- Gateway: /gateway/
+- CLI: /cli/
+- Node.js SDK: /client-node/
+- Python SDK: /client-python/
+- Java SDK: /client-java/
+- Go SDK: /client-go/
+- .NET SDK: /client-dotnet/
+
+## Key Concepts
+
+- **Inboxes**: Isolated email containers identified by address, with client-side encryption keys
+- **Email Capture**: Real SMTP delivery with full TLS support and Let's Encrypt certificates
+- **Zero-Knowledge Encryption**: Emails encrypted with client's public key (ML-KEM-768); server cannot decrypt
+- **Auth Results**: SPF, DKIM, DMARC, and reverse DNS validation on every message
+- **Real-time Delivery**: Server-Sent Events (SSE) for instant email notifications
+- **Ephemeral Storage**: In-memory storage optimized for CI/CD pipelines with automatic cleanup
+- **Webhooks**: HTTP callbacks for email arrival notifications
+
+## Common Use Cases
+
+1. Integration testing email flows
+2. E2E testing with real SMTP
+3. Validating email content and formatting
+4. Testing spam filters and authentication
+5. CI/CD pipeline email validation
+
+## Resources
+
+- Website: https://www.vaultsandbox.com
+- Documentation: https://vaultsandbox.dev
+- GitHub: https://github.com/vaultsandbox/gateway
