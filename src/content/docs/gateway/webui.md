@@ -16,6 +16,8 @@ A web application provides a rich user interface for the VaultSandbox Gateway SM
 - **Real-Time Updates**: Server-Sent Events (SSE) for live email notifications
 - **Gateway Metrics**: Monitor SMTP server performance and health
 - **Webhooks**: Configure HTTP notifications for email events (global or per-inbox)
+- **Chaos Testing**: Configure chaos engineering modes per inbox for SMTP resilience testing
+- **Spam Analysis**: View spam scores and detailed spam indicators for received emails
 - **Dark/Light Theme**: Automatic theme switching based on system preferences
 - **Quantum-Safe Decryption**: Support for ML-KEM-768 encrypted email payloads
 - **Responsive Design**: Mobile-friendly interface built with PrimeNG and Tailwind CSS
@@ -110,6 +112,8 @@ Click any email to view full details:
 - **Attachments**: List of attachments with download support
 - **Links**: Extracted links with security warnings for external URLs
 - **Authentication Results**: Visual display of SPF, DKIM, DMARC, and reverse DNS
+- **Spam Analysis**: View spam score and detailed spam indicators
+- **Email Snapshot**: Capture a screenshot of the email view using the camera button
 
 ## Email Authentication Display
 
@@ -166,8 +170,10 @@ Create and manage multiple virtual inboxes to organize emails:
   - **Email Address**: Enter an alias (leave empty for a random email address)
   - **Domain**: Select from available domains (if you have more than one configured)
   - **TTL (Time to Live)**: Set the inbox lifetime in hours (this value will be remembered as your default)
+  - **Enable encryption**: Encrypt emails end-to-end so only you can read them
+  - **Enable email authentication (SPF, DKIM, DMARC)**: Perform sender verification checks on incoming emails
+  - **Enable spam analysis**: Analyze incoming emails for spam using Rspamd
 
-Emails matching the address pattern are automatically routed to the corresponding inbox
 
 ### Inbox Management
 
@@ -175,8 +181,10 @@ Emails matching the address pattern are automatically routed to the correspondin
 
 Right-click on any inbox in the sidebar to access the context menu with the following options:
 
+- **Webhooks**: Configure webhooks for this specific inbox
+- **Chaos**: Configure chaos engineering modes for SMTP testing on this inbox
 - **Export Inbox**: Export just the inbox alias and private key
-- **Forget Inbox**: Remove the inbox from your local storage (does not delete the inbox, from server)
+- **Forget Inbox**: Remove the inbox from your local storage (does not delete the inbox from server)
 - **Delete All Emails**: Remove all emails from the inbox while keeping the inbox itself
 - **Delete Inbox**: Permanently delete the inbox and all its emails
 
@@ -192,6 +200,7 @@ Click the menu icon in the top-left corner of the interface to access additional
 - **Webhooks**: Configure global webhooks that apply to all inboxes
 - **Settings**: Configure application preferences
 - **Light Mode**: Toggle between light and dark themes
+- **Docs**: Open the VaultSandbox documentation
 - **Logout**: Clear your API key and log out of the application
 
 ## Gateway Metrics
@@ -202,13 +211,19 @@ Monitor SMTP server performance and health:
 
 1. Click the **"Metrics"** button in the toolbar
 2. View real-time metrics in the **General Metrics** tab:
-   - **SMTP Connections**: Current and total connections
-   - **Emails Received**: Total emails processed
-   - **Uptime**: Server uptime and health status
+   - **Server Uptime**: Uptime duration and online status
+   - **Total Connections**: Connection count with rejected percentage
+   - **Emails Received**: Total emails with recipient count and average
+   - **Active Now**: Current active connections with processing time
+   - **Inbox Activity**: Created, active, and deleted inbox counts
+   - **Email Authentication**: SPF and DKIM pass/fail statistics
 3. View storage information in the **Storage Metrics** tab:
    - **Memory Usage**: Current email storage space used
    - **Free Space**: Available storage capacity
    - **Cleanup Schedule**: When automatic cleanup occurs
+4. View webhook statistics in the **Webhook Metrics** tab:
+   - **Webhook Deliveries**: Total webhook requests sent
+   - **Success/Failure Rates**: Delivery success statistics
 
 ### SSE Console
 
@@ -261,7 +276,10 @@ Access global webhooks from the application menu. These webhooks apply to all in
 
 ![Inbox Webhooks](/images/gateway/webui/inbox-webhooks.png)
 
-Right-click an inbox in the sidebar and select **Webhooks** to configure webhooks for that specific inbox only.
+Access inbox-specific webhooks in two ways:
+
+- Right-click an inbox in the sidebar and select **Webhooks**
+- Click the **bolt icon** in the header bar next to the inbox email address
 
 ### Creating a Webhook
 
@@ -273,6 +291,34 @@ Right-click an inbox in the sidebar and select **Webhooks** to configure webhook
 - **Payload Template**: Choose the payload format (Default Raw JSON or custom templates)
 - **Filters**: Add rules to filter which emails trigger the webhook
 - **Require email authentication**: Only trigger for emails that pass SPF/DKIM/DMARC checks
+
+## Chaos Testing
+
+Configure chaos engineering modes to simulate email delivery failures and test application resilience.
+
+### Accessing Chaos Configuration
+
+![Inbox Chaos](/images/gateway/webui/inbox-chaos.png)
+
+Access chaos configuration for an inbox in two ways:
+
+- Right-click an inbox in the sidebar and select **Chaos**
+- Click the **warning icon** in the header bar next to the inbox email address
+
+### Chaos Configuration Dialog
+
+![Chaos Configuration](/images/gateway/webui/chaos-config.png)
+
+- **Enable Chaos**: Master toggle to enable or disable chaos for this inbox
+- **Auto-disable after**: Set an expiration date to automatically disable chaos
+- **Connection Drop**: Drop SMTP connections before sending a response. Configure probability (0-100%) and graceful close (FIN vs RST)
+- **Greylisting**: Reject initial delivery attempts, accept on retry (tests retry logic)
+- **Random Errors**: Return random SMTP error codes (4xx temporary or 5xx permanent)
+- **Blackhole**: Accept emails but silently discard them
+- **Latency Injection**: Add artificial delays to SMTP responses
+- **Disable All**: Quickly disable all chaos modes
+
+For detailed configuration options and API usage, see [Chaos Engineering](/gateway/chaos-engineering/).
 
 ## Theme Management
 
