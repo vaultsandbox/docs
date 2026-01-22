@@ -80,6 +80,8 @@ All environment variables at a glance. See sections below for details.
 | `VSB_RSPAMD_TIMEOUT_MS`              | `5000`            | Rspamd request timeout (ms)        |
 | `VSB_RSPAMD_PASSWORD`                | —                 | Rspamd authentication password     |
 | `VSB_SPAM_ANALYSIS_INBOX_DEFAULT`    | `true`            | Default spam analysis for inboxes  |
+| **Chaos Engineering**                |                   |                                    |
+| `VSB_CHAOS_ENABLED`                  | `false`           | Enable chaos engineering features  |
 | **Other**                            |                   |                                    |
 | `NODE_ENV`                           | `production`      | Environment                        |
 | `VSB_SSE_CONSOLE_ENABLED`            | `true`            | Enable SSE console                 |
@@ -726,6 +728,34 @@ Configure Rspamd integration for spam detection. See the [Spam Analysis document
 | `VSB_RSPAMD_TIMEOUT_MS` | `5000` | Request timeout in milliseconds |
 | `VSB_RSPAMD_PASSWORD` | — | Password for Rspamd authentication (optional) |
 | `VSB_SPAM_ANALYSIS_INBOX_DEFAULT` | `true` | Default spam analysis setting for new inboxes |
+
+## Chaos Engineering
+
+Configure chaos engineering features for testing application resilience. See the [Chaos Engineering documentation](/gateway/chaos-engineering/) for full details on chaos types and API usage.
+
+### VSB_CHAOS_ENABLED
+
+**Description**: Master switch for chaos engineering features. When `false`, all chaos-related API endpoints return `403 Forbidden` and chaos configurations are ignored.
+
+**Default**: `false`
+
+**Example**:
+
+```bash
+VSB_CHAOS_ENABLED=true
+```
+
+**What it enables**:
+
+- `GET /api/inboxes/:email/chaos` - Get inbox chaos configuration
+- `POST /api/inboxes/:email/chaos` - Update inbox chaos configuration
+- `DELETE /api/inboxes/:email/chaos` - Disable chaos for an inbox
+- `chaos` field in `POST /api/inboxes` request body
+- Chaos evaluation during SMTP email processing
+
+:::caution[Testing only]
+Chaos engineering is designed for testing environments. It should not be enabled in production systems as it intentionally causes email delivery failures.
+:::
 
 ## Crypto / Signing
 

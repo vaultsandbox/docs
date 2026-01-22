@@ -1,6 +1,6 @@
 ---
 title: Inbox Commands
-description: Create, list, and manage VaultSandbox inboxes from the CLI
+description: Create, list, and manage VaultSandbox inboxes from the CLI, including chaos engineering
 ---
 
 Inbox commands let you create temporary email addresses, list existing inboxes, and manage their lifecycle.
@@ -524,6 +524,222 @@ vsb inbox webhook test <webhook-id> [flags]
 ```bash
 vsb inbox webhook test wh_abc123
 vsb inbox webhook test wh_abc123 -o json
+```
+
+---
+
+## Chaos Engineering
+
+Chaos engineering commands let you inject various failure scenarios for testing email delivery resilience. Use these to simulate real-world issues like network latency, connection drops, and error responses.
+
+:::note
+Chaos engineering must be enabled server-side for these commands to work.
+:::
+
+### vsb inbox chaos set
+
+Enable and configure chaos engineering scenarios for an inbox.
+
+```bash
+vsb inbox chaos set [flags]
+```
+
+#### Global Chaos Flags
+
+| Flag        | Description                                              | Default |
+| ----------- | -------------------------------------------------------- | ------- |
+| `--inbox`   | Specify inbox (uses active inbox if omitted)             |         |
+| `--expires` | Auto-disable after duration (e.g., `1h`, `30m`) or timestamp |     |
+
+#### Latency Injection
+
+Simulate network latency by adding delays to email processing.
+
+| Flag            | Description                                    | Default |
+| --------------- | ---------------------------------------------- | ------- |
+| `--latency`     | Enable latency injection                       | `false` |
+| `--min-delay`   | Minimum delay in milliseconds                  | `500`   |
+| `--max-delay`   | Maximum delay in milliseconds                  | `10000` |
+| `--no-jitter`   | Use fixed delay (max-delay) instead of random  | `false` |
+| `--probability` | Probability of applying latency (0.0-1.0)      | `1.0`   |
+
+#### Connection Drops
+
+Simulate network connection failures.
+
+| Flag                 | Description                                    | Default |
+| -------------------- | ---------------------------------------------- | ------- |
+| `--connection-drop`  | Enable connection dropping                     | `false` |
+| `--drop-probability` | Probability of dropping a connection (0.0-1.0) | `1.0`   |
+| `--abrupt`           | Use abrupt close (RST) instead of graceful (FIN) | `false` |
+
+#### Random Errors
+
+Generate random error responses.
+
+| Flag            | Description                                       | Default       |
+| --------------- | ------------------------------------------------- | ------------- |
+| `--random-error`| Enable random error generation                    | `false`       |
+| `--error-rate`  | Probability of returning error (0.0-1.0)          | `0.1`         |
+| `--error-types` | Error types to inject: `temporary`, `permanent`   | `temporary`   |
+
+#### Greylisting
+
+Simulate email greylisting behavior.
+
+| Flag             | Description                                      | Default     |
+| ---------------- | ------------------------------------------------ | ----------- |
+| `--greylist`     | Enable greylisting simulation                    | `false`     |
+| `--retry-window` | Retry window in milliseconds                     | `300000`    |
+| `--max-attempts` | Number of attempts before accepting              | `2`         |
+| `--track-by`     | Track greylisting by: `ip`, `sender`, `ip_sender`| `ip_sender` |
+
+#### Blackhole Mode
+
+Silently drop emails without response.
+
+| Flag                 | Description                              | Default |
+| -------------------- | ---------------------------------------- | ------- |
+| `--blackhole`        | Enable blackhole mode                    | `false` |
+| `--trigger-webhooks` | Still trigger webhooks in blackhole mode | `false` |
+
+#### Examples
+
+```bash
+# Enable latency injection (500-5000ms delay)
+vsb inbox chaos set --latency --min-delay 500 --max-delay 5000
+
+# Enable latency with 50% probability
+vsb inbox chaos set --latency --min-delay 1000 --max-delay 5000 --probability 0.5
+
+# Enable connection drops (30% of connections)
+vsb inbox chaos set --connection-drop --drop-probability 0.3
+
+# Enable abrupt connection drops
+vsb inbox chaos set --connection-drop --drop-probability 0.5 --abrupt
+
+# Enable random errors (20% temporary errors)
+vsb inbox chaos set --random-error --error-rate 0.2 --error-types temporary
+
+# Enable greylisting
+vsb inbox chaos set --greylist --max-attempts 3 --retry-window 600000
+
+# Enable blackhole mode (drop all emails)
+vsb inbox chaos set --blackhole
+
+# Blackhole with webhooks still firing
+vsb inbox chaos set --blackhole --trigger-webhooks
+
+# Set chaos with auto-expiration
+vsb inbox chaos set --latency --min-delay 500 --expires 1h
+
+# Set chaos on specific inbox
+vsb inbox chaos set --inbox user@example.vsx.email --latency --min-delay 1000
+
+# Combine multiple chaos types
+vsb inbox chaos set \
+  --latency --min-delay 500 --max-delay 2000 --probability 0.3 \
+  --connection-drop --drop-probability 0.1 \
+  --random-error --error-rate 0.05
+```
+
+---
+
+### vsb inbox chaos get
+
+Display the current chaos configuration for an inbox.
+
+```bash
+vsb inbox chaos get [flags]
+```
+
+#### Flags
+
+| Flag       | Description                                  |
+| ---------- | -------------------------------------------- |
+| `--inbox`  | Specify inbox (uses active inbox if omitted) |
+| `--output` | Output format: `json` or pretty-print        |
+
+#### Examples
+
+```bash
+# Get chaos config for active inbox
+vsb inbox chaos get
+
+# Get chaos config for specific inbox
+vsb inbox chaos get --inbox user@example.vsx.email
+
+# Output as JSON
+vsb inbox chaos get -o json
+```
+
+#### Output
+
+```
+Chaos Configuration
+
+  Status:   enabled
+  Expires:  2024-01-15 16:30 (1h)
+
+  Latency:
+    Delay:       500-2000ms (jitter enabled)
+    Probability: 0.3
+
+  Connection Drop:
+    Probability: 0.1
+```
+
+JSON output:
+
+```json
+{
+  "enabled": true,
+  "expiresAt": "2024-01-15T16:30:00Z",
+  "latency": {
+    "enabled": true,
+    "minDelayMs": 500,
+    "maxDelayMs": 2000,
+    "jitter": true,
+    "probability": 0.3
+  },
+  "connectionDrop": {
+    "enabled": true,
+    "probability": 0.1,
+    "graceful": true
+  }
+}
+```
+
+---
+
+### vsb inbox chaos disable
+
+Disable all chaos engineering scenarios for an inbox.
+
+```bash
+vsb inbox chaos disable [flags]
+```
+
+#### Flags
+
+| Flag          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `--inbox`     | Specify inbox (uses active inbox if omitted) |
+| `-f, --force` | Skip confirmation prompt                     |
+| `--output`    | Output format: `json` or pretty-print        |
+
+#### Examples
+
+```bash
+# Disable chaos for active inbox (prompts for confirmation)
+vsb inbox chaos disable
+
+# Force disable without confirmation
+vsb inbox chaos disable -f
+vsb inbox chaos disable --force
+
+# Disable for specific inbox
+vsb inbox chaos disable --inbox user@example.vsx.email
 ```
 
 ---

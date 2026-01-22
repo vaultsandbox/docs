@@ -48,6 +48,7 @@ export default defineConfig({
 						{ label: 'API Keys & Authentication', link: '/gateway/api-keys/' },
 						{ label: 'Webhooks', link: '/gateway/webhooks/' },
 						{ label: 'Spam Analysis', link: '/gateway/spam-analysis/' },
+						{ label: 'Chaos Engineering', link: '/gateway/chaos-engineering/' },
 						{ label: 'Security & Encryption', link: '/gateway/security/' },
 						{ label: 'API Reference', link: '/gateway/api-reference/' },
 					],
@@ -100,6 +101,7 @@ export default defineConfig({
 								{ label: 'Email Authentication', link: '/client-node/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-node/guides/real-time/' },
 								{ label: 'Webhooks', link: '/client-node/guides/webhooks/' },
+								{ label: 'Chaos Engineering', link: '/client-node/guides/chaos/' },
 							],
 						},
 						{
@@ -158,6 +160,7 @@ export default defineConfig({
 								{ label: 'Email Authentication', link: '/client-python/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-python/guides/real-time/' },
 								{ label: 'Webhooks', link: '/client-python/guides/webhooks/' },
+								{ label: 'Chaos Engineering', link: '/client-python/guides/chaos/' },
 							],
 						},
 						{
@@ -216,6 +219,7 @@ export default defineConfig({
 								{ label: 'Email Authentication', link: '/client-java/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-java/guides/real-time/' },
 								{ label: 'Webhooks', link: '/client-java/guides/webhooks/' },
+								{ label: 'Chaos Engineering', link: '/client-java/guides/chaos/' },
 							],
 						},
 						{
@@ -274,6 +278,7 @@ export default defineConfig({
 								{ label: 'Email Authentication', link: '/client-go/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-go/guides/real-time/' },
 								{ label: 'Webhooks', link: '/client-go/guides/webhooks/' },
+								{ label: 'Chaos Engineering', link: '/client-go/guides/chaos/' },
 							],
 						},
 						{
@@ -332,6 +337,7 @@ export default defineConfig({
 								{ label: 'Email Authentication', link: '/client-dotnet/guides/authentication/' },
 								{ label: 'Real-time Monitoring', link: '/client-dotnet/guides/real-time/' },
 								{ label: 'Webhooks', link: '/client-dotnet/guides/webhooks/' },
+								{ label: 'Chaos Engineering', link: '/client-dotnet/guides/chaos/' },
 							],
 						},
 						{

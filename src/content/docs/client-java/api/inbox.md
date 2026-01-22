@@ -890,6 +890,122 @@ System.out.println("New secret: " + result.getSecret());
 System.out.println("Old secret valid until: " + result.getPreviousSecretValidUntil());
 ```
 
+## Chaos Methods
+
+The Inbox class provides methods for configuring chaos engineering features to test email resilience. Chaos must be enabled on the gateway server.
+
+### getChaos()
+
+Gets the current chaos configuration for this inbox.
+
+```java
+public ChaosConfig getChaos()
+```
+
+**Returns:** `ChaosConfig` - The current chaos configuration
+
+```java
+public class ChaosConfig {
+    Boolean enabled;
+    String expiresAt;
+    LatencyConfig latency;
+    ConnectionDropConfig connectionDrop;
+    RandomErrorConfig randomError;
+    GreylistConfig greylist;
+    BlackholeConfig blackhole;
+}
+```
+
+**Example:**
+
+```java
+ChaosConfig config = inbox.getChaos();
+
+System.out.println("Chaos enabled: " + config.isEnabled());
+if (config.getLatency() != null && config.getLatency().isEnabled()) {
+    System.out.println("Latency: " + config.getLatency().getMinDelayMs() + "-" + config.getLatency().getMaxDelayMs() + "ms");
+}
+```
+
+**Throws:**
+
+- `ApiException` (403) - Chaos features are disabled on the server
+
+---
+
+### setChaos(ChaosConfig config)
+
+Sets or updates the chaos configuration for this inbox.
+
+```java
+public ChaosConfig setChaos(ChaosConfig config)
+```
+
+**Parameters:**
+
+| Parameter | Type          | Required | Description         |
+| --------- | ------------- | -------- | ------------------- |
+| `config`  | `ChaosConfig` | Yes      | The chaos configuration |
+
+**Returns:** `ChaosConfig` - The updated chaos configuration
+
+**Example:**
+
+```java
+import com.vaultsandbox.client.model.ChaosConfig;
+import com.vaultsandbox.client.model.LatencyConfig;
+import com.vaultsandbox.client.model.RandomErrorConfig;
+import com.vaultsandbox.client.model.ChaosErrorType;
+
+ChaosConfig config = inbox.setChaos(ChaosConfig.builder()
+    .enabled(true)
+    .latency(LatencyConfig.builder()
+        .enabled(true)
+        .minDelayMs(1000)
+        .maxDelayMs(5000)
+        .probability(0.5)
+        .build())
+    .randomError(RandomErrorConfig.builder()
+        .enabled(true)
+        .errorRate(0.1)
+        .errorTypes(ChaosErrorType.TEMPORARY)
+        .build())
+    .build());
+
+System.out.println("Chaos enabled: " + config.isEnabled());
+```
+
+**Throws:**
+
+- `ApiException` (403) - Chaos features are disabled on the server
+- `InboxNotFoundException` - Inbox does not exist
+
+---
+
+### disableChaos()
+
+Disables all chaos features for this inbox.
+
+```java
+public void disableChaos()
+```
+
+**Example:**
+
+```java
+// Disable all chaos features
+inbox.disableChaos();
+
+System.out.println("Chaos disabled");
+```
+
+**Throws:**
+
+- `ApiException` (403) - Chaos features are disabled on the server
+- `InboxNotFoundException` - Inbox does not exist
+
+---
+
 ## Thread Safety
 
 The `Inbox` class is thread-safe:
@@ -907,3 +1023,4 @@ The `Inbox` class is thread-safe:
 - [Spam Analysis](/client-java/concepts/spam-analysis/) - Working with spam analysis results
 - [Real-time Subscriptions](/client-java/guides/real-time/) - Subscription patterns
 - [Webhooks](/client-java/guides/webhooks/) - Webhook setup and management
+- [Chaos Engineering Guide](/client-java/guides/chaos/) - Test email resilience with simulated failures

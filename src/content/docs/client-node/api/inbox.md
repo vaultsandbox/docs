@@ -902,6 +902,140 @@ console.log(`Old secret valid until: ${result.previousSecretValidUntil}`);
 
 ---
 
+## Chaos Methods
+
+The Inbox class provides methods for configuring chaos engineering features to test email resilience. Chaos must be enabled on the gateway server.
+
+### getChaosConfig()
+
+Gets the current chaos configuration for this inbox.
+
+```typescript
+getChaosConfig(): Promise<ChaosConfigResponse>
+```
+
+#### Returns
+
+`Promise<ChaosConfigResponse>` - The current chaos configuration
+
+```typescript
+interface ChaosConfigResponse {
+	enabled: boolean;
+	expiresAt?: string;
+	latency?: LatencyConfig;
+	connectionDrop?: ConnectionDropConfig;
+	randomError?: RandomErrorConfig;
+	greylist?: GreylistConfig;
+	blackhole?: BlackholeConfig;
+}
+```
+
+#### Example
+
+```javascript
+const config = await inbox.getChaosConfig();
+
+console.log(`Chaos enabled: ${config.enabled}`);
+if (config.latency?.enabled) {
+	console.log(`Latency: ${config.latency.minDelayMs}-${config.latency.maxDelayMs}ms`);
+}
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+
+---
+
+### setChaosConfig()
+
+Sets or updates the chaos configuration for this inbox.
+
+```typescript
+setChaosConfig(config: ChaosConfigRequest): Promise<ChaosConfigResponse>
+```
+
+#### Parameters
+
+```typescript
+interface ChaosConfigRequest {
+	enabled: boolean;
+	expiresAt?: string;
+	latency?: LatencyConfig;
+	connectionDrop?: ConnectionDropConfig;
+	randomError?: RandomErrorConfig;
+	greylist?: GreylistConfig;
+	blackhole?: BlackholeConfig;
+}
+```
+
+| Property         | Type                   | Required | Description                          |
+| ---------------- | ---------------------- | -------- | ------------------------------------ |
+| `enabled`        | `boolean`              | Yes      | Master switch for chaos features     |
+| `expiresAt`      | `string`               | No       | ISO 8601 timestamp for auto-disable  |
+| `latency`        | `LatencyConfig`        | No       | Latency injection configuration      |
+| `connectionDrop` | `ConnectionDropConfig` | No       | Connection drop configuration        |
+| `randomError`    | `RandomErrorConfig`    | No       | Random error configuration           |
+| `greylist`       | `GreylistConfig`       | No       | Greylisting simulation configuration |
+| `blackhole`      | `BlackholeConfig`      | No       | Blackhole mode configuration         |
+
+#### Returns
+
+`Promise<ChaosConfigResponse>` - The updated chaos configuration
+
+#### Example
+
+```javascript
+const config = await inbox.setChaosConfig({
+	enabled: true,
+	latency: {
+		enabled: true,
+		minDelayMs: 1000,
+		maxDelayMs: 5000,
+		jitter: true,
+		probability: 0.5,
+	},
+	randomError: {
+		enabled: true,
+		errorRate: 0.1,
+		errorTypes: ['temporary'],
+	},
+});
+
+console.log('Chaos configured:', config);
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+- `InboxNotFoundError` - Inbox does not exist
+
+---
+
+### disableChaos()
+
+Disables all chaos features for this inbox.
+
+```typescript
+disableChaos(): Promise<void>
+```
+
+#### Example
+
+```javascript
+// Disable all chaos features
+await inbox.disableChaos();
+
+console.log('Chaos disabled');
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+- `InboxNotFoundError` - Inbox does not exist
+
+---
+
 ## InboxMonitor
 
 The `InboxMonitor` class allows you to monitor multiple inboxes simultaneously.

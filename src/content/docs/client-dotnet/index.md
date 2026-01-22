@@ -13,6 +13,7 @@ The official .NET SDK for VaultSandbox Gateway. It handles quantum-safe encrypti
 - **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
 - **Spam Analysis**: Rspamd integration with detailed scores and rules
 - **Full Email Access**: Decrypted content, headers, links, and attachments
+- **Chaos Engineering**: Simulate SMTP failures, latency, and network issues for resilience testing
 - **Dependency Injection**: First-class ASP.NET Core `IServiceCollection` integration
 
 ## Requirements
@@ -68,4 +69,5 @@ await client.DisposeAsync();
 - [Core Concepts](/client-dotnet/concepts/inboxes/) - Inboxes, emails, and authentication
 - [Spam Analysis](/client-dotnet/concepts/spam-analysis/) - Rspamd integration
 - [Webhooks](/client-dotnet/guides/webhooks/) - Set up webhook notifications
+- [Chaos Engineering](/client-dotnet/guides/chaos/) - Test email resilience with simulated failures
 - [API Reference](/client-dotnet/api/client/) - Full API documentation

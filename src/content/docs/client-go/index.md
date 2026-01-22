@@ -14,6 +14,7 @@ The official Go SDK for VaultSandbox Gateway. It handles quantum-safe encryption
 - **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
 - **Spam Analysis**: Rspamd integration for spam detection and scoring
 - **Full Email Access**: Decrypted content, headers, links, and attachments
+- **Chaos Engineering**: Simulate SMTP failures, latency, and network issues for resilience testing
 - **Idiomatic Go**: Context-based cancellation, functional options, and proper error handling
 
 ## Requirements
@@ -89,4 +90,5 @@ func main() {
 - [Installation](/client-go/installation/) - Install the SDK
 - [Configuration](/client-go/configuration/) - Client options and setup
 - [Core Concepts](/client-go/concepts/inboxes/) - Inboxes, emails, authentication, and spam analysis
+- [Chaos Engineering](/client-go/guides/chaos/) - Test email resilience with simulated failures
 - [API Reference](/client-go/api/client/) - Full API documentation

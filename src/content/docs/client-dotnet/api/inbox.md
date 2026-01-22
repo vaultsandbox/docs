@@ -716,6 +716,143 @@ The `IInbox` interface also includes methods for managing webhooks:
 
 For complete documentation including filtering, templates, and signature verification, see the [Webhooks Guide](/client-dotnet/guides/webhooks/).
 
+## Chaos Methods
+
+The `IInbox` interface provides methods for configuring chaos engineering features to test email resilience. Chaos must be enabled on the gateway server.
+
+### GetChaosConfigAsync
+
+Gets the current chaos configuration for this inbox.
+
+```csharp
+Task<ChaosConfig> GetChaosConfigAsync(CancellationToken cancellationToken = default)
+```
+
+#### Returns
+
+`Task<ChaosConfig>` - The current chaos configuration
+
+```csharp
+public sealed class ChaosConfig
+{
+    public bool Enabled { get; }
+    public DateTimeOffset? ExpiresAt { get; }
+    public LatencyConfig? Latency { get; }
+    public ConnectionDropConfig? ConnectionDrop { get; }
+    public RandomErrorConfig? RandomError { get; }
+    public GreylistConfig? Greylist { get; }
+    public BlackholeConfig? Blackhole { get; }
+}
+```
+
+#### Example
+
+```csharp
+var config = await inbox.GetChaosConfigAsync();
+
+Console.WriteLine($"Chaos enabled: {config.Enabled}");
+if (config.Latency?.Enabled == true)
+{
+    Console.WriteLine($"Latency: {config.Latency.MinDelayMs}-{config.Latency.MaxDelayMs}ms");
+}
+```
+
+#### Errors
+
+- `ApiException` (403) - Chaos features are disabled on the server
+
+---
+
+### SetChaosConfigAsync
+
+Sets or updates the chaos configuration for this inbox.
+
+```csharp
+Task<ChaosConfig> SetChaosConfigAsync(
+    SetChaosConfigOptions options,
+    CancellationToken cancellationToken = default)
+```
+
+#### Parameters
+
+| Parameter | Type                    | Required | Description           |
+| --------- | ----------------------- | -------- | --------------------- |
+| `options` | `SetChaosConfigOptions` | Yes      | Chaos configuration   |
+
+```csharp
+public sealed class SetChaosConfigOptions
+{
+    public required bool Enabled { get; set; }
+    public DateTimeOffset? ExpiresAt { get; set; }
+    public LatencyOptions? Latency { get; set; }
+    public ConnectionDropOptions? ConnectionDrop { get; set; }
+    public RandomErrorOptions? RandomError { get; set; }
+    public GreylistOptions? Greylist { get; set; }
+    public BlackholeOptions? Blackhole { get; set; }
+}
+```
+
+#### Returns
+
+`Task<ChaosConfig>` - The updated chaos configuration
+
+#### Example
+
+```csharp
+using VaultSandbox.Client;
+
+var config = await inbox.SetChaosConfigAsync(new SetChaosConfigOptions
+{
+    Enabled = true,
+    Latency = new LatencyOptions
+    {
+        Enabled = true,
+        MinDelayMs = 1000,
+        MaxDelayMs = 5000,
+        Probability = 0.5,
+    },
+    RandomError = new RandomErrorOptions
+    {
+        Enabled = true,
+        ErrorRate = 0.1,
+        ErrorTypes = new[] { RandomErrorType.Temporary },
+    },
+});
+
+Console.WriteLine($"Chaos enabled: {config.Enabled}");
+```
+
+#### Errors
+
+- `ApiException` (403) - Chaos features are disabled on the server
+- `InboxNotFoundException` - Inbox does not exist
+
+---
+
+### DisableChaosAsync
+
+Disables all chaos features for this inbox.
+
+```csharp
+Task DisableChaosAsync(CancellationToken cancellationToken = default)
+```
+
+#### Example
+
+```csharp
+// Disable all chaos features
+await inbox.DisableChaosAsync();
+
+Console.WriteLine("Chaos disabled");
+```
+
+#### Errors
+
+- `ApiException` (403) - Chaos features are disabled on the server
+- `InboxNotFoundException` - Inbox does not exist
+
+---
+
 ## Complete Inbox Example
 
 ```csharp
@@ -791,3 +928,4 @@ async Task CompleteInboxExample(CancellationToken cancellationToken)
 - [IVaultSandboxClient API](/client-dotnet/api/client/) - Learn about client methods
 - [Waiting for Emails Guide](/client-dotnet/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-dotnet/guides/real-time/) - IAsyncEnumerable patterns
+- [Chaos Engineering Guide](/client-dotnet/guides/chaos/) - Test email resilience with simulated failures

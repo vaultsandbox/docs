@@ -963,6 +963,143 @@ if result.PreviousSecretValidUntil != nil {
 
 ---
 
+## Chaos Methods
+
+The Inbox type provides methods for configuring chaos engineering features to test email resilience. Chaos must be enabled on the gateway server.
+
+### GetChaosConfig
+
+Gets the current chaos configuration for this inbox.
+
+```go
+func (i *Inbox) GetChaosConfig(ctx context.Context) (*ChaosConfig, error)
+```
+
+#### Returns
+
+`*ChaosConfig` - The current chaos configuration
+
+```go
+type ChaosConfig struct {
+    Enabled       bool
+    ExpiresAt     *time.Time
+    Latency       *LatencyConfig
+    ConnectionDrop *ConnectionDropConfig
+    RandomError   *RandomErrorConfig
+    Greylist      *GreylistConfig
+    Blackhole     *BlackholeConfig
+}
+```
+
+#### Example
+
+```go
+config, err := inbox.GetChaosConfig(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Chaos enabled: %v\n", config.Enabled)
+if config.Latency != nil && config.Latency.Enabled {
+    fmt.Printf("Latency: %d-%dms\n", config.Latency.MinDelayMs, config.Latency.MaxDelayMs)
+}
+```
+
+#### Errors
+
+- `APIError` (403) - Chaos features are disabled on the server
+
+---
+
+### SetChaosConfig
+
+Sets or updates the chaos configuration for this inbox.
+
+```go
+func (i *Inbox) SetChaosConfig(ctx context.Context, config *ChaosConfig) (*ChaosConfig, error)
+```
+
+#### Parameters
+
+| Parameter | Type           | Required | Description          |
+| --------- | -------------- | -------- | -------------------- |
+| `config`  | `*ChaosConfig` | Yes      | The chaos configuration to set |
+
+#### ChaosConfig Fields
+
+| Field           | Type                    | Required | Description                        |
+| --------------- | ----------------------- | -------- | ---------------------------------- |
+| `Enabled`       | `bool`                  | Yes      | Master switch for all chaos        |
+| `ExpiresAt`     | `*time.Time`            | No       | Timestamp to auto-disable chaos    |
+| `Latency`       | `*LatencyConfig`        | No       | Latency injection config           |
+| `ConnectionDrop`| `*ConnectionDropConfig` | No       | Connection drop config             |
+| `RandomError`   | `*RandomErrorConfig`    | No       | Random error config                |
+| `Greylist`      | `*GreylistConfig`       | No       | Greylisting config                 |
+| `Blackhole`     | `*BlackholeConfig`      | No       | Blackhole config                   |
+
+#### Returns
+
+`*ChaosConfig` - The updated chaos configuration
+
+#### Example
+
+```go
+config, err := inbox.SetChaosConfig(ctx, &vaultsandbox.ChaosConfig{
+    Enabled: true,
+    Latency: &vaultsandbox.LatencyConfig{
+        Enabled:     true,
+        MinDelayMs:  1000,
+        MaxDelayMs:  5000,
+        Probability: 0.5,
+    },
+    RandomError: &vaultsandbox.RandomErrorConfig{
+        Enabled:   true,
+        ErrorRate: 0.1,
+        ErrorTypes: []vaultsandbox.RandomErrorType{
+            vaultsandbox.RandomErrorTypeTemporary,
+        },
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf("Chaos enabled: %v\n", config.Enabled)
+```
+
+#### Errors
+
+- `APIError` (403) - Chaos features are disabled on the server
+- `ErrInboxNotFound` - Inbox does not exist
+
+---
+
+### DisableChaos
+
+Disables all chaos features for this inbox.
+
+```go
+func (i *Inbox) DisableChaos(ctx context.Context) error
+```
+
+#### Example
+
+```go
+// Disable all chaos features
+if err := inbox.DisableChaos(ctx); err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println("Chaos disabled")
+```
+
+#### Errors
+
+- `APIError` (403) - Chaos features are disabled on the server
+- `ErrInboxNotFound` - Inbox does not exist
+
+---
+
 ## Complete Inbox Example
 
 ```go
@@ -1074,3 +1211,4 @@ func main() {
 - [Webhooks Guide](/client-go/guides/webhooks/) - Set up webhook notifications
 - [Waiting for Emails Guide](/client-go/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-go/guides/real-time/) - Advanced monitoring patterns
+- [Chaos Engineering Guide](/client-go/guides/chaos/) - Test email resilience with simulated failures

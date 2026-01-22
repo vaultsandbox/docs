@@ -10,6 +10,7 @@ The Gateway is a receive-only SMTP server designed for QA and testing environmen
 - **SMTP Reception**: Receive-only server on port 25 with automatic TLS via Let's Encrypt
 - **Email Authentication**: SPF, DKIM, DMARC, and reverse DNS validation (configurable per inbox or globally)
 - **Spam Analysis**: Optional Rspamd integration for spam detection with per-inbox control
+- **Chaos Engineering**: Simulate delivery failures (latency, errors, connection drops, greylisting, blackhole) to test resilience
 - **Configurable Encryption**: Quantum-safe encryption (ML-KEM-768) by default, with optional plain storage mode
 - **Web Interface**: Angular-based UI at `/app` for viewing emails and authentication results
 - **REST API**: Programmatic access to emails with auto-generated API keys
@@ -56,4 +57,5 @@ The Gateway runs as a single container with two integrated components:
 - [API Reference](/gateway/api-reference/) - REST API endpoints
 - [Webhooks](/gateway/webhooks/) - Real-time HTTP notifications for email events
 - [Spam Analysis](/gateway/spam-analysis/) - Rspamd integration for spam detection
+- [Chaos Engineering](/gateway/chaos-engineering/) - Simulate delivery failures to test resilience
 - [Security](/gateway/security/) - Security features and considerations

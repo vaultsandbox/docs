@@ -986,6 +986,138 @@ await webhook.refresh()
 print(f"Updated stats: {webhook.stats}")
 ```
 
+## Chaos Methods
+
+The Inbox class provides methods for configuring chaos engineering features to test email resilience. Chaos must be enabled on the gateway server.
+
+### get_chaos()
+
+Gets the current chaos configuration for this inbox.
+
+```python
+async def get_chaos(self) -> ChaosConfig
+```
+
+#### Returns
+
+`ChaosConfig` - The current chaos configuration
+
+```python
+@dataclass
+class ChaosConfig:
+    enabled: bool
+    expires_at: str | None = None
+    latency: LatencyConfig | None = None
+    connection_drop: ConnectionDropConfig | None = None
+    random_error: RandomErrorConfig | None = None
+    greylist: GreylistConfig | None = None
+    blackhole: BlackholeConfig | None = None
+```
+
+#### Example
+
+```python
+config = await inbox.get_chaos()
+
+print(f"Chaos enabled: {config.enabled}")
+if config.latency and config.latency.enabled:
+    print(f"Latency: {config.latency.min_delay_ms}-{config.latency.max_delay_ms}ms")
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+
+---
+
+### set_chaos()
+
+Sets or updates the chaos configuration for this inbox.
+
+```python
+async def set_chaos(
+    self,
+    *,
+    enabled: bool,
+    expires_at: str | None = None,
+    latency: LatencyConfig | None = None,
+    connection_drop: ConnectionDropConfig | None = None,
+    random_error: RandomErrorConfig | None = None,
+    greylist: GreylistConfig | None = None,
+    blackhole: BlackholeConfig | None = None,
+) -> ChaosConfig
+```
+
+#### Parameters
+
+| Parameter         | Type                        | Required | Description                        |
+| ----------------- | --------------------------- | -------- | ---------------------------------- |
+| `enabled`         | `bool`                      | Yes      | Master switch for all chaos        |
+| `expires_at`      | `str \| None`               | No       | ISO 8601 timestamp to auto-disable |
+| `latency`         | `LatencyConfig \| None`     | No       | Latency injection config           |
+| `connection_drop` | `ConnectionDropConfig \| None` | No    | Connection drop config             |
+| `random_error`    | `RandomErrorConfig \| None` | No       | Random error config                |
+| `greylist`        | `GreylistConfig \| None`    | No       | Greylisting config                 |
+| `blackhole`       | `BlackholeConfig \| None`   | No       | Blackhole config                   |
+
+#### Returns
+
+`ChaosConfig` - The updated chaos configuration
+
+#### Example
+
+```python
+from vaultsandbox import LatencyConfig, RandomErrorConfig
+
+config = await inbox.set_chaos(
+    enabled=True,
+    latency=LatencyConfig(
+        enabled=True,
+        min_delay_ms=1000,
+        max_delay_ms=5000,
+        probability=0.5,
+    ),
+    random_error=RandomErrorConfig(
+        enabled=True,
+        error_rate=0.1,
+        error_types=["temporary"],
+    ),
+)
+
+print(f"Chaos enabled: {config.enabled}")
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+- `InboxNotFoundError` - Inbox does not exist
+
+---
+
+### disable_chaos()
+
+Disables all chaos features for this inbox.
+
+```python
+async def disable_chaos(self) -> None
+```
+
+#### Example
+
+```python
+# Disable all chaos features
+await inbox.disable_chaos()
+
+print("Chaos disabled")
+```
+
+#### Errors
+
+- `ApiError` (403) - Chaos features are disabled on the server
+- `InboxNotFoundError` - Inbox does not exist
+
+---
+
 ## Complete Inbox Example
 
 ```python
@@ -1052,3 +1184,4 @@ asyncio.run(complete_inbox_example())
 - [Webhooks Guide](/client-python/guides/webhooks/) - Set up webhook notifications
 - [Waiting for Emails Guide](/client-python/guides/waiting-for-emails/) - Best practices
 - [Real-time Monitoring Guide](/client-python/guides/real-time/) - Advanced monitoring patterns
+- [Chaos Engineering Guide](/client-python/guides/chaos/) - Test email resilience with simulated failures

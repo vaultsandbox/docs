@@ -12,6 +12,7 @@ The official Node.js SDK for VaultSandbox Gateway. It handles quantum-safe encry
 - **Webhooks**: HTTP callbacks for email events with filtering and templates
 - **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
 - **Full Email Access**: Decrypted content, headers, links, and attachments
+- **Chaos Engineering**: Simulate SMTP failures, latency, greylisting, and network issues
 - **TypeScript Support**: Comprehensive type definitions included
 
 ## Requirements
@@ -62,4 +63,5 @@ await inbox.delete();
 - [Configuration](/client-node/configuration/) - Client options and setup
 - [Core Concepts](/client-node/concepts/inboxes/) - Inboxes, emails, and authentication
 - [Webhooks](/client-node/guides/webhooks/) - Set up webhook notifications
+- [Chaos Engineering](/client-node/guides/chaos/) - Test email resilience with failure simulation
 - [API Reference](/client-node/api/client/) - Full API documentation

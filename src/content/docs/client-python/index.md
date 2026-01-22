@@ -13,6 +13,7 @@ The official Python SDK for VaultSandbox Gateway. It handles quantum-safe encryp
 - **Email Authentication**: Built-in SPF/DKIM/DMARC validation helpers
 - **Spam Analysis**: Rspamd integration for spam detection and scoring
 - **Full Email Access**: Decrypted content, headers, links, and attachments
+- **Chaos Engineering**: Simulate SMTP failures, latency, and network issues for resilience testing
 - **Type Hints**: Full type annotations with `py.typed` marker for IDE support
 
 ## Requirements
@@ -67,4 +68,5 @@ asyncio.run(main())
 - [Core Concepts](/client-python/concepts/inboxes/) - Inboxes, emails, and authentication
 - [Spam Analysis](/client-python/concepts/spam-analysis/) - Spam detection and scoring
 - [Webhooks](/client-python/guides/webhooks/) - Set up webhook notifications
+- [Chaos Engineering](/client-python/guides/chaos/) - Test email resilience with simulated failures
 - [API Reference](/client-python/api/client/) - Full API documentation
