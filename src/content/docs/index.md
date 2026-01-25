@@ -9,11 +9,19 @@ description: Production-like email testing. Self-hosted and secure.
 
 > **VaultSandbox is in Public Beta.** Join the journey to 1.0. Share feedback on [GitHub](https://github.com/vaultsandbox/gateway/discussions).
 
-VaultSandbox is a self-hosted email testing platform that lets you validate your complete email stack—including SMTP, TLS, DNS, and authentication—inside your own infrastructure. It replaces fake SMTP servers and public testing services with real mail delivery that behaves exactly like production, without exposing customer data.
+VaultSandbox is a self-hosted email testing platform that lets you test email like it behaves in production. It replaces fake SMTP servers and public testing services with real mail delivery—complete with TLS, DNS validation, and authentication—inside your own infrastructure.
 
-Most email testing tools force you to disable TLS verification, skip DNS checks, or rely on mocks that hide authentication failures. VaultSandbox runs a real SMTP server with Let's Encrypt certificates, validates SPF/DKIM/DMARC on every message, and delivers emails in real-time via Server-Sent Events. All messages are encrypted immediately after parsing using the client's public key (ML-KEM-768) and stored only in encrypted form—the server cannot decrypt them because it never receives the private key.
+Most email testing tools force you to disable TLS verification, skip DNS checks, or rely on mocks that hide authentication failures. VaultSandbox runs a real SMTP server with Let's Encrypt certificates, validates SPF/DKIM/DMARC on every message, and delivers emails in real-time via Server-Sent Events.
 
-Designed for CI/CD pipelines, VaultSandbox stores everything in-memory for fast test execution and automatic cleanup. Deploy it with Docker Compose, point your DNS records at it, and start testing with production-like security configurations—no more `rejectUnauthorized: false` hacks or unreliable polling loops.
+**Key features:**
+
+- **Chaos Engineering** - Per-inbox failure injection: latency, greylisting, connection drops, SMTP errors, or blackhole messages. Test retries, backoff, and the code paths you hope never run.
+- **Spam Analysis** - Rspamd integration provides real spam scoring, content analysis, and authentication visualization.
+- **Webhooks** - Global or per-inbox routing to Slack, Discord, Teams, or Zapier with filtering and HMAC-signed delivery.
+- **Zero-Knowledge Encryption** - Messages are encrypted using the client's public key (ML-KEM-768) and stored only in encrypted form—the server cannot decrypt them.
+- **Multiple Interfaces** - Web UI for browsing, CLI/TUI for automation, and SDKs for Node.js, Python, Go, Java, and .NET.
+
+Designed for CI/CD pipelines, VaultSandbox stores everything in-memory for fast test execution and automatic cleanup. Deploy it with Docker Compose, point your DNS records at it, and start testing—no more `rejectUnauthorized: false` hacks or unreliable polling loops.
 
 ## Next Steps
 

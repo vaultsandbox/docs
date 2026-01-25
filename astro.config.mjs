@@ -27,6 +27,7 @@ export default defineConfig({
 						{ label: 'Introduction', link: '/' },
 						{ label: 'Quick Start', link: '/getting-started/quickstart/' },
 						{ label: 'Quick Start - Custom Domain', link: '/getting-started/quickstart-custom-domain/' },
+						{ label: 'Quick Start - localhost', link: '/deployment/local-development/' },
 						{ label: 'Architecture Overview', link: '/getting-started/architecture/' },
 					],
 				},
