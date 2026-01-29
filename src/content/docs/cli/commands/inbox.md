@@ -267,6 +267,49 @@ Deleting an inbox removes all associated emails and encryption keys. This action
 
 ---
 
+## vsb inbox prune
+
+Remove inboxes from the local keystore that no longer exist on the server.
+
+This is useful when inboxes have been deleted server-side but still exist locally, causing errors like "API error 404: Not Found" when starting the dashboard.
+
+```bash
+vsb inbox prune [flags]
+```
+
+### Flags
+
+| Flag        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `--dry-run` | Show what would be pruned without removing anything |
+
+### Examples
+
+```bash
+# Preview what would be pruned
+vsb inbox prune --dry-run
+
+# Prune invalid inboxes
+vsb inbox prune
+```
+
+### Output
+
+```
+✓ Pruned: old123@old123.vsx.email
+✓ Pruned: deleted456@deleted456.vsx.email
+
+2 inbox(es) pruned
+```
+
+When all inboxes are valid:
+
+```
+✓ All inboxes are valid
+```
+
+---
+
 ## Inbox Webhooks
 
 Inbox webhooks receive notifications only for emails sent to a specific inbox. They work the same as [global webhooks](/cli/commands/webhook/) but are scoped to one inbox.
