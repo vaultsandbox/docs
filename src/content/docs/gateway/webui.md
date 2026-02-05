@@ -173,7 +173,17 @@ Create and manage multiple virtual inboxes to organize emails:
   - **Enable encryption**: Encrypt emails end-to-end so only you can read them
   - **Enable email authentication (SPF, DKIM, DMARC)**: Perform sender verification checks on incoming emails
   - **Enable spam analysis**: Analyze incoming emails for spam using Rspamd
+  - **Enable persistence**: Keep inbox metadata across server restarts (only shown when the server persistence policy allows per-inbox override)
 
+
+### Persistence Status
+
+When viewing an inbox, the header displays its persistence status next to the expiration date:
+
+- **Persistent**: Inbox metadata survives server restarts (emails are still ephemeral)
+- **Ephemeral**: Inbox is lost on server restart
+
+The persistence toggle in the create inbox dialog is only visible when the server's persistence policy (`VSB_PERSISTENCE_POLICY`) is set to `enabled` or `disabled`, which allow per-inbox overrides. When the policy is `always` or `never`, the toggle is hidden and all inboxes follow the server-enforced policy.
 
 ### Inbox Management
 
