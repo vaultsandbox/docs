@@ -13,7 +13,7 @@ An inbox is a temporary, encrypted email destination that:
 - Uses **client-side encryption** (ML-KEM-768 keypair)
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
-- Stores emails **in memory** on the gateway
+- Stores emails either **in memory** (ephemeral) or **on disk** (persistent) based on server configuration
 
 ## Creating Inboxes
 
@@ -53,10 +53,11 @@ func main() {
 
 ```go
 inbox, err := client.CreateInbox(ctx,
-	vaultsandbox.WithTTL(time.Hour),                           // 1 hour (default: 1 hour)
-	vaultsandbox.WithEmailAddress("test@mail.example.com"),    // Request specific address
-	vaultsandbox.WithEmailAuth(false),                         // Disable email authentication
-	vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain), // Request plain inbox
+	vaultsandbox.WithTTL(time.Hour),                                     // 1 hour (default: 1 hour)
+	vaultsandbox.WithEmailAddress("test@mail.example.com"),              // Request specific address
+	vaultsandbox.WithEmailAuth(false),                                   // Disable email authentication
+	vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain),       // Request plain inbox
+	vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent), // Request persistent inbox
 )
 ```
 
@@ -64,12 +65,14 @@ inbox, err := client.CreateInbox(ctx,
 
 ### Inbox Creation Options
 
-| Option             | Type             | Description                                                         |
-| ------------------ | ---------------- | ------------------------------------------------------------------- |
-| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour) |
-| `WithEmailAddress` | `string`         | Request a specific email address                                    |
-| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)     |
-| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox                                    |
+| Option             | Type              | Description                                                         |
+| ------------------ | ----------------- | ------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration`   | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour) |
+| `WithEmailAddress` | `string`          | Request a specific email address                                    |
+| `WithEmailAuth`    | `bool`            | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)     |
+| `WithEncryption`   | `EncryptionMode`  | Request encrypted or plain inbox                                    |
+| `WithPersistence`  | `PersistenceMode` | Request persistent or ephemeral inbox                               |
+| `WithSpamAnalysis` | `bool`            | Enable/disable spam analysis                                        |
 
 ### Encryption Mode
 
@@ -84,6 +87,32 @@ const (
 ```
 
 Whether encryption can be overridden depends on the server's encryption policy. See [ServerInfo](#getting-server-information) for details.
+
+### Persistence Mode
+
+```go
+type PersistenceMode string
+
+const (
+    PersistenceModeDefault    PersistenceMode = ""           // Use server default
+    PersistenceModePersistent PersistenceMode = "persistent" // Request persistent inbox
+    PersistenceModeEphemeral  PersistenceMode = "ephemeral"  // Request ephemeral inbox
+)
+```
+
+Persistent inboxes are stored on disk and survive server restarts. Ephemeral inboxes are stored only in memory and are lost when the server restarts. Whether persistence can be overridden depends on the server's persistence policy. See [ServerInfo](#getting-server-information) for details.
+
+```go
+// Create a persistent inbox
+inbox, err := client.CreateInbox(ctx,
+    vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent),
+)
+
+// Check if inbox is persistent
+if inbox.Persistent() {
+    fmt.Println("Inbox data will survive server restarts")
+}
+```
 
 ## Client Options
 
@@ -247,6 +276,24 @@ if inbox.Encrypted() {
 When `true`, the inbox has ML-KEM-768 encryption keys and emails are encrypted. When `false`, emails are stored as Base64-encoded plain text.
 
 **Note**: The `ServerSigPk` field in exported inbox data is only present when `encrypted` is `true`.
+
+---
+
+### Persistent()
+
+**Returns**: `bool`
+
+Returns whether the inbox is persistent.
+
+```go
+if inbox.Persistent() {
+	fmt.Println("Inbox data will survive server restarts")
+} else {
+	fmt.Println("Inbox is ephemeral (in-memory only)")
+}
+```
+
+When `true`, the inbox and its emails are stored persistently on the server's disk. When `false`, the inbox is ephemeral and stored only in memory, meaning data is lost if the server restarts.
 
 ---
 
@@ -1194,10 +1241,14 @@ The `ServerInfo` struct contains:
 
 ```go
 type ServerInfo struct {
-	AllowedDomains   []string         // Email domains available for inbox creation
-	MaxTTL           time.Duration    // Maximum allowed TTL for inboxes
-	DefaultTTL       time.Duration    // Default TTL when not specified
-	EncryptionPolicy EncryptionPolicy // Server's encryption policy
+	AllowedDomains           []string           // Email domains available for inbox creation
+	MaxTTL                   time.Duration      // Maximum allowed TTL for inboxes
+	DefaultTTL               time.Duration      // Default TTL when not specified
+	EncryptionPolicy         EncryptionPolicy   // Server's encryption policy
+	PersistencePolicy        PersistencePolicy  // Server's persistence policy
+	PersistentGlobalWebhooks bool               // Whether global webhooks persist across restarts
+	SpamAnalysisEnabled      bool               // Whether spam analysis is available
+	ChaosEnabled             bool               // Whether chaos engineering features are available
 }
 ```
 
@@ -1235,6 +1286,43 @@ if info.EncryptionPolicy.CanOverride() {
 // Check default encryption state
 if info.EncryptionPolicy.DefaultEncrypted() {
 	fmt.Println("Inboxes are encrypted by default")
+}
+```
+
+### Persistence Policy
+
+The `PersistencePolicy` field indicates how the server handles inbox persistence:
+
+```go
+type PersistencePolicy string
+
+const (
+	PersistencePolicyAlways   PersistencePolicy = "always"   // All inboxes persistent, no override
+	PersistencePolicyEnabled  PersistencePolicy = "enabled"  // Persistent by default, can request ephemeral
+	PersistencePolicyDisabled PersistencePolicy = "disabled" // Ephemeral by default, can request persistent
+	PersistencePolicyNever    PersistencePolicy = "never"    // All inboxes ephemeral, no override
+)
+```
+
+| Policy     | Default Persistence | Per-Inbox Override           |
+| ---------- | ------------------- | ---------------------------- |
+| `always`   | Persistent          | No - all inboxes persistent  |
+| `enabled`  | Persistent          | Yes - can request ephemeral  |
+| `disabled` | Ephemeral           | Yes - can request persistent |
+| `never`    | Ephemeral           | No - all inboxes ephemeral   |
+
+**Helper Methods:**
+
+```go
+// Check if we can override persistence settings per-inbox
+if info.PersistencePolicy.CanOverride() {
+	// Can use WithPersistence() option
+	inbox, err := client.CreateInbox(ctx, vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent))
+}
+
+// Check default persistence state
+if info.PersistencePolicy.DefaultPersistent() {
+	fmt.Println("Inboxes are persistent by default")
 }
 ```
 

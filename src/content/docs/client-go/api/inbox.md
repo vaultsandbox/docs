@@ -138,6 +138,36 @@ if inbox.Encrypted() {
 }
 ```
 
+---
+
+### Persistent
+
+```go
+func (i *Inbox) Persistent() bool
+```
+
+Returns whether the inbox is persistent.
+
+When `true`, the inbox and its emails are stored persistently on the server and will survive server restarts.
+When `false`, the inbox is ephemeral and stored only in memory.
+
+#### Example
+
+```go
+inbox, err := client.CreateInbox(ctx,
+    vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent),
+)
+if err != nil {
+    log.Fatal(err)
+}
+
+if inbox.Persistent() {
+    fmt.Println("Inbox data will survive server restarts")
+} else {
+    fmt.Println("Inbox is ephemeral (in-memory only)")
+}
+```
+
 ## Methods
 
 ### GetEmails
