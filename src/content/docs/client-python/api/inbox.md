@@ -124,6 +124,31 @@ else:
     print("Email authentication is disabled")
 ```
 
+---
+
+### persistent
+
+```python
+persistent: bool
+```
+
+Indicates whether the inbox is persistent (survives server restarts).
+
+- `True` - Inbox data is stored persistently on the server
+- `False` - Inbox is ephemeral (in-memory only)
+
+The persistence state is determined by the server's `persistence_policy` and the `persistence` option passed during inbox creation.
+
+#### Example
+
+```python
+inbox = await client.create_inbox()
+if inbox.persistent:
+    print("Inbox is persistent (survives server restarts)")
+else:
+    print("Inbox is ephemeral (in-memory only)")
+```
+
 ## Methods
 
 ### list_emails()
@@ -461,6 +486,29 @@ async def test_email_notification(inbox):
 
 ---
 
+### unsubscribe()
+
+Unsubscribes from email notifications.
+
+```python
+async def unsubscribe(self, subscription: Subscription) -> None
+```
+
+#### Parameters
+
+- `subscription`: The subscription to cancel (returned from `on_new_email`)
+
+#### Example
+
+```python
+subscription = await inbox.on_new_email(handle_email)
+
+# Later, stop receiving notifications
+await inbox.unsubscribe(subscription)
+```
+
+---
+
 ### get_sync_status()
 
 Gets the current synchronization status of the inbox with the server.
@@ -637,9 +685,12 @@ class ExportedInbox:
     email_address: str
     expires_at: str
     inbox_hash: str
-    server_sig_pk: str      # Base64url-encoded
-    secret_key: str         # Base64url-encoded (SENSITIVE!)
+    encrypted: bool         # Whether the inbox uses encryption
+    email_auth: bool        # Whether email authentication is enabled
     exported_at: str
+    server_sig_pk: str | None = None  # Base64url-encoded (only for encrypted inboxes)
+    secret_key: str | None = None     # Base64url-encoded, SENSITIVE! (only for encrypted inboxes)
+    persistent: bool = False          # Whether the inbox is persistent
 ```
 
 Note: The public key is derived from the secret key during import.

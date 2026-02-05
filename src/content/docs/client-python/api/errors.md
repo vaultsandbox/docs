@@ -20,6 +20,7 @@ VaultSandboxError (base class)
 ├── WebhookLimitReachedError
 ├── InboxAlreadyExistsError
 ├── InvalidImportDataError
+├── InvalidTimestampError (also inherits from ValueError)
 ├── DecryptionError
 ├── SignatureVerificationError
 ├── WebhookSignatureVerificationError
@@ -375,6 +376,29 @@ try:
 except InvalidImportDataError as e:
     print(f"Invalid import data: {e}")
     print("The exported data may be corrupted or from a different server")
+```
+
+---
+
+### InvalidTimestampError
+
+Thrown when a timestamp format is invalid. This error inherits from both `ValueError` and `VaultSandboxError` for backwards compatibility with code that catches `ValueError` from datetime parsing.
+
+```python
+class InvalidTimestampError(ValueError, VaultSandboxError):
+    pass
+```
+
+#### Example
+
+```python
+from vaultsandbox import InvalidTimestampError
+
+try:
+    inbox = await client.import_inbox_from_file("./export.json")
+except InvalidTimestampError as e:
+    print(f"Invalid timestamp in export: {e}")
+    print("The expiresAt or exportedAt field has an invalid format")
 ```
 
 ---

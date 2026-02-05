@@ -13,7 +13,7 @@ An inbox is a temporary, encrypted email destination that:
 - Uses **client-side encryption** (ML-KEM-768 keypair)
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
-- Stores emails **in memory** on the gateway
+- Can be **persistent** (survives server restarts) or **ephemeral** (in-memory only)
 
 ## Creating Inboxes
 
@@ -42,11 +42,13 @@ async with VaultSandboxClient(base_url=url, api_key=api_key) as client:
             email_address="test@mail.example.com",  # Request specific address
             email_auth=False,  # Disable SPF/DKIM/DMARC checks
             encryption="plain",  # Request plain inbox (if policy allows)
+            spam_analysis=True,  # Enable spam analysis (if available)
+            persistence="persistent",  # Request persistent inbox (if policy allows)
         )
     )
 ```
 
-**Note**: Requesting a specific email address may fail if it's already in use. The `encryption` option may be rejected based on the server's `encryption_policy`.
+**Note**: Requesting a specific email address may fail if it's already in use. The `encryption` option may be rejected based on the server's `encryption_policy`. The `persistence` option may be rejected based on the server's `persistence_policy`. The `spam_analysis` option requires spam analysis to be enabled on the server.
 
 ## Inbox Properties
 
@@ -136,6 +138,24 @@ print(inbox.email_auth)  # True or False
 
 - `True` - SPF, DKIM, DMARC, and Reverse DNS checks are performed
 - `False` - All authentication checks are skipped (results show `skipped` status)
+
+### persistent
+
+**Type**: `bool`
+
+Indicates whether the inbox is persistent.
+
+```python
+print(inbox.persistent)  # True or False
+```
+
+- `True` - Inbox data is stored persistently and survives server restarts
+- `False` - Inbox is ephemeral (in-memory only) and will be lost on server restart
+
+The persistence state is determined by:
+
+1. Server's `persistence_policy` setting
+2. The `persistence` option passed during inbox creation (when policy allows)
 
 ## Inbox Lifecycle
 

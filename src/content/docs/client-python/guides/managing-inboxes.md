@@ -87,6 +87,65 @@ else:
     print(f"Server policy is '{info.encryption_policy}', cannot override")
 ```
 
+### Creating Persistent Inboxes
+
+When the server's persistence policy allows it, you can create persistent inboxes that survive server restarts:
+
+```python
+from vaultsandbox import CreateInboxOptions
+
+# Check server policy first
+info = await client.get_server_info()
+
+if info.persistence_policy in ["always", "enabled"]:
+    # Policy allows persistent inboxes
+    inbox = await client.create_inbox(CreateInboxOptions(persistence="persistent"))
+    print(f"Persistent: {inbox.persistent}")  # True
+elif info.persistence_policy in ["enabled", "disabled"]:
+    # Policy allows ephemeral inboxes
+    inbox = await client.create_inbox(CreateInboxOptions(persistence="ephemeral"))
+    print(f"Persistent: {inbox.persistent}")  # False
+else:
+    print(f"Server policy is '{info.persistence_policy}', cannot override")
+```
+
+**Persistence Policy Values**:
+
+| Policy     | Default        | Per-Inbox Override              |
+| ---------- | -------------- | ------------------------------- |
+| `always`   | Persistent     | No - all inboxes persistent     |
+| `enabled`  | Persistent     | Yes - can request `ephemeral`   |
+| `disabled` | Ephemeral      | Yes - can request `persistent`  |
+| `never`    | Ephemeral      | No - all inboxes ephemeral      |
+
+### Creating Inboxes with Initial Chaos Configuration
+
+When chaos engineering is enabled on the server, you can set initial chaos configuration when creating an inbox:
+
+```python
+from vaultsandbox import CreateInboxOptions, LatencyConfig, ChaosConfig
+
+# Check if chaos is enabled on the server
+info = await client.get_server_info()
+
+if info.chaos_enabled:
+    # Create inbox with initial chaos configuration
+    inbox = await client.create_inbox(
+        CreateInboxOptions(
+            chaos=ChaosConfig(
+                enabled=True,
+                latency=LatencyConfig(
+                    enabled=True,
+                    min_delay_ms=500,
+                    max_delay_ms=2000,
+                    probability=0.5,
+                ),
+            ),
+        )
+    )
+    print(f"Inbox created with chaos enabled")
+```
+
 ### Combining Options
 
 ```python
@@ -98,6 +157,7 @@ inbox = await client.create_inbox(
         ttl=3600,                          # 1 hour
         email_auth=False,                  # Skip auth checks
         encryption="plain",                # Plain text (if allowed)
+        persistence="persistent",          # Persistent (if allowed)
         email_address="test@mail.example.com",  # Specific address
     )
 )
@@ -105,6 +165,7 @@ inbox = await client.create_inbox(
 print(f"Address: {inbox.email_address}")
 print(f"Encrypted: {inbox.encrypted}")
 print(f"Email auth: {inbox.email_auth}")
+print(f"Persistent: {inbox.persistent}")
 ```
 
 ## Listing Emails
