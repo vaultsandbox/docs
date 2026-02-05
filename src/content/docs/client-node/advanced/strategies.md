@@ -49,10 +49,11 @@ const client = new VaultSandboxClient({
 
 ### SSE Configuration Options
 
-| Option                    | Type     | Default | Description                            |
-| ------------------------- | -------- | ------- | -------------------------------------- |
-| `sseReconnectInterval`    | `number` | `5000`  | Initial delay before reconnection (ms) |
-| `sseMaxReconnectAttempts` | `number` | `10`    | Maximum reconnection attempts          |
+| Option                    | Type     | Default | Description                                          |
+| ------------------------- | -------- | ------- | ---------------------------------------------------- |
+| `sseReconnectInterval`    | `number` | `5000`  | Initial delay before reconnection (ms)               |
+| `sseMaxReconnectAttempts` | `number` | `10`    | Maximum reconnection attempts                        |
+| `sseMaxCacheSize`         | `number` | `1000`  | Max emails cached per inbox (0 = unlimited)          |
 
 ### Reconnection Behavior
 
@@ -198,7 +199,7 @@ const slowClient = new VaultSandboxClient({
 
 ### Performance Optimization
 
-For `waitForEmailCount()`, you can override the polling interval:
+For `waitForEmail()`, you can override the polling interval per-call:
 
 ```javascript
 // Default client polling: 2s
@@ -210,7 +211,7 @@ const client = new VaultSandboxClient({
 });
 
 // Override for specific operation (faster)
-await inbox.waitForEmailCount(5, {
+await inbox.waitForEmail({
 	timeout: 30000,
 	pollInterval: 1000, // Check every 1s for this operation
 });

@@ -13,7 +13,7 @@ An inbox is a temporary, encrypted email destination that:
 - Uses **client-side encryption** (ML-KEM-768 keypair)
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
-- Stores emails **in memory** on the gateway
+- Stores emails on the gateway (in memory)
 
 ## Creating Inboxes
 
@@ -218,6 +218,41 @@ if (minutesLeft < 5) {
 	console.warn('Inbox expiring soon!');
 }
 ```
+
+## Persistence
+
+By default, inboxes are ephemeral (in-memory only) and are lost when the gateway server restarts. When the server's persistence policy allows it, you can create persistent inboxes that survive server restarts.
+
+### Checking Persistence Policy
+
+```javascript
+const info = await client.getServerInfo();
+console.log(`Persistence policy: ${info.persistencePolicy}`);
+
+// Policy determines the default and whether you can override:
+// 'always'   - All inboxes persistent, no override
+// 'enabled'  - Persistent by default, can request ephemeral
+// 'disabled' - Ephemeral by default, can request persistent
+// 'never'    - All inboxes ephemeral, no override
+```
+
+### Creating Persistent Inboxes
+
+```javascript
+// Create a persistent inbox (survives server restarts)
+const inbox = await client.createInbox({ persistence: 'persistent' });
+console.log(`Persistent: ${inbox.persistent}`); // true
+
+// Explicitly create an ephemeral inbox
+const tempInbox = await client.createInbox({ persistence: 'ephemeral' });
+console.log(`Persistent: ${tempInbox.persistent}`); // false
+```
+
+### When to Use Persistence
+
+- **Long-running tests**: Inboxes survive gateway maintenance windows
+- **Manual testing**: Inbox remains available across server restarts
+- **Production monitoring**: Persistent inboxes for ongoing email monitoring
 
 ## Import and Export
 

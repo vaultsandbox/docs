@@ -134,6 +134,32 @@ if (inbox.spamAnalysis) {
 }
 ```
 
+---
+
+### persistent
+
+```typescript
+persistent?: boolean;
+```
+
+Whether this inbox is persistent (survives server restarts). When `true`, the inbox and its emails are stored on disk and will be available after the gateway server restarts.
+
+- `true` - Inbox is persistent
+- `false` - Inbox is ephemeral (in-memory only)
+- `undefined` - Using server default setting
+
+#### Example
+
+```javascript
+// Create persistent inbox
+const inbox = await client.createInbox({ persistence: 'persistent' });
+console.log(`Persistent: ${inbox.persistent}`); // true
+
+// Create ephemeral inbox
+const inbox = await client.createInbox({ persistence: 'ephemeral' });
+console.log(`Persistent: ${inbox.persistent}`); // false
+```
+
 ## Methods
 
 ### listEmails()
@@ -599,8 +625,10 @@ interface ExportedInboxData {
 	emailAddress: string;
 	inboxHash: string;
 	expiresAt: string; // ISO 8601 timestamp
-	serverSigPk: string; // ML-DSA-65 public key (base64url)
-	secretKey: string; // ML-KEM-768 secret key (base64url)
+	encrypted: boolean; // Whether this inbox uses encryption
+	emailAuth: boolean; // Whether email authentication checks are enabled
+	serverSigPk?: string; // ML-DSA-65 public key (base64url, encrypted inboxes only)
+	secretKey?: string; // ML-KEM-768 secret key (base64url, encrypted inboxes only)
 	exportedAt: string; // ISO 8601 timestamp
 }
 ```

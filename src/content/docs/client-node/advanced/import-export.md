@@ -13,8 +13,10 @@ When you export an inbox, you get a JSON object containing:
 - Email address
 - Inbox identifier
 - Expiration time
-- **Secret encryption key** (base64url-encoded, sensitive!)
-- **Server public signing key** (base64url-encoded)
+- Whether the inbox is encrypted
+- Whether email authentication is enabled
+- **Secret encryption key** (base64url-encoded, encrypted inboxes only, sensitive!)
+- **Server public signing key** (base64url-encoded, encrypted inboxes only)
 - Export timestamp
 
 The public key is derived from the secret key during import, so it's not included in the export.
@@ -195,6 +197,8 @@ console.log(data);
 //   emailAddress: 'test123@inbox.vaultsandbox.com',
 //   inboxHash: 'abc123...',
 //   expiresAt: '2024-12-01T12:00:00.000Z',
+//   encrypted: true,
+//   emailAuth: true,
 //   serverSigPk: 'base64url-encoded-server-signing-key',
 //   secretKey: 'base64url-encoded-secret-key',
 //   exportedAt: '2024-11-30T08:00:00.000Z'
