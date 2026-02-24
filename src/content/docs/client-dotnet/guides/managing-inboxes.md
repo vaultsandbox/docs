@@ -43,6 +43,24 @@ var inbox = await client.CreateInboxAsync(new CreateInboxOptions
 });
 ```
 
+### With Persistence
+
+```csharp
+// Create a persistent inbox (survives gateway restarts)
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    Persistence = InboxPersistence.Persistent
+});
+
+// Create an ephemeral inbox (default on most servers)
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    Persistence = InboxPersistence.Ephemeral
+});
+```
+
+Persistence applies to inbox metadata and webhooks only. Emails are always stored in memory.
+
 ### Requesting Specific Address
 
 ```csharp
@@ -54,7 +72,7 @@ try
     });
     Console.WriteLine($"Got requested address: {inbox.EmailAddress}");
 }
-catch (InboxAlreadyExistsException)
+catch (ApiException ex) when (ex.StatusCode == 409)
 {
     Console.WriteLine("Address already in use, using random address");
     var inbox = await client.CreateInboxAsync();
@@ -549,9 +567,9 @@ catch (ApiException ex)
 {
     Console.WriteLine($"API error: {ex.StatusCode} - {ex.Message}");
 }
-catch (NetworkException ex)
+catch (VaultSandboxException ex)
 {
-    Console.WriteLine($"Network error: {ex.Message}");
+    Console.WriteLine($"VaultSandbox error: {ex.Message}");
 }
 ```
 

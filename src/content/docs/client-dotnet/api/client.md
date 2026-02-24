@@ -177,17 +177,21 @@ public sealed class CreateInboxOptions
     public TimeSpan? Ttl { get; set; }
     public bool? EmailAuth { get; set; }
     public InboxEncryption? Encryption { get; set; }
+    public InboxPersistence? Persistence { get; set; }
     public bool? SpamAnalysis { get; set; }
+    public SetChaosConfigOptions? Chaos { get; set; }
 }
 ```
 
-| Property       | Type               | Description                                                       |
-| -------------- | ------------------ | ----------------------------------------------------------------- |
-| `Ttl`          | `TimeSpan?`        | Time-to-live for the inbox (min: 60s, max: 7 days)                |
-| `EmailAddress` | `string?`          | Request a specific email address (max 254 chars)                  |
-| `EmailAuth`    | `bool?`            | Enable/disable SPF/DKIM/DMARC/PTR checks. Omit for server default |
-| `Encryption`   | `InboxEncryption?` | Request `Encrypted` or `Plain` inbox. Omit for server default     |
-| `SpamAnalysis` | `bool?`            | Enable/disable Rspamd spam analysis. Omit for server default      |
+| Property       | Type                  | Description                                                       |
+| -------------- | --------------------- | ----------------------------------------------------------------- |
+| `Ttl`          | `TimeSpan?`           | Time-to-live for the inbox (min: 60s, max: 7 days)                |
+| `EmailAddress` | `string?`             | Request a specific email address (max 254 chars)                  |
+| `EmailAuth`    | `bool?`               | Enable/disable SPF/DKIM/DMARC/PTR checks. Omit for server default |
+| `Encryption`   | `InboxEncryption?`    | Request `Encrypted` or `Plain` inbox. Omit for server default     |
+| `Persistence`  | `InboxPersistence?`   | Request `Persistent` or `Ephemeral` inbox. Omit for server default |
+| `SpamAnalysis` | `bool?`               | Enable/disable Rspamd spam analysis. Omit for server default      |
+| `Chaos`        | `SetChaosConfigOptions?` | Initial chaos configuration. Omit to disable                   |
 
 #### InboxEncryption Enum
 
@@ -195,6 +199,13 @@ public sealed class CreateInboxOptions
 | ----------- | ----------------------------------- |
 | `Encrypted` | Request an encrypted inbox          |
 | `Plain`     | Request a plain (unencrypted) inbox |
+
+#### InboxPersistence Enum
+
+| Value        | Description                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
+| `Persistent` | Inbox metadata and webhooks persist across gateway restarts (emails do not)      |
+| `Ephemeral`  | Inbox is stored in memory only                                                  |
 
 #### Returns
 
@@ -235,6 +246,22 @@ var inbox = await client.CreateInboxAsync(new CreateInboxOptions
 var inbox = await client.CreateInboxAsync(new CreateInboxOptions
 {
     SpamAnalysis = true
+});
+
+// Create a persistent inbox (when server policy allows)
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    Persistence = InboxPersistence.Persistent
+});
+
+// Create inbox with chaos configuration
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    Chaos = new SetChaosConfigOptions
+    {
+        Enabled = true,
+        Latency = new LatencyOptions { Enabled = true, MinDelayMs = 500, MaxDelayMs = 3000 }
+    }
 });
 ```
 
@@ -325,20 +352,36 @@ public sealed record ServerInfo
     public required bool SseConsole { get; init; }
     public required IReadOnlyList<string> AllowedDomains { get; init; }
     public required EncryptionPolicy EncryptionPolicy { get; init; }
+    public required PersistencePolicy PersistencePolicy { get; init; }
     public bool SpamAnalysisEnabled { get; init; }
+    public bool ChaosEnabled { get; init; }
+    public bool PersistentGlobalWebhooks { get; init; }
+
+    // Helper properties
+    public bool CanOverrideEncryption { get; }
+    public bool DefaultEncrypted { get; }
+    public bool CanOverridePersistence { get; }
+    public bool DefaultPersistent { get; }
 }
 ```
 
-| Property              | Type                    | Description                                               |
-| --------------------- | ----------------------- | --------------------------------------------------------- |
-| `ServerSigPk`         | `string`                | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `Context`             | `string`                | Context string for the encryption scheme                  |
-| `MaxTtl`              | `int`                   | Maximum time-to-live for inboxes in seconds               |
-| `DefaultTtl`          | `int`                   | Default time-to-live for inboxes in seconds               |
-| `SseConsole`          | `bool`                  | Whether the server SSE console is enabled                 |
-| `AllowedDomains`      | `IReadOnlyList<string>` | List of domains allowed for inbox creation                |
-| `EncryptionPolicy`    | `EncryptionPolicy`      | Server's encryption policy for inbox creation             |
-| `SpamAnalysisEnabled` | `bool`                  | Whether Rspamd spam analysis is available on the server   |
+| Property                   | Type                    | Description                                               |
+| -------------------------- | ----------------------- | --------------------------------------------------------- |
+| `ServerSigPk`              | `string`                | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `Context`                  | `string`                | Context string for the encryption scheme                  |
+| `MaxTtl`                   | `int`                   | Maximum time-to-live for inboxes in seconds               |
+| `DefaultTtl`               | `int`                   | Default time-to-live for inboxes in seconds               |
+| `SseConsole`               | `bool`                  | Whether the server SSE console is enabled                 |
+| `AllowedDomains`           | `IReadOnlyList<string>` | List of domains allowed for inbox creation                |
+| `EncryptionPolicy`         | `EncryptionPolicy`      | Server's encryption policy for inbox creation             |
+| `PersistencePolicy`        | `PersistencePolicy`     | Server's persistence policy for inbox creation            |
+| `SpamAnalysisEnabled`      | `bool`                  | Whether Rspamd spam analysis is available on the server   |
+| `ChaosEnabled`             | `bool`                  | Whether chaos engineering features are enabled            |
+| `PersistentGlobalWebhooks` | `bool`                  | Whether global webhooks are persistent on this server     |
+| `CanOverrideEncryption`    | `bool`                  | Whether per-inbox encryption override is allowed          |
+| `DefaultEncrypted`         | `bool`                  | Whether inboxes are encrypted by default                  |
+| `CanOverridePersistence`   | `bool`                  | Whether per-inbox persistence override is allowed         |
+| `DefaultPersistent`        | `bool`                  | Whether inboxes are persistent by default                 |
 
 #### EncryptionPolicy Enum
 
@@ -349,6 +392,17 @@ public sealed record ServerInfo
 | `Disabled` | Plain              | Yes - can request `Encrypted`        |
 | `Never`    | Plain              | No - all inboxes plain (unencrypted) |
 
+#### PersistencePolicy Enum
+
+| Policy     | Default Persistence | Per-Inbox Override                    |
+| ---------- | ------------------- | ------------------------------------- |
+| `Always`   | Persistent          | No - all inboxes persistent           |
+| `Enabled`  | Persistent          | Yes - can request `Ephemeral`         |
+| `Disabled` | Ephemeral           | Yes - can request `Persistent`        |
+| `Never`    | Ephemeral           | No - all inboxes ephemeral            |
+
+Persistence applies to inbox metadata and webhooks only. Emails are always stored in memory regardless of persistence setting.
+
 #### Example
 
 ```csharp
@@ -357,11 +411,15 @@ Console.WriteLine($"Server: {info.Context}");
 Console.WriteLine($"Max TTL: {info.MaxTtl}s, Default TTL: {info.DefaultTtl}s");
 Console.WriteLine($"Allowed domains: {string.Join(", ", info.AllowedDomains)}");
 Console.WriteLine($"Encryption policy: {info.EncryptionPolicy}");
+Console.WriteLine($"Persistence policy: {info.PersistencePolicy}");
 Console.WriteLine($"Spam analysis: {(info.SpamAnalysisEnabled ? "Available" : "Not available")}");
+Console.WriteLine($"Chaos engineering: {(info.ChaosEnabled ? "Available" : "Not available")}");
 
-// Check if encryption can be overridden per-inbox
-var canOverride = info.EncryptionPolicy is EncryptionPolicy.Enabled or EncryptionPolicy.Disabled;
-var defaultEncrypted = info.EncryptionPolicy is EncryptionPolicy.Always or EncryptionPolicy.Enabled;
+// Use helper properties for policy checks
+Console.WriteLine($"Can override encryption: {info.CanOverrideEncryption}");
+Console.WriteLine($"Default encrypted: {info.DefaultEncrypted}");
+Console.WriteLine($"Can override persistence: {info.CanOverridePersistence}");
+Console.WriteLine($"Default persistent: {info.DefaultPersistent}");
 
 // Check if spam analysis is available
 if (info.SpamAnalysisEnabled)

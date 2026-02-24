@@ -136,6 +136,28 @@ else
 }
 ```
 
+---
+
+### Persistent
+
+```csharp
+bool Persistent { get; }
+```
+
+Indicates whether this inbox is persistent. Persistent inboxes have their metadata and webhooks stored on disk, surviving gateway restarts. Emails are always stored in memory regardless of this setting.
+
+#### Example
+
+```csharp
+var inbox = await client.CreateInboxAsync(new CreateInboxOptions
+{
+    Persistence = InboxPersistence.Persistent
+});
+
+Console.WriteLine($"Inbox persistent: {inbox.Persistent}");
+// Inbox persistent: True
+```
+
 ## Methods
 
 ### GetEmailsAsync
@@ -673,10 +695,11 @@ public sealed record InboxExport
     public required string EmailAddress { get; init; }
     public required DateTimeOffset ExpiresAt { get; init; }
     public required string InboxHash { get; init; }
+    public bool Encrypted { get; init; } = true;
+    public bool Persistent { get; init; }
+    public bool EmailAuth { get; init; }
     public string? ServerSigPk { get; init; }  // Only present when inbox is encrypted
     public string? SecretKey { get; init; }    // Only present when inbox is encrypted
-    public required bool Encrypted { get; init; }
-    public required bool EmailAuth { get; init; }
     public required DateTimeOffset ExportedAt { get; init; }
 }
 ```
