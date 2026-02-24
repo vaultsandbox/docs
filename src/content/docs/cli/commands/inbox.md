@@ -31,7 +31,12 @@ vsb inbox create [flags]
 | `--ttl`           | Time-to-live duration (e.g., `1h`, `24h`, `7d`)                             | `24h`          |
 | `--email-auth`    | Enable/disable SPF/DKIM/DMARC/PTR authentication checks (`true` or `false`) | Server default |
 | `--encryption`    | Request encryption mode (`encrypted` or `plain`)                            | Server default |
+| `--persistence`   | Persistence mode (`persistent` or `ephemeral`)                              | Server default |
 | `--spam-analysis` | Enable/disable spam analysis for this inbox (`true` or `false`)             | Server default |
+
+:::note
+Persistence applies to inbox metadata and webhook configurations only. Emails are always fetched from the server and are not persisted locally regardless of this setting.
+:::
 
 ### Examples
 
@@ -49,11 +54,17 @@ vsb inbox create --email-auth=false
 # Create unencrypted inbox (if server policy allows)
 vsb inbox create --encryption=plain
 
+# Create persistent inbox (survives server restarts)
+vsb inbox create --persistence=persistent
+
+# Create ephemeral inbox
+vsb inbox create --persistence=ephemeral
+
 # Create inbox with spam analysis enabled
 vsb inbox create --spam-analysis=true
 
 # Combine options
-vsb inbox create --ttl 7d --email-auth=true --encryption=encrypted --spam-analysis=true
+vsb inbox create --ttl 7d --email-auth=true --encryption=encrypted --persistence=persistent --spam-analysis=true
 
 # Create inbox and output JSON (useful for scripting)
 vsb inbox create -o json
@@ -64,8 +75,10 @@ vsb inbox create -o json
 ```
 Inbox Ready!
 
-  Address:  abc123@abc123.vsx.email
-  Expires:  24h
+  Address:     abc123@abc123.vsx.email
+  Expires:     24h
+  Encrypted:   Yes
+  Persistent:  No
 
 Run 'vsb' to see emails arrive live.
 ```
@@ -76,7 +89,10 @@ JSON output:
 {
 	"email": "abc123@abc123.vsx.email",
 	"expiresAt": "2024-01-16T14:30:00Z",
-	"createdAt": "2024-01-15T14:30:00Z"
+	"createdAt": "2024-01-15T14:30:00Z",
+	"encrypted": true,
+	"emailAuth": true,
+	"persistent": false
 }
 ```
 
@@ -129,7 +145,10 @@ JSON output:
 		"email": "abc123@abc123.vsx.email",
 		"expiresAt": "2024-01-16T14:30:00Z",
 		"isActive": true,
-		"isExpired": false
+		"isExpired": false,
+		"encrypted": true,
+		"emailAuth": true,
+		"persistent": false
 	}
 ]
 ```
@@ -176,6 +195,9 @@ abc123@abc123.vsx.email  ACTIVE
 ID:            abc123
 Created:       2024-01-15 14:30
 Expires:       2024-01-16 14:30 (14h)
+Encrypted:     Yes
+Email Auth:    Yes
+Persistent:    No
 Emails:        3
 ```
 
@@ -189,6 +211,9 @@ JSON output:
 	"isExpired": false,
 	"id": "abc123",
 	"createdAt": "2024-01-15T14:30:00Z",
+	"encrypted": true,
+	"emailAuth": true,
+	"persistent": false,
 	"emailCount": 3,
 	"syncError": "error message"
 }
