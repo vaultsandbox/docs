@@ -24,6 +24,7 @@ An inbox has a unique email address that can receive emails. Emails are end-to-e
 | `emailAuth`    | `boolean` | Whether email authentication checks are enabled                     |
 | `spamAnalysis` | `boolean` | Whether spam analysis is enabled for this inbox                     |
 | `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption                       |
+| `persistent`   | `boolean` | Whether this inbox is persistent (metadata survives server restarts) |
 
 ### Getters
 
@@ -35,6 +36,7 @@ public String getServerSigPk()  // null when encrypted is false
 public boolean isEmailAuth()
 public boolean isSpamAnalysis()
 public boolean isEncrypted()
+public boolean isPersistent()
 ```
 
 ## Email Retrieval Methods

@@ -293,7 +293,7 @@ if inbox.Persistent() {
 }
 ```
 
-When `true`, the inbox and its emails are stored persistently on the server's disk. When `false`, the inbox is ephemeral and stored only in memory, meaning data is lost if the server restarts.
+When `true`, the inbox metadata and its webhook configurations are persisted to the server's disk. When `false`, the inbox is ephemeral and stored only in memory, meaning data is lost if the server restarts. Emails are always ephemeral regardless of persistence setting.
 
 ---
 

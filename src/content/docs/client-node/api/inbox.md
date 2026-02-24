@@ -142,7 +142,7 @@ if (inbox.spamAnalysis) {
 persistent?: boolean;
 ```
 
-Whether this inbox is persistent (survives server restarts). When `true`, the inbox and its emails are stored on disk and will be available after the gateway server restarts.
+Whether this inbox is persistent (survives server restarts). When `true`, the inbox metadata and its webhook configurations are persisted to disk. Emails are always ephemeral regardless of persistence setting.
 
 - `true` - Inbox is persistent
 - `false` - Inbox is ephemeral (in-memory only)
