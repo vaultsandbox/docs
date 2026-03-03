@@ -102,6 +102,32 @@ if (info.isSpamAnalysisEnabled()) {
 ```
 :::
 
+### With Persistence
+
+Create persistent inboxes that survive server restarts (when server policy allows).
+
+```java
+// Check server persistence policy
+ServerInfo info = client.getServerInfo();
+System.out.println("Persistence policy: " + info.getPersistencePolicy());
+
+// Create persistent inbox
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .persistent()
+        .build()
+);
+System.out.println("Persistent: " + inbox.isPersistent());  // true
+
+// Create ephemeral inbox (explicit)
+Inbox tempInbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .ephemeral()
+        .build()
+);
+System.out.println("Persistent: " + tempInbox.isPersistent());  // false
+```
+
 ### With Encryption Options
 
 Request a specific encryption mode (when server policy allows):
@@ -138,13 +164,14 @@ if (info.canOverrideEncryption()) {
 
 ## Inbox Properties
 
-| Property       | Type      | Description                                     |
-| -------------- | --------- | ----------------------------------------------- |
-| `emailAddress` | `String`  | The inbox email address                         |
-| `expiresAt`    | `Instant` | When the inbox expires                          |
-| `emailAuth`    | `boolean` | Whether email authentication checks are enabled |
-| `spamAnalysis` | `boolean` | Whether spam analysis is enabled for this inbox |
-| `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption   |
+| Property       | Type      | Description                                             |
+| -------------- | --------- | ------------------------------------------------------- |
+| `emailAddress` | `String`  | The inbox email address                                 |
+| `expiresAt`    | `Instant` | When the inbox expires                                  |
+| `emailAuth`    | `boolean` | Whether email authentication checks are enabled         |
+| `spamAnalysis` | `boolean` | Whether spam analysis is enabled for this inbox         |
+| `encrypted`    | `boolean` | Whether this inbox uses end-to-end encryption           |
+| `persistent`   | `boolean` | Whether this inbox is persistent (survives restarts)    |
 
 ```java
 Inbox inbox = client.createInbox();
@@ -154,6 +181,7 @@ Instant expires = inbox.getExpiresAt();    // 2024-01-15T12:00:00Z
 boolean auth = inbox.isEmailAuth();        // true (default)
 boolean spam = inbox.isSpamAnalysis();     // depends on server default
 boolean encrypted = inbox.isEncrypted();   // depends on server policy
+boolean persistent = inbox.isPersistent(); // depends on server policy
 ```
 
 ## Listing Emails

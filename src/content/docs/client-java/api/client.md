@@ -126,13 +126,15 @@ Inbox inbox = client.createInbox(options);
 
 ### CreateInboxOptions
 
-| Option         | Type       | Default        | Description                                                 |
-| -------------- | ---------- | -------------- | ----------------------------------------------------------- |
-| `emailAddress` | `String`   | auto-generated | Custom email address or domain                              |
-| `ttl`          | `Duration` | server default | Inbox time-to-live                                          |
-| `emailAuth`    | `Boolean`  | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                    |
-| `spamAnalysis` | `Boolean`  | server default | Enable/disable Rspamd spam analysis for this inbox          |
-| `encryption`   | `String`   | server default | Request `"encrypted"` or `"plain"` inbox (if policy allows) |
+| Option         | Type          | Default        | Description                                                                    |
+| -------------- | ------------- | -------------- | ------------------------------------------------------------------------------ |
+| `emailAddress` | `String`      | auto-generated | Custom email address or domain                                                 |
+| `ttl`          | `Duration`    | server default | Inbox time-to-live                                                             |
+| `emailAuth`    | `Boolean`     | `true`         | Enable/disable SPF/DKIM/DMARC/PTR checks                                       |
+| `spamAnalysis` | `Boolean`     | server default | Enable/disable Rspamd spam analysis for this inbox                             |
+| `encryption`   | `String`      | server default | Request `"encrypted"` or `"plain"` inbox (if policy allows)                    |
+| `chaos`        | `ChaosConfig` | `null`         | Chaos engineering configuration. Only available when chaos is enabled on server |
+| `persistence`  | `String`      | server default | Request `"persistent"` or `"ephemeral"` inbox (if policy allows)               |
 
 **Convenience Methods:**
 
@@ -142,6 +144,12 @@ CreateInboxOptions.plain()
 
 // Create encrypted inbox (shorthand for .encryption("encrypted"))
 CreateInboxOptions.encrypted()
+
+// Create persistent inbox (shorthand for .persistence("persistent"))
+CreateInboxOptions.builder().persistent().build()
+
+// Create ephemeral inbox (shorthand for .persistence("ephemeral"))
+CreateInboxOptions.builder().ephemeral().build()
 ```
 
 **Examples:**
@@ -171,6 +179,13 @@ Inbox inbox = client.createInbox(
         .build()
 );
 
+// Create persistent inbox (survives server restarts)
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .persistent()
+        .build()
+);
+
 // Combine options
 Inbox inbox = client.createInbox(
     CreateInboxOptions.builder()
@@ -179,6 +194,7 @@ Inbox inbox = client.createInbox(
         .emailAuth(false)
         .spamAnalysis(true)
         .encryption("plain")
+        .persistent()
         .build()
 );
 ```
@@ -423,20 +439,23 @@ System.out.println("Allowed domains: " + info.getAllowedDomains());
 
 ### ServerInfo Properties
 
-| Property              | Type           | Description                                                        |
-| --------------------- | -------------- | ------------------------------------------------------------------ |
-| `serverSigPk`         | `String`       | Server's public signing key                                        |
-| `context`             | `String`       | Server context identifier                                          |
-| `maxTtl`              | `int`          | Maximum inbox TTL in seconds                                       |
-| `defaultTtl`          | `int`          | Default inbox TTL in seconds                                       |
-| `sseConsole`          | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`)          |
-| `spamAnalysisEnabled` | `boolean`      | Whether spam analysis is available (getter: `isSpamAnalysisEnabled()`) |
-| `allowedDomains`      | `List<String>` | Allowed email domains                                              |
-| `algs`                | `Algorithms`   | Supported cryptographic algorithms                                 |
-| `version`             | `String`       | Server version                                                     |
-| `domain`              | `String`       | Server domain                                                      |
-| `limits`              | `Limits`       | Rate limits and constraints                                        |
-| `encryptionPolicy`    | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never` |
+| Property                   | Type           | Description                                                            |
+| -------------------------- | -------------- | ---------------------------------------------------------------------- |
+| `serverSigPk`              | `String`       | Server's public signing key                                            |
+| `context`                  | `String`       | Server context identifier                                              |
+| `maxTtl`                   | `int`          | Maximum inbox TTL in seconds                                           |
+| `defaultTtl`               | `int`          | Default inbox TTL in seconds                                           |
+| `sseConsole`               | `boolean`      | Whether SSE console is enabled (getter: `isSseConsole()`)              |
+| `spamAnalysisEnabled`      | `boolean`      | Whether spam analysis is available (getter: `isSpamAnalysisEnabled()`)  |
+| `chaosEnabled`             | `boolean`      | Whether chaos engineering features are enabled                         |
+| `allowedDomains`           | `List<String>` | Allowed email domains                                                  |
+| `algs`                     | `Algorithms`   | Supported cryptographic algorithms                                     |
+| `version`                  | `String`       | Server version                                                         |
+| `domain`                   | `String`       | Server domain                                                          |
+| `limits`                   | `Limits`       | Rate limits and constraints                                            |
+| `encryptionPolicy`         | `String`       | Server encryption policy: `always`, `enabled`, `disabled`, `never`     |
+| `persistencePolicy`        | `String`       | Server persistence policy: `always`, `enabled`, `disabled`, `never`    |
+| `persistentGlobalWebhooks` | `boolean`      | Whether global webhooks are persisted                                  |
 
 ### Encryption Policy
 
@@ -465,6 +484,33 @@ System.out.println("Can override: " + canOverride);
 System.out.println("Default encrypted: " + defaultEncrypted);
 ```
 
+### Persistence Policy
+
+The `persistencePolicy` property determines how inbox persistence can be configured:
+
+| Policy     | Default Behavior | Can Override?                           |
+| ---------- | ---------------- | --------------------------------------- |
+| `always`   | Persistent       | No - all inboxes are always persistent  |
+| `enabled`  | Persistent       | Yes - can request `ephemeral`           |
+| `disabled` | Ephemeral        | Yes - can request `persistent`          |
+| `never`    | Ephemeral        | No - all inboxes are always ephemeral   |
+
+**Helper Methods:**
+
+```java
+ServerInfo info = client.getServerInfo();
+
+// Check if per-inbox persistence override is allowed
+boolean canOverride = info.canOverridePersistence();  // true if "enabled" or "disabled"
+
+// Check if default is persistent
+boolean defaultPersistent = info.isDefaultPersistent();  // true if "always" or "enabled"
+
+System.out.println("Policy: " + info.getPersistencePolicy());
+System.out.println("Can override: " + canOverride);
+System.out.println("Default persistent: " + defaultPersistent);
+```
+
 ### Spam Analysis Availability
 
 Check if the server supports spam analysis:
@@ -483,6 +529,28 @@ if (info.isSpamAnalysisEnabled()) {
     );
 } else {
     System.out.println("Spam analysis is not enabled on this server");
+}
+```
+
+### Persistence Policy Availability
+
+Check the server's persistence policy:
+
+```java
+ServerInfo info = client.getServerInfo();
+
+System.out.println("Persistence policy: " + info.getPersistencePolicy());
+
+if (info.canOverridePersistence()) {
+    System.out.println("Can override persistence per inbox");
+
+    // Create a persistent inbox
+    Inbox inbox = client.createInbox(
+        CreateInboxOptions.builder()
+            .persistent()
+            .build()
+    );
+    System.out.println("Persistent: " + inbox.isPersistent());
 }
 ```
 

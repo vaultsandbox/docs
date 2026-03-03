@@ -12,17 +12,15 @@ All SDK exceptions inherit from the base `VaultSandboxException` class, allowing
 ```
 VaultSandboxException (base class)
 ├── ApiException
-├── NetworkException
 ├── VaultSandboxTimeoutException
 ├── InboxNotFoundException
 ├── EmailNotFoundException
-├── InboxAlreadyExistsException
+├── WebhookNotFoundException
 ├── InvalidImportDataException
 ├── DecryptionException
 ├── SignatureVerificationException
 ├── ServerKeyMismatchException
-├── SseException
-└── StrategyException
+└── SseException
 ```
 
 ## Automatic Retries
@@ -174,35 +172,6 @@ catch (ApiException ex)
 
 ---
 
-### NetworkException
-
-Thrown when there is a network-level failure (e.g., cannot connect to server).
-
-```csharp
-public class NetworkException : VaultSandboxException
-{
-    public override string Message { get; }
-}
-```
-
-#### Example
-
-```csharp
-using VaultSandbox.Client.Exceptions;
-
-try
-{
-    var inbox = await client.CreateInboxAsync();
-}
-catch (NetworkException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
-    Console.WriteLine("Check your internet connection and server URL");
-}
-```
-
----
-
 ### VaultSandboxTimeoutException
 
 Thrown by methods like `WaitForEmailAsync()` and `WaitForEmailCountAsync()` when the timeout is reached before the condition is met.
@@ -318,24 +287,20 @@ catch (EmailNotFoundException ex)
 
 ---
 
-### InboxAlreadyExistsException
+### WebhookNotFoundException
 
-Thrown when attempting to create an inbox that conflicts with an existing one. The conflict can occur due to:
-
-- **Encrypted inboxes**: An inbox with the same client KEM public key already exists
-- **Plain inboxes**: An inbox with the same email address already exists
-- **Import**: The inbox is already imported in this client
+Thrown when a webhook does not exist on the server.
 
 ```csharp
-public class InboxAlreadyExistsException : VaultSandboxException
+public class WebhookNotFoundException : VaultSandboxException
 {
-    public string EmailAddress { get; }
+    public string WebhookId { get; }
 }
 ```
 
 #### Properties
 
-- `EmailAddress`: The email address of the inbox that already exists
+- `WebhookId`: The identifier of the webhook that was not found
 - `Message`: Error message describing the issue
 
 #### Example
@@ -345,26 +310,12 @@ using VaultSandbox.Client.Exceptions;
 
 try
 {
-    var inbox = await client.CreateInboxAsync(new CreateInboxOptions
-    {
-        EmailAddress = "test@inbox.vaultsandbox.com"
-    });
+    var webhook = await inbox.GetWebhookAsync("whk_nonexistent");
 }
-catch (InboxAlreadyExistsException ex)
+catch (WebhookNotFoundException)
 {
-    Console.WriteLine($"Inbox conflict: {ex.Message}");
-    // For encrypted: "An inbox with the same client KEM public key already exists"
-    // For plain: "An inbox with this email address already exists"
-}
-
-try
-{
-    var inbox = await client.ImportInboxAsync(exportedData);
-}
-catch (InboxAlreadyExistsException ex)
-{
-    Console.WriteLine("Inbox already imported in this client");
-    Console.WriteLine("Use a new client instance or delete the existing inbox");
+    Console.WriteLine("Webhook not found");
+    Console.WriteLine("It may have been deleted");
 }
 ```
 
@@ -572,39 +523,6 @@ catch (SseException ex)
 }
 ```
 
----
-
-### StrategyException
-
-Thrown when a delivery strategy is not set or is invalid.
-
-```csharp
-public class StrategyException : VaultSandboxException
-{
-    public override string Message { get; }
-}
-```
-
-#### Example
-
-```csharp
-using VaultSandbox.Client.Exceptions;
-
-try
-{
-    var inbox = await client.CreateInboxAsync();
-    await foreach (var email in inbox.WatchAsync())
-    {
-        Console.WriteLine($"New email: {email.Subject}");
-    }
-}
-catch (StrategyException ex)
-{
-    Console.WriteLine($"Strategy error: {ex.Message}");
-    Console.WriteLine("The delivery strategy may not be properly configured");
-}
-```
-
 ## Error Handling Patterns
 
 ### Basic Exception Handling
@@ -639,10 +557,6 @@ catch (ApiException ex)
 {
     Console.WriteLine($"API Error ({ex.StatusCode}): {ex.Message}");
 }
-catch (NetworkException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
-}
 catch (VaultSandboxException ex)
 {
     Console.WriteLine($"VaultSandbox error: {ex.Message}");
@@ -672,7 +586,6 @@ catch (Exception ex)
         ApiException { StatusCode: 403 } => "Permission denied",
         ApiException { StatusCode: 429 } => "Rate limit exceeded",
         ApiException api => $"API error ({api.StatusCode}): {api.Message}",
-        NetworkException net => $"Network error: {net.Message}",
         SignatureVerificationException => "CRITICAL: Signature verification failed!",
         DecryptionException => "CRITICAL: Decryption failed!",
         VaultSandboxException vsb => $"VaultSandbox error: {vsb.Message}",

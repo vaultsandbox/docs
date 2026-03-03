@@ -28,13 +28,16 @@ Exported inbox data is stored as JSON:
 	"emailAddress": "abc123@vaultsandbox.com",
 	"expiresAt": "2024-01-15T10:30:00Z",
 	"inboxHash": "hash123...",
+	"encrypted": true,
+	"emailAuth": true,
+	"persistent": false,
 	"serverSigPk": "base64url...",
 	"secretKey": "base64url...",
 	"exportedAt": "2024-01-14T10:30:00Z"
 }
 ```
 
-The public key is not included in exports as it can be derived from the secret key during import.
+The public key is not included in exports as it can be derived from the secret key during import. The `serverSigPk` and `secretKey` fields are only present for encrypted inboxes.
 
 ## Basic Export
 
@@ -87,15 +90,18 @@ List<Email> emails = restored.listEmails();
 
 ## ExportedInbox Properties
 
-| Property       | Type     | Description                                        |
-| -------------- | -------- | -------------------------------------------------- |
-| `version`      | `int`    | Export format version (currently 1)                |
-| `emailAddress` | `String` | Inbox email address                                |
-| `expiresAt`    | `String` | ISO 8601 expiration timestamp                      |
-| `inboxHash`    | `String` | Unique inbox identifier                            |
-| `serverSigPk`  | `String` | Server signature public key (ML-DSA-65, base64url) |
-| `secretKey`    | `String` | ML-KEM-768 secret key (base64url)                  |
-| `exportedAt`   | `String` | ISO 8601 export timestamp                          |
+| Property       | Type      | Description                                                         |
+| -------------- | --------- | ------------------------------------------------------------------- |
+| `version`      | `int`     | Export format version (currently 1)                                 |
+| `emailAddress` | `String`  | Inbox email address                                                 |
+| `expiresAt`    | `String`  | ISO 8601 expiration timestamp                                       |
+| `inboxHash`    | `String`  | Unique inbox identifier                                             |
+| `encrypted`    | `Boolean` | Whether this inbox uses encryption                                  |
+| `emailAuth`    | `Boolean` | Whether email authentication checks are enabled                     |
+| `persistent`   | `Boolean` | Whether this inbox is persistent                                    |
+| `serverSigPk`  | `String`  | Server signature public key (ML-DSA-65, base64url, encrypted only)  |
+| `secretKey`    | `String`  | ML-KEM-768 secret key (base64url, encrypted only)                   |
+| `exportedAt`   | `String`  | ISO 8601 export timestamp                                           |
 
 ### Validation
 

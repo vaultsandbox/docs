@@ -13,8 +13,9 @@ When you export an inbox, you get an `InboxExport` record containing:
 - Email address
 - Inbox identifier (hash)
 - Expiration time
-- **Secret encryption key** (sensitive! public key is derived from this)
-- **Server public signing key**
+- Encryption, persistence, and email auth flags
+- **Secret encryption key** (sensitive! only for encrypted inboxes)
+- **Server public signing key** (only for encrypted inboxes)
 - Export timestamp
 
 This exported data can be imported into another client instance, allowing you to access the same inbox from different environments or at different times.
@@ -224,8 +225,11 @@ var data = await inbox.ExportAsync();
 // - EmailAddress: "test123@inbox.vaultsandbox.com"
 // - InboxHash: "abc123..."
 // - ExpiresAt: DateTimeOffset (when inbox expires)
-// - ServerSigPk: "base64url-encoded-server-signing-key"
-// - SecretKey: "base64url-encoded-secret-key" (public key derived from this)
+// - Encrypted: true/false
+// - Persistent: true/false
+// - EmailAuth: true/false
+// - ServerSigPk: "base64url-encoded-server-signing-key" (encrypted inboxes only)
+// - SecretKey: "base64url-encoded-secret-key" (encrypted inboxes only)
 // - ExportedAt: DateTimeOffset (when export was created)
 
 // Save to file
@@ -257,8 +261,11 @@ await client.ExportInboxToFileAsync(inbox, "./backups/inbox.json");
 | `EmailAddress` | `string`         | Inbox email address                                                                            |
 | `InboxHash`    | `string`         | Unique inbox identifier                                                                        |
 | `ExpiresAt`    | `DateTimeOffset` | When the inbox expires (ISO 8601)                                                              |
-| `ServerSigPk`  | `string`         | Server ML-DSA-65 signing public key (base64url)                                                |
-| `SecretKey`    | `string`         | ML-KEM-768 secret key (base64url, **sensitive!**). Public key is derived from bytes 1152-2400. |
+| `Encrypted`    | `bool`           | Whether the inbox uses end-to-end encryption                                                   |
+| `Persistent`   | `bool`           | Whether the inbox is persistent (metadata and webhooks only, not emails)                       |
+| `EmailAuth`    | `bool`           | Whether email authentication checks are enabled                                                |
+| `ServerSigPk`  | `string?`        | Server ML-DSA-65 signing public key (base64url). Only present for encrypted inboxes.           |
+| `SecretKey`    | `string?`        | ML-KEM-768 secret key (base64url, **sensitive!**). Only present for encrypted inboxes.         |
 | `ExportedAt`   | `DateTimeOffset` | When this export was created (ISO 8601)                                                        |
 
 ## Import Methods
@@ -404,11 +411,12 @@ using (var stream = File.OpenRead("backup.json"))
 The SDK performs comprehensive validation when importing inbox data:
 
 1. **Version validation** - Must be version 1
-2. **Required fields** - `EmailAddress`, `InboxHash`, `SecretKey`, and `ServerSigPk` must be present
-3. **Email format** - Must contain exactly one `@` character
-4. **Expiration check** - Inbox must not be expired
-5. **Base64URL encoding** - Keys must be valid base64url (rejects standard Base64 with `+`, `/`, `=`)
-6. **Key sizes** - Secret key must be 2400 bytes (ML-KEM-768), server signing key must be 1952 bytes (ML-DSA-65)
+2. **Required fields** - `EmailAddress` and `InboxHash` must be present
+3. **Encrypted inbox fields** - If `Encrypted` is `true`, `SecretKey` and `ServerSigPk` must be present
+4. **Email format** - Must contain exactly one `@` character
+5. **Expiration check** - Inbox must not be expired
+6. **Base64URL encoding** - Keys must be valid base64url (rejects standard Base64 with `+`, `/`, `=`)
+7. **Key sizes** - Secret key must be 2400 bytes (ML-KEM-768), server signing key must be 1952 bytes (ML-DSA-65)
 
 The SDK throws exceptions for invalid imports:
 
@@ -430,10 +438,10 @@ catch (InvalidImportDataException ex)
     // - Invalid key sizes
     // - Inbox has expired
 }
-catch (InboxAlreadyExistsException)
+catch (ApiException ex) when (ex.StatusCode == 409)
 {
-    Console.WriteLine("Inbox already imported in this client");
-    // The inbox is already available in this client instance
+    Console.WriteLine("Inbox already exists on server");
+    // The inbox is already available
 }
 catch (ApiException ex) when (ex.StatusCode == 404)
 {

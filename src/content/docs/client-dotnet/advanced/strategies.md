@@ -442,10 +442,6 @@ catch (SseException ex)
     Console.WriteLine($"SSE error: {ex.Message}");
     // Consider recreating client with polling if SSE is blocked
 }
-catch (StrategyException ex)
-{
-    Console.WriteLine($"Strategy error: {ex.Message}");
-}
 catch (OperationCanceledException)
 {
     Console.WriteLine("Watch cancelled");

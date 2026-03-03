@@ -518,10 +518,6 @@ catch (ApiException ex)
 {
     Console.WriteLine($"API error: {ex.StatusCode} - {ex.Message}");
 }
-catch (NetworkException ex)
-{
-    Console.WriteLine($"Network error: {ex.Message}");
-}
 catch (VaultSandboxTimeoutException ex)
 {
     Console.WriteLine($"Timeout after {ex.Timeout.TotalSeconds}s");

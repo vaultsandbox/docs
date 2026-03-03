@@ -13,8 +13,11 @@ When you export an inbox, you get a data structure containing:
 - Email address
 - Inbox identifier
 - Expiration time
-- **Secret encryption key** (base64url-encoded, sensitive!)
-- **Server public signing key** (base64url-encoded)
+- Encryption status
+- Email authentication status
+- Persistence status
+- **Secret encryption key** (base64url-encoded, sensitive!) - only for encrypted inboxes
+- **Server public signing key** (base64url-encoded) - only for encrypted inboxes
 - Export timestamp
 
 Note: The public key is derived from the secret key during import, so it is not stored in the export.
@@ -148,9 +151,12 @@ async def export_from_dev():
                 "emailAddress": exported.email_address,
                 "expiresAt": exported.expires_at,
                 "inboxHash": exported.inbox_hash,
+                "encrypted": exported.encrypted,
+                "emailAuth": exported.email_auth,
                 "serverSigPk": exported.server_sig_pk,
                 "secretKey": exported.secret_key,
                 "exportedAt": exported.exported_at,
+                "persistent": exported.persistent,
             }, indent=2)
         )
 
@@ -236,9 +242,12 @@ data = {
     "emailAddress": exported.email_address,
     "expiresAt": exported.expires_at,
     "inboxHash": exported.inbox_hash,
+    "encrypted": exported.encrypted,
+    "emailAuth": exported.email_auth,
     "serverSigPk": exported.server_sig_pk,
     "secretKey": exported.secret_key,
     "exportedAt": exported.exported_at,
+    "persistent": exported.persistent,
 }
 Path("inbox.json").write_text(json.dumps(data, indent=2))
 ```
@@ -301,9 +310,12 @@ exported = ExportedInbox(
     email_address=data["emailAddress"],
     expires_at=data["expiresAt"],
     inbox_hash=data["inboxHash"],
-    server_sig_pk=data["serverSigPk"],
-    secret_key=data["secretKey"],
+    encrypted=data.get("encrypted", True),
+    email_auth=data.get("emailAuth", True),
     exported_at=data.get("exportedAt", ""),
+    server_sig_pk=data.get("serverSigPk"),
+    secret_key=data.get("secretKey"),
+    persistent=data.get("persistent", False),
 )
 
 inbox = await client.import_inbox(exported)
@@ -368,13 +380,16 @@ The `ExportedInbox` dataclass contains all data needed to reconstruct an inbox:
 ```python
 @dataclass
 class ExportedInbox:
-    version: int            # Export format version (always 1)
-    email_address: str      # The email address assigned to the inbox
-    expires_at: str         # ISO 8601 timestamp when the inbox expires
-    inbox_hash: str         # SHA-256 hash of the client KEM public key
-    server_sig_pk: str      # Server signing public key (base64url-encoded)
-    secret_key: str         # ML-KEM-768 secret key (base64url-encoded, SENSITIVE!)
-    exported_at: str        # ISO 8601 timestamp when the inbox was exported
+    version: int                    # Export format version (always 1)
+    email_address: str              # The email address assigned to the inbox
+    expires_at: str                 # ISO 8601 timestamp when the inbox expires
+    inbox_hash: str                 # SHA-256 hash of the client KEM public key
+    encrypted: bool                 # Whether the inbox uses encryption
+    email_auth: bool                # Whether email authentication is enabled
+    exported_at: str                # ISO 8601 timestamp when the inbox was exported
+    server_sig_pk: str | None       # Server signing public key (base64url-encoded, only for encrypted)
+    secret_key: str | None          # ML-KEM-768 secret key (base64url-encoded, SENSITIVE!, only for encrypted)
+    persistent: bool = False        # Whether the inbox is persistent
 ```
 
 Note: The public key is not stored because it can be derived from the secret key during import.
@@ -513,9 +528,12 @@ def export_inbox_securely(inbox, password: str) -> bytes:
         "emailAddress": exported.email_address,
         "expiresAt": exported.expires_at,
         "inboxHash": exported.inbox_hash,
+        "encrypted": exported.encrypted,
+        "emailAuth": exported.email_auth,
         "serverSigPk": exported.server_sig_pk,
         "secretKey": exported.secret_key,
         "exportedAt": exported.exported_at,
+        "persistent": exported.persistent,
     })
 
     # Derive key from password
@@ -616,9 +634,12 @@ def export_with_metadata(inbox) -> dict:
             "emailAddress": exported.email_address,
             "expiresAt": exported.expires_at,
             "inboxHash": exported.inbox_hash,
+            "encrypted": exported.encrypted,
+            "emailAuth": exported.email_auth,
             "serverSigPk": exported.server_sig_pk,
             "secretKey": exported.secret_key,
             "exportedAt": exported.exported_at,
+            "persistent": exported.persistent,
         },
     }
 
@@ -636,9 +657,12 @@ async def import_with_metadata(client, data: dict):
         email_address=inbox_data["emailAddress"],
         expires_at=inbox_data["expiresAt"],
         inbox_hash=inbox_data["inboxHash"],
-        server_sig_pk=inbox_data["serverSigPk"],
-        secret_key=inbox_data["secretKey"],
+        encrypted=inbox_data.get("encrypted", True),
+        email_auth=inbox_data.get("emailAuth", True),
         exported_at=inbox_data.get("exportedAt", ""),
+        server_sig_pk=inbox_data.get("serverSigPk"),
+        secret_key=inbox_data.get("secretKey"),
+        persistent=inbox_data.get("persistent", False),
     )
 
     return await client.import_inbox(exported)

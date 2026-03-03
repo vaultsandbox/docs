@@ -107,6 +107,24 @@ if (email.spamAnalysis?.status === 'analyzed') {
 }
 ```
 
+### With Persistence
+
+Create persistent inboxes that survive server restarts (when server policy allows).
+
+```javascript
+// Check server persistence policy
+const info = await client.getServerInfo();
+console.log(`Persistence policy: ${info.persistencePolicy}`);
+
+// Create persistent inbox
+const inbox = await client.createInbox({ persistence: 'persistent' });
+console.log(`Persistent: ${inbox.persistent}`); // true
+
+// Create ephemeral inbox (explicit)
+const tempInbox = await client.createInbox({ persistence: 'ephemeral' });
+console.log(`Persistent: ${tempInbox.persistent}`); // false
+```
+
 ### Combining Options
 
 ```javascript
@@ -116,6 +134,7 @@ const inbox = await client.createInbox({
 	emailAuth: false, // Skip auth checks
 	encryption: 'plain', // No encryption (when allowed)
 	spamAnalysis: true, // Enable spam analysis
+	persistence: 'persistent', // Survive server restarts
 });
 
 console.log(`Address: ${inbox.emailAddress}`);
@@ -123,6 +142,7 @@ console.log(`Expires: ${inbox.expiresAt}`);
 console.log(`Auth enabled: ${inbox.emailAuth}`);
 console.log(`Encrypted: ${inbox.encrypted}`);
 console.log(`Spam analysis: ${inbox.spamAnalysis}`);
+console.log(`Persistent: ${inbox.persistent}`);
 ```
 
 ## Listing Emails

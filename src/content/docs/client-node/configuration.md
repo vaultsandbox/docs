@@ -190,6 +190,28 @@ sseMaxReconnectAttempts: Infinity; // Never give up
 sseMaxReconnectAttempts: 3; // Give up quickly
 ```
 
+#### sseMaxCacheSize
+
+**Type**: `number`
+
+**Default**: `1000`
+
+**Description**: Maximum number of emails to cache per inbox in SSE strategy. Set to `0` for unlimited.
+
+**Examples**:
+
+```javascript
+sseMaxCacheSize: 1000; // Default - cache up to 1000 emails per inbox
+sseMaxCacheSize: 0; // Unlimited cache
+sseMaxCacheSize: 100; // Limit cache to 100 emails per inbox
+```
+
+**Considerations**:
+
+- Controls memory usage when using SSE strategy
+- Older emails are evicted when the limit is reached
+- Set to `0` only if memory usage is not a concern
+
 ## Configuration Examples
 
 ### Production Configuration

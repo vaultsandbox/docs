@@ -131,14 +131,18 @@ WithTTL(ttl time.Duration) InboxOption
 WithEmailAddress(email string) InboxOption
 WithEmailAuth(enabled bool) InboxOption
 WithEncryption(mode EncryptionMode) InboxOption
+WithPersistence(mode PersistenceMode) InboxOption
+WithSpamAnalysis(enabled bool) InboxOption
 ```
 
-| Option             | Type             | Description                                                                         |
-| ------------------ | ---------------- | ----------------------------------------------------------------------------------- |
-| `WithTTL`          | `time.Duration`  | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)                 |
-| `WithEmailAddress` | `string`         | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`)              |
-| `WithEmailAuth`    | `bool`           | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)                     |
-| `WithEncryption`   | `EncryptionMode` | Request encrypted or plain inbox (`EncryptionModeEncrypted`, `EncryptionModePlain`) |
+| Option             | Type              | Description                                                                         |
+| ------------------ | ----------------- | ----------------------------------------------------------------------------------- |
+| `WithTTL`          | `time.Duration`   | Time-to-live for the inbox (min: 60s, max: 7 days, default: 1 hour)                 |
+| `WithEmailAddress` | `string`          | Request a specific email address (e.g., `test@inbox.vaultsandbox.com`)              |
+| `WithEmailAuth`    | `bool`            | Enable/disable email authentication checks (SPF/DKIM/DMARC/PTR)                     |
+| `WithEncryption`   | `EncryptionMode`  | Request encrypted or plain inbox (`EncryptionModeEncrypted`, `EncryptionModePlain`) |
+| `WithPersistence`  | `PersistenceMode` | Request persistent or ephemeral inbox (`PersistenceModePersistent`, `PersistenceModeEphemeral`) |
+| `WithSpamAnalysis` | `bool`            | Enable/disable spam analysis (Rspamd) for this inbox                                |
 
 #### Encryption Mode
 
@@ -149,6 +153,18 @@ const (
     EncryptionModeDefault   EncryptionMode = ""          // Use server default
     EncryptionModeEncrypted EncryptionMode = "encrypted" // Request encrypted inbox
     EncryptionModePlain     EncryptionMode = "plain"     // Request plain inbox
+)
+```
+
+#### Persistence Mode
+
+```go
+type PersistenceMode string
+
+const (
+    PersistenceModeDefault    PersistenceMode = ""           // Use server default
+    PersistenceModePersistent PersistenceMode = "persistent" // Request persistent inbox
+    PersistenceModeEphemeral  PersistenceMode = "ephemeral"  // Request ephemeral inbox
 )
 ```
 
@@ -182,6 +198,9 @@ inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEmailAuth(false))
 
 // Create a plain (unencrypted) inbox (when server policy allows)
 inbox, err := client.CreateInbox(ctx, vaultsandbox.WithEncryption(vaultsandbox.EncryptionModePlain))
+
+// Create a persistent inbox (when server policy allows)
+inbox, err := client.CreateInbox(ctx, vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent))
 ```
 
 #### Errors
@@ -257,19 +276,27 @@ func (c *Client) ServerInfo() *ServerInfo
 
 ```go
 type ServerInfo struct {
-    AllowedDomains   []string
-    MaxTTL           time.Duration
-    DefaultTTL       time.Duration
-    EncryptionPolicy EncryptionPolicy
+    AllowedDomains           []string
+    MaxTTL                   time.Duration
+    DefaultTTL               time.Duration
+    EncryptionPolicy         EncryptionPolicy
+    PersistencePolicy        PersistencePolicy
+    PersistentGlobalWebhooks bool
+    SpamAnalysisEnabled      bool
+    ChaosEnabled             bool
 }
 ```
 
-| Field              | Type               | Description                                |
-| ------------------ | ------------------ | ------------------------------------------ |
-| `AllowedDomains`   | `[]string`         | List of domains allowed for inbox creation |
-| `MaxTTL`           | `time.Duration`    | Maximum time-to-live for inboxes           |
-| `DefaultTTL`       | `time.Duration`    | Default time-to-live for inboxes           |
-| `EncryptionPolicy` | `EncryptionPolicy` | Server's encryption policy for inboxes     |
+| Field                      | Type                | Description                                           |
+| -------------------------- | ------------------- | ----------------------------------------------------- |
+| `AllowedDomains`           | `[]string`          | List of domains allowed for inbox creation            |
+| `MaxTTL`                   | `time.Duration`     | Maximum time-to-live for inboxes                      |
+| `DefaultTTL`               | `time.Duration`     | Default time-to-live for inboxes                      |
+| `EncryptionPolicy`         | `EncryptionPolicy`  | Server's encryption policy for inboxes                |
+| `PersistencePolicy`        | `PersistencePolicy` | Server's persistence policy for inboxes               |
+| `PersistentGlobalWebhooks` | `bool`              | Whether global webhooks persist across server restarts |
+| `SpamAnalysisEnabled`      | `bool`              | Whether spam analysis (Rspamd) is available           |
+| `ChaosEnabled`             | `bool`              | Whether chaos engineering features are available      |
 
 #### Encryption Policy
 
@@ -301,6 +328,36 @@ func (p EncryptionPolicy) CanOverride() bool
 func (p EncryptionPolicy) DefaultEncrypted() bool
 ```
 
+#### Persistence Policy
+
+```go
+type PersistencePolicy string
+
+const (
+    PersistencePolicyAlways   PersistencePolicy = "always"   // All inboxes persistent, no override
+    PersistencePolicyEnabled  PersistencePolicy = "enabled"  // Persistent by default, can request ephemeral
+    PersistencePolicyDisabled PersistencePolicy = "disabled" // Ephemeral by default, can request persistent
+    PersistencePolicyNever    PersistencePolicy = "never"    // All inboxes ephemeral, no override
+)
+```
+
+| Policy     | Default Persistence | Per-Inbox Override           |
+| ---------- | ------------------- | ---------------------------- |
+| `always`   | Persistent          | No - all inboxes persistent  |
+| `enabled`  | Persistent          | Yes - can request ephemeral  |
+| `disabled` | Ephemeral           | Yes - can request persistent |
+| `never`    | Ephemeral           | No - all inboxes ephemeral   |
+
+**Helper Methods:**
+
+```go
+// CanOverride returns true if the policy allows per-inbox persistence override
+func (p PersistencePolicy) CanOverride() bool
+
+// DefaultPersistent returns true if persistence is the default for this policy
+func (p PersistencePolicy) DefaultPersistent() bool
+```
+
 #### Example
 
 ```go
@@ -308,6 +365,7 @@ info := client.ServerInfo()
 fmt.Printf("Max TTL: %v, Default TTL: %v\n", info.MaxTTL, info.DefaultTTL)
 fmt.Printf("Allowed domains: %v\n", info.AllowedDomains)
 fmt.Printf("Encryption policy: %s\n", info.EncryptionPolicy)
+fmt.Printf("Persistence policy: %s\n", info.PersistencePolicy)
 
 // Check if we can override encryption settings
 if info.EncryptionPolicy.CanOverride() {
@@ -317,6 +375,16 @@ if info.EncryptionPolicy.CanOverride() {
 // Check default encryption state
 if info.EncryptionPolicy.DefaultEncrypted() {
     fmt.Println("Inboxes are encrypted by default")
+}
+
+// Check if we can override persistence settings
+if info.PersistencePolicy.CanOverride() {
+    fmt.Println("Per-inbox persistence override is allowed")
+}
+
+// Check default persistence state
+if info.PersistencePolicy.DefaultPersistent() {
+    fmt.Println("Inboxes are persistent by default")
 }
 ```
 

@@ -13,7 +13,7 @@ An inbox is a temporary email destination that:
 - Supports **optional encryption** (ML-KEM-768 keypair) based on server policy
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
-- Stores emails **in memory** on the gateway
+- Stores emails on the gateway (in memory)
 - Can optionally **skip email authentication** checks (SPF/DKIM/DMARC/PTR)
 
 ## Creating Inboxes
@@ -167,6 +167,17 @@ System.out.println(inbox.isEncrypted());
 ```
 
 **Note**: When `encrypted` is `true`, the inbox will have a `serverSigPk` property for signature verification. When `false`, `serverSigPk` will be `null`.
+
+### persistent
+
+**Type**: `boolean`
+
+Whether this inbox is persistent (survives server restarts). When `true`, the inbox metadata and its webhook configurations are persisted to disk. Emails are always ephemeral regardless of persistence setting.
+
+```java
+System.out.println(inbox.isPersistent());
+// true (persistent) or false (ephemeral)
+```
 
 ## Inbox Lifecycle
 
@@ -367,6 +378,49 @@ if (minutesLeft < 5) {
     System.err.println("Inbox expiring soon!");
 }
 ```
+
+## Persistence
+
+By default, inboxes are ephemeral (in-memory only) and are lost when the gateway server restarts. When the server's persistence policy allows it, you can create persistent inboxes that survive server restarts.
+
+### Checking Persistence Policy
+
+```java
+ServerInfo info = client.getServerInfo();
+System.out.println("Persistence policy: " + info.getPersistencePolicy());
+
+// Policy determines the default and whether you can override:
+// "always"   - All inboxes persistent, no override
+// "enabled"  - Persistent by default, can request ephemeral
+// "disabled" - Ephemeral by default, can request persistent
+// "never"    - All inboxes ephemeral, no override
+```
+
+### Creating Persistent Inboxes
+
+```java
+// Create a persistent inbox (survives server restarts)
+Inbox inbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .persistent()
+        .build()
+);
+System.out.println("Persistent: " + inbox.isPersistent()); // true
+
+// Explicitly create an ephemeral inbox
+Inbox tempInbox = client.createInbox(
+    CreateInboxOptions.builder()
+        .ephemeral()
+        .build()
+);
+System.out.println("Persistent: " + tempInbox.isPersistent()); // false
+```
+
+### When to Use Persistence
+
+- **Long-running tests**: Inboxes survive gateway maintenance windows
+- **Manual testing**: Inbox remains available across server restarts
+- **Production monitoring**: Persistent inboxes for ongoing email monitoring
 
 ## Import and Export
 
@@ -660,6 +714,43 @@ if (info.canOverrideEncryption() && !info.isDefaultEncrypted()) {
 
 Inbox inbox = client.createInbox(options.build());
 System.out.println("Inbox encrypted: " + inbox.isEncrypted());
+```
+
+## Checking Server Persistence Policy
+
+The server's persistence policy determines how inbox persistence can be configured:
+
+```java
+ServerInfo info = client.getServerInfo();
+String policy = info.getPersistencePolicy();
+
+System.out.println("Persistence policy: " + policy);
+System.out.println("Can override: " + info.canOverridePersistence());
+System.out.println("Default persistent: " + info.isDefaultPersistent());
+```
+
+### Persistence Policies
+
+| Policy     | Default Behavior | Can Override?                           |
+| ---------- | ---------------- | --------------------------------------- |
+| `always`   | Persistent       | No - all inboxes are always persistent  |
+| `enabled`  | Persistent       | Yes - can request `ephemeral`           |
+| `disabled` | Ephemeral        | Yes - can request `persistent`          |
+| `never`    | Ephemeral        | No - all inboxes are always ephemeral   |
+
+### Example: Conditional Persistent Inbox
+
+```java
+ServerInfo info = client.getServerInfo();
+
+if (info.canOverridePersistence()) {
+    Inbox inbox = client.createInbox(
+        CreateInboxOptions.builder()
+            .persistent()
+            .build()
+    );
+    System.out.println("Inbox persistent: " + inbox.isPersistent());
+}
 ```
 
 ## Next Steps

@@ -408,6 +408,8 @@ type AuthResults struct {
 }
 ```
 
+**Note**: If parsing of authentication results fails, `AuthResults` will be `nil` and `AuthResultsError` will contain the error. See [AuthResultsError](#authresultserror) below.
+
 #### Example
 
 ```go
@@ -442,6 +444,118 @@ if email.AuthResults.DMARC != nil {
 ```
 
 See the [Authentication Guide](/client-go/guides/authentication/) for more details.
+
+---
+
+### AuthResultsError
+
+```go
+AuthResultsError error
+```
+
+Contains any error that occurred while parsing the email authentication results. If this field is set, `AuthResults` will be `nil`.
+
+#### Example
+
+```go
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+    log.Fatal(err)
+}
+
+if email.AuthResultsError != nil {
+    log.Printf("Failed to parse auth results: %v", email.AuthResultsError)
+    // Handle the case where auth results couldn't be parsed
+} else if email.AuthResults != nil {
+    // Auth results parsed successfully
+    validation := email.AuthResults.Validate()
+    fmt.Printf("Authentication passed: %v\n", validation.Passed)
+}
+```
+
+---
+
+### SpamAnalysis
+
+```go
+SpamAnalysis *spamanalysis.SpamAnalysis
+```
+
+Spam analysis results from Rspamd integration. May be `nil` if spam analysis is not enabled on the server or inbox, or if parsing failed (check `SpamAnalysisError`).
+
+```go
+type SpamAnalysis struct {
+    Status           SpamStatus   // "analyzed", "skipped", "error"
+    Score            *float64     // Spam score (positive = more spammy)
+    RequiredScore    *float64     // Threshold for spam classification
+    Action           SpamAction   // Recommended action
+    IsSpam           *bool        // Whether classified as spam
+    Symbols          []SpamSymbol // Triggered rules with scores
+    ProcessingTimeMs *int         // Analysis time in milliseconds
+    Info             string       // Error/skip reason
+}
+```
+
+**Note**: If parsing of spam analysis results fails, `SpamAnalysis` will be `nil` and `SpamAnalysisError` will contain the error. See [SpamAnalysisError](#spamanalysiserror) below.
+
+#### Example
+
+```go
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+    log.Fatal(err)
+}
+
+if email.SpamAnalysis != nil && email.SpamAnalysis.WasAnalyzed() {
+    fmt.Printf("Spam score: %.2f\n", *email.SpamAnalysis.Score)
+    fmt.Printf("Is spam: %v\n", *email.SpamAnalysis.IsSpam)
+    fmt.Printf("Action: %s\n", email.SpamAnalysis.Action)
+
+    // Check triggered rules
+    for _, symbol := range email.SpamAnalysis.Symbols {
+        fmt.Printf("  %s: %.2f\n", symbol.Name, symbol.Score)
+    }
+}
+
+// Validate spam analysis
+if email.SpamAnalysis != nil {
+    validation := email.SpamAnalysis.Validate()
+    if validation.Available {
+        fmt.Printf("Score: %.2f, Is spam: %v\n", validation.Score, validation.IsSpam)
+    } else {
+        fmt.Printf("Not available: %s\n", validation.Reason)
+    }
+}
+```
+
+See the [Spam Analysis Guide](/client-go/concepts/spam-analysis/) for more details.
+
+---
+
+### SpamAnalysisError
+
+```go
+SpamAnalysisError error
+```
+
+Contains any error that occurred while parsing the spam analysis results. If this field is set, `SpamAnalysis` will be `nil`.
+
+#### Example
+
+```go
+email, err := inbox.WaitForEmail(ctx, vaultsandbox.WithWaitTimeout(10*time.Second))
+if err != nil {
+    log.Fatal(err)
+}
+
+if email.SpamAnalysisError != nil {
+    log.Printf("Failed to parse spam analysis: %v", email.SpamAnalysisError)
+    // Handle the case where spam analysis couldn't be parsed
+} else if email.SpamAnalysis != nil {
+    // Spam analysis parsed successfully
+    fmt.Printf("Spam score: %.2f\n", email.SpamAnalysis.Score)
+}
+```
 
 ---
 

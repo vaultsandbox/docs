@@ -327,6 +327,43 @@ if client.ServerInfo().SpamAnalysisEnabled {
 }
 ```
 
+#### WithPersistence
+
+**Signature**: `WithPersistence(mode PersistenceMode) InboxOption`
+
+**Default**: `PersistenceModeDefault`
+
+**Description**: Set the persistence mode for the inbox. Persistent inboxes survive server restarts, while ephemeral inboxes are stored only in memory.
+
+**Options**:
+
+- `PersistenceModeDefault` - Use server default
+- `PersistenceModePersistent` - Request persistent inbox (stored on disk)
+- `PersistenceModeEphemeral` - Request ephemeral inbox (in-memory only)
+
+**Example**:
+
+```go
+// Create a persistent inbox
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent),
+)
+
+// Create an ephemeral inbox
+inbox, err := client.CreateInbox(ctx,
+	vaultsandbox.WithPersistence(vaultsandbox.PersistenceModeEphemeral),
+)
+
+// Check if server allows persistence overrides
+if client.ServerInfo().PersistencePolicy.CanOverride() {
+	inbox, err := client.CreateInbox(ctx,
+		vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent),
+	)
+}
+```
+
+**Note**: The server's persistence policy may not allow overrides. Use `ServerInfo().PersistencePolicy.CanOverride()` to check if the server allows per-inbox persistence settings.
+
 ## Wait Options
 
 Options passed to `WaitForEmail()` and `WaitForEmailCount()`.
@@ -629,7 +666,10 @@ fmt.Printf("Allowed domains: %v\n", info.AllowedDomains)
 - `MaxTTL time.Duration` - Maximum inbox TTL allowed
 - `DefaultTTL time.Duration` - Default inbox TTL
 - `EncryptionPolicy EncryptionPolicy` - Server encryption policy
+- `PersistencePolicy PersistencePolicy` - Server persistence policy
+- `PersistentGlobalWebhooks bool` - Whether global webhooks persist across server restarts
 - `SpamAnalysisEnabled bool` - Whether spam analysis is available
+- `ChaosEnabled bool` - Whether chaos engineering features are available
 
 ### CheckKey()
 
@@ -912,21 +952,25 @@ Represents a decrypted email:
 
 ```go
 type Email struct {
-	ID           string
-	From         string
-	To           []string
-	Subject      string
-	Text         string
-	HTML         string
-	ReceivedAt   time.Time
-	Headers      map[string]string
-	Attachments  []Attachment
-	Links        []string
-	AuthResults  *authresults.AuthResults
-	SpamAnalysis *spamanalysis.SpamAnalysis
-	IsRead       bool
+	ID                string
+	From              string
+	To                []string
+	Subject           string
+	Text              string
+	HTML              string
+	ReceivedAt        time.Time
+	Headers           map[string]string
+	Attachments       []Attachment
+	Links             []string
+	AuthResults       *authresults.AuthResults
+	SpamAnalysis      *spamanalysis.SpamAnalysis
+	IsRead            bool
+	AuthResultsError  error // Set if auth results parsing failed
+	SpamAnalysisError error // Set if spam analysis parsing failed
 }
 ```
+
+**Note**: `AuthResultsError` and `SpamAnalysisError` are set when parsing of the respective fields fails. If either error is set, the corresponding field (`AuthResults` or `SpamAnalysis`) will be `nil`.
 
 ### Attachment
 
@@ -950,11 +994,14 @@ Contains server configuration:
 
 ```go
 type ServerInfo struct {
-	AllowedDomains      []string
-	MaxTTL              time.Duration
-	DefaultTTL          time.Duration
-	EncryptionPolicy    EncryptionPolicy
-	SpamAnalysisEnabled bool
+	AllowedDomains           []string
+	MaxTTL                   time.Duration
+	DefaultTTL               time.Duration
+	EncryptionPolicy         EncryptionPolicy
+	PersistencePolicy        PersistencePolicy
+	PersistentGlobalWebhooks bool
+	SpamAnalysisEnabled      bool
+	ChaosEnabled             bool
 }
 ```
 

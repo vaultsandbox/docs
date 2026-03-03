@@ -93,15 +93,19 @@ class CreateInboxOptions:
     email_auth: bool | None = None
     encryption: str | None = None
     spam_analysis: bool | None = None
+    persistence: str | None = None
+    chaos: ChaosConfig | None = None
 ```
 
-| Property        | Type           | Description                                                                                |
-| --------------- | -------------- | ------------------------------------------------------------------------------------------ |
-| `ttl`           | `int \| None`  | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
-| `email_address` | `str \| None`  | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
-| `email_auth`    | `bool \| None` | Enable/disable SPF/DKIM/DMARC/PTR checks (default: server setting)                         |
-| `encryption`    | `str \| None`  | Request encryption mode: `"encrypted"` or `"plain"` (default: server policy)               |
-| `spam_analysis` | `bool \| None` | Enable/disable spam analysis for this inbox (default: server setting)                      |
+| Property        | Type                   | Description                                                                                |
+| --------------- | ---------------------- | ------------------------------------------------------------------------------------------ |
+| `ttl`           | `int \| None`          | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
+| `email_address` | `str \| None`          | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| `email_auth`    | `bool \| None`         | Enable/disable SPF/DKIM/DMARC/PTR checks (default: server setting)                         |
+| `encryption`    | `str \| None`          | Request encryption mode: `"encrypted"` or `"plain"` (default: server policy)               |
+| `spam_analysis` | `bool \| None`         | Enable/disable spam analysis for this inbox (default: server setting)                      |
+| `persistence`   | `str \| None`          | Request persistence mode: `"persistent"` or `"ephemeral"` (default: server policy)         |
+| `chaos`         | `ChaosConfig \| None`  | Initial chaos configuration for the inbox (requires chaos enabled on server)               |
 
 ##### Email Authentication (`email_auth`)
 
@@ -124,6 +128,14 @@ class CreateInboxOptions:
 - Omit - Use server default (`VSB_SPAM_ANALYSIS_INBOX_DEFAULT`)
 
 **Note**: Spam analysis requires the server to have Rspamd enabled (`VSB_SPAM_ANALYSIS_ENABLED=true`). Use `get_server_info()` to check if spam analysis is available.
+
+##### Persistence Mode (`persistence`)
+
+- `"persistent"` - Request a persistent inbox (survives server restarts)
+- `"ephemeral"` - Request an ephemeral inbox (in-memory only)
+- Omit - Use server default based on `persistence_policy`
+
+**Note**: The server may reject the persistence request based on its `persistence_policy`. Use `get_server_info()` to check the policy before creating inboxes.
 
 #### Returns
 
@@ -157,6 +169,12 @@ inbox = await client.create_inbox(CreateInboxOptions(spam_analysis=True))
 
 # Create inbox with spam analysis disabled
 inbox = await client.create_inbox(CreateInboxOptions(spam_analysis=False))
+
+# Create a persistent inbox (when server policy allows)
+inbox = await client.create_inbox(CreateInboxOptions(persistence="persistent"))
+
+# Create an ephemeral inbox (when server policy allows)
+inbox = await client.create_inbox(CreateInboxOptions(persistence="ephemeral"))
 
 # Create with multiple options
 inbox = await client.create_inbox(
@@ -211,6 +229,31 @@ async def client():
 
 ---
 
+### delete_inbox()
+
+Deletes a specific inbox by email address.
+
+```python
+async def delete_inbox(self, email_address: str) -> None
+```
+
+#### Parameters
+
+- `email_address`: The email address of the inbox to delete
+
+#### Example
+
+```python
+await client.delete_inbox("test123@inbox.vaultsandbox.com")
+print("Inbox deleted")
+```
+
+#### Errors
+
+- `InboxNotFoundError` - Inbox does not exist
+
+---
+
 ### get_server_info()
 
 Retrieves information about the VaultSandbox Gateway server.
@@ -235,19 +278,25 @@ class ServerInfo:
     allowed_domains: list[str]
     encryption_policy: str
     spam_analysis_enabled: bool
+    chaos_enabled: bool
+    persistence_policy: str
+    persistent_global_webhooks: bool
 ```
 
-| Property                | Type             | Description                                               |
-| ----------------------- | ---------------- | --------------------------------------------------------- |
-| `server_sig_pk`         | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`                  | `dict[str, str]` | Cryptographic algorithms supported by the server          |
-| `context`               | `str`            | Context string for the encryption scheme                  |
-| `max_ttl`               | `int`            | Maximum time-to-live for inboxes in seconds               |
-| `default_ttl`           | `int`            | Default time-to-live for inboxes in seconds               |
-| `sse_console`           | `bool`           | Whether the server SSE console is enabled                 |
-| `allowed_domains`       | `list[str]`      | List of domains allowed for inbox creation                |
-| `encryption_policy`     | `str`            | Server encryption policy (see below)                      |
-| `spam_analysis_enabled` | `bool`           | Whether spam analysis (Rspamd) is enabled on this server  |
+| Property                     | Type             | Description                                               |
+| ---------------------------- | ---------------- | --------------------------------------------------------- |
+| `server_sig_pk`              | `str`            | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`                       | `dict[str, str]` | Cryptographic algorithms supported by the server          |
+| `context`                    | `str`            | Context string for the encryption scheme                  |
+| `max_ttl`                    | `int`            | Maximum time-to-live for inboxes in seconds               |
+| `default_ttl`                | `int`            | Default time-to-live for inboxes in seconds               |
+| `sse_console`                | `bool`           | Whether the server SSE console is enabled                 |
+| `allowed_domains`            | `list[str]`      | List of domains allowed for inbox creation                |
+| `encryption_policy`          | `str`            | Server encryption policy (see below)                      |
+| `spam_analysis_enabled`      | `bool`           | Whether spam analysis (Rspamd) is enabled on this server  |
+| `chaos_enabled`              | `bool`           | Whether chaos engineering is enabled on this server       |
+| `persistence_policy`         | `str`            | Server persistence policy (see below)                     |
+| `persistent_global_webhooks` | `bool`           | Whether global webhooks are persisted                     |
 
 #### Encryption Policy
 
@@ -259,6 +308,17 @@ The `encryption_policy` field indicates the server's encryption settings:
 | `enabled`  | Encrypted          | Yes - can request `plain`     |
 | `disabled` | Plain              | Yes - can request `encrypted` |
 | `never`    | Plain              | No - all inboxes plain        |
+
+#### Persistence Policy
+
+The `persistence_policy` field indicates the server's persistence settings:
+
+| Policy     | Default            | Per-Inbox Override              |
+| ---------- | ------------------ | ------------------------------- |
+| `always`   | Persistent         | No - all inboxes persistent     |
+| `enabled`  | Persistent         | Yes - can request `ephemeral`   |
+| `disabled` | Ephemeral          | Yes - can request `persistent`  |
+| `never`    | Ephemeral          | No - all inboxes ephemeral      |
 
 #### Example
 
@@ -276,6 +336,15 @@ print(f"Can override: {can_override}, Default encrypted: {default_encrypted}")
 
 # Check spam analysis availability
 print(f"Spam analysis enabled: {info.spam_analysis_enabled}")
+
+# Check persistence policy
+print(f"Persistence policy: {info.persistence_policy}")
+can_override_persistence = info.persistence_policy in ["enabled", "disabled"]
+default_persistent = info.persistence_policy in ["always", "enabled"]
+print(f"Can override: {can_override_persistence}, Default persistent: {default_persistent}")
+
+# Check chaos engineering availability
+print(f"Chaos enabled: {info.chaos_enabled}")
 ```
 
 ---
@@ -388,6 +457,7 @@ class ExportedInbox:
     exported_at: str
     server_sig_pk: str | None = None  # Base64url-encoded (only for encrypted inboxes)
     secret_key: str | None = None     # Base64url-encoded, SENSITIVE! (only for encrypted inboxes)
+    persistent: bool = False          # Whether the inbox is persistent
 ```
 
 Note: The public key is derived from the secret key during import. The `server_sig_pk` and `secret_key` fields are only present for encrypted inboxes.
@@ -441,9 +511,12 @@ exported = ExportedInbox(
     email_address=data["emailAddress"],
     expires_at=data["expiresAt"],
     inbox_hash=data["inboxHash"],
-    server_sig_pk=data["serverSigPk"],
-    secret_key=data["secretKey"],
+    encrypted=data.get("encrypted", True),
+    email_auth=data.get("emailAuth", True),
     exported_at=data.get("exportedAt", ""),
+    server_sig_pk=data.get("serverSigPk"),
+    secret_key=data.get("secretKey"),
+    persistent=data.get("persistent", False),
 )
 
 inbox = await client.import_inbox(exported)

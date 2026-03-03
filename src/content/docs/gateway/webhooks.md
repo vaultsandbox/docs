@@ -462,6 +462,50 @@ After 5 consecutive failures, the webhook is automatically disabled. Re-enable i
 | Concurrent deliveries per webhook | 10 |
 | Total concurrent deliveries (global) | 100 |
 
+## Webhook Persistence
+
+Webhook configurations can optionally survive server restarts. Persistence behavior depends on the webhook scope and server configuration.
+
+### Inbox Webhooks
+
+Inbox webhooks are persisted **only if their parent inbox is persistent**. When an inbox is created with `persistence: "persistent"` (or the server policy defaults to persistent), all webhooks added to that inbox are automatically saved to disk.
+
+- Creating, updating, or deleting an inbox webhook updates the persisted state
+- When a persistent inbox is deleted, its webhooks are removed from disk
+- On startup, inbox webhooks are restored along with their parent inbox
+
+### Global Webhooks
+
+Global webhooks are persisted **only if `VSB_PERSISTENT_GLOBAL_WEBHOOKS=true`** is set on the server.
+
+```bash
+VSB_PERSISTENT_GLOBAL_WEBHOOKS=true
+```
+
+- When enabled, all global webhook CRUD operations are persisted to disk
+- On startup, all global webhooks are restored automatically
+
+### What Resets on Restart
+
+Even for persisted webhooks, the following are **not** preserved across restarts:
+
+- **Delivery statistics**: `totalDeliveries`, `successfulDeliveries`, `failedDeliveries`, `consecutiveFailures` all reset to zero
+- **Pending retries**: Any queued retry deliveries are lost
+- **Disabled state from failures**: Webhooks disabled due to consecutive failures will be re-enabled on restore
+
+:::tip[Check Persistence Status]
+Use `GET /api/server-info` to check the current persistence configuration:
+
+```json
+{
+  "persistencePolicy": "disabled",
+  "persistentGlobalWebhooks": false
+}
+```
+
+See [Persistence Configuration](/gateway/configuration/#persistence) for all options.
+:::
+
 ## Configuration Limits
 
 | Setting | Limit |

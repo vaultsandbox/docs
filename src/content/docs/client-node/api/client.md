@@ -28,22 +28,24 @@ interface ClientConfig {
 	retryOn?: number[];
 	sseReconnectInterval?: number;
 	sseMaxReconnectAttempts?: number;
+	sseMaxCacheSize?: number;
 }
 ```
 
 #### Properties
 
-| Property                  | Type                 | Required | Default                          | Description                                         |
-| ------------------------- | -------------------- | -------- | -------------------------------- | --------------------------------------------------- |
-| `url`                     | `string`             | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`) |
-| `apiKey`                  | `string`             | Yes      | -                                | Your API authentication key                         |
-| `strategy`                | `'sse' \| 'polling'` | No       | `'sse'`                          | Email delivery strategy                             |
-| `pollingInterval`         | `number`             | No       | `2000`                           | Polling interval in milliseconds                    |
-| `maxRetries`              | `number`             | No       | `3`                              | Maximum retry attempts for HTTP requests            |
-| `retryDelay`              | `number`             | No       | `1000`                           | Base delay in milliseconds between retries          |
-| `retryOn`                 | `number[]`           | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry              |
-| `sseReconnectInterval`    | `number`             | No       | `5000`                           | Initial delay before SSE reconnection (ms)          |
-| `sseMaxReconnectAttempts` | `number`             | No       | `10`                             | Maximum SSE reconnection attempts                   |
+| Property                  | Type                 | Required | Default                          | Description                                              |
+| ------------------------- | -------------------- | -------- | -------------------------------- | -------------------------------------------------------- |
+| `url`                     | `string`             | Yes      | -                                | Gateway URL (e.g., `https://smtp.vaultsandbox.com`)      |
+| `apiKey`                  | `string`             | Yes      | -                                | Your API authentication key                              |
+| `strategy`                | `'sse' \| 'polling'` | No       | `'sse'`                          | Email delivery strategy                                  |
+| `pollingInterval`         | `number`             | No       | `2000`                           | Polling interval in milliseconds                         |
+| `maxRetries`              | `number`             | No       | `3`                              | Maximum retry attempts for HTTP requests                 |
+| `retryDelay`              | `number`             | No       | `1000`                           | Base delay in milliseconds between retries               |
+| `retryOn`                 | `number[]`           | No       | `[408, 429, 500, 502, 503, 504]` | HTTP status codes that trigger a retry                   |
+| `sseReconnectInterval`    | `number`             | No       | `5000`                           | Initial delay before SSE reconnection (ms)               |
+| `sseMaxReconnectAttempts` | `number`             | No       | `10`                             | Maximum SSE reconnection attempts                        |
+| `sseMaxCacheSize`         | `number`             | No       | `1000`                           | Max emails cached per inbox in SSE (0 = unlimited)       |
 
 #### Example
 
@@ -80,16 +82,20 @@ interface CreateInboxOptions {
 	emailAuth?: boolean;
 	encryption?: 'encrypted' | 'plain';
 	spamAnalysis?: boolean;
+	chaos?: ChaosConfigRequest;
+	persistence?: 'persistent' | 'ephemeral';
 }
 ```
 
-| Property       | Type                     | Description                                                                                |
-| -------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
-| `ttl`          | `number`                 | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
-| `emailAddress` | `string`                 | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
-| `emailAuth`    | `boolean`                | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
-| `encryption`   | `'encrypted' \| 'plain'` | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
-| `spamAnalysis` | `boolean`                | Enable (`true`) or disable (`false`) spam analysis for this inbox. Omit to use server default |
+| Property       | Type                           | Description                                                                                |
+| -------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `ttl`          | `number`                       | Time-to-live for the inbox in seconds (min: 60, max: 604800, default: server's defaultTtl) |
+| `emailAddress` | `string`                       | Request a specific email address (max 254 chars, e.g., `test@inbox.vaultsandbox.com`)      |
+| `emailAuth`    | `boolean`                      | Enable (`true`) or disable (`false`) SPF/DKIM/DMARC/PTR checks. Omit to use server default |
+| `encryption`   | `'encrypted' \| 'plain'`       | Request encrypted or plain inbox. Omit to use server default based on `encryptionPolicy`   |
+| `spamAnalysis` | `boolean`                      | Enable (`true`) or disable (`false`) spam analysis for this inbox. Omit to use server default |
+| `chaos`        | `ChaosConfigRequest`           | Chaos engineering configuration. Only available when chaos is enabled on the server        |
+| `persistence`  | `'persistent' \| 'ephemeral'`  | Request persistent or ephemeral inbox. Omit to use server default based on `persistencePolicy` |
 
 #### Returns
 
@@ -119,12 +125,16 @@ const inbox = await client.createInbox({ encryption: 'plain' });
 // Create inbox with spam analysis enabled
 const inbox = await client.createInbox({ spamAnalysis: true });
 
+// Create persistent inbox (survives server restarts)
+const inbox = await client.createInbox({ persistence: 'persistent' });
+
 // Combine options
 const inbox = await client.createInbox({
 	ttl: 3600,
 	emailAuth: false,
 	encryption: 'plain',
 	spamAnalysis: true,
+	persistence: 'persistent',
 });
 ```
 
@@ -218,24 +228,30 @@ interface ServerInfo {
 	allowedDomains: string[];
 	encryptionPolicy: 'always' | 'enabled' | 'disabled' | 'never';
 	spamAnalysisEnabled?: boolean;
+	chaosEnabled?: boolean;
+	persistencePolicy?: 'always' | 'enabled' | 'disabled' | 'never';
+	persistentGlobalWebhooks?: boolean;
 }
 ```
 
-| Property              | Type       | Description                                               |
-| --------------------- | ---------- | --------------------------------------------------------- |
-| `serverSigPk`         | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
-| `algs`                | `object`   | Cryptographic algorithms supported by the server          |
-| `algs.kem`            | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
-| `algs.sig`            | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
-| `algs.aead`           | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
-| `algs.kdf`            | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
-| `context`             | `string`   | Context string for the encryption scheme                  |
-| `maxTtl`              | `number`   | Maximum time-to-live for inboxes in seconds               |
-| `defaultTtl`          | `number`   | Default time-to-live for inboxes in seconds               |
-| `sseConsole`          | `boolean`  | Whether the server SSE console is enabled                 |
-| `allowedDomains`      | `string[]` | List of domains allowed for inbox creation                |
-| `encryptionPolicy`    | `string`   | Server encryption policy (see table below)                |
-| `spamAnalysisEnabled` | `boolean`  | Whether spam analysis (Rspamd) is enabled on this server  |
+| Property                   | Type       | Description                                               |
+| -------------------------- | ---------- | --------------------------------------------------------- |
+| `serverSigPk`              | `string`   | Base64URL-encoded server signing public key for ML-DSA-65 |
+| `algs`                     | `object`   | Cryptographic algorithms supported by the server          |
+| `algs.kem`                 | `string`   | Key encapsulation mechanism (e.g., `ML-KEM-768`)          |
+| `algs.sig`                 | `string`   | Digital signature algorithm (e.g., `ML-DSA-65`)           |
+| `algs.aead`                | `string`   | Authenticated encryption (e.g., `AES-256-GCM`)            |
+| `algs.kdf`                 | `string`   | Key derivation function (e.g., `HKDF-SHA-512`)            |
+| `context`                  | `string`   | Context string for the encryption scheme                  |
+| `maxTtl`                   | `number`   | Maximum time-to-live for inboxes in seconds               |
+| `defaultTtl`               | `number`   | Default time-to-live for inboxes in seconds               |
+| `sseConsole`               | `boolean`  | Whether the server SSE console is enabled                 |
+| `allowedDomains`           | `string[]` | List of domains allowed for inbox creation                |
+| `encryptionPolicy`         | `string`   | Server encryption policy (see table below)                |
+| `spamAnalysisEnabled`      | `boolean`  | Whether spam analysis (Rspamd) is enabled on this server  |
+| `chaosEnabled`             | `boolean`  | Whether chaos engineering features are enabled            |
+| `persistencePolicy`        | `string`   | Server persistence policy (see table below)               |
+| `persistentGlobalWebhooks` | `boolean`  | Whether global webhooks are persisted                     |
 
 #### Encryption Policy
 
@@ -245,6 +261,15 @@ interface ServerInfo {
 | `enabled`  | Encrypted          | Yes - can request `plain`     |
 | `disabled` | Plain              | Yes - can request `encrypted` |
 | `never`    | Plain              | No - all inboxes plain        |
+
+#### Persistence Policy
+
+| Policy     | Default Behavior | Per-Inbox Override              |
+| ---------- | ---------------- | ------------------------------- |
+| `always`   | Persistent       | No - all inboxes persistent     |
+| `enabled`  | Persistent       | Yes - can request `ephemeral`   |
+| `disabled` | Ephemeral        | Yes - can request `persistent`  |
+| `never`    | Ephemeral        | No - all inboxes ephemeral      |
 
 #### Example
 
@@ -269,6 +294,14 @@ console.log(`Spam analysis enabled: ${info.spamAnalysisEnabled}`);
 if (info.spamAnalysisEnabled) {
 	// Spam analysis is available on this server
 	const inbox = await client.createInbox({ spamAnalysis: true });
+}
+
+// Check persistence policy
+console.log(`Persistence policy: ${info.persistencePolicy}`);
+
+if (info.persistencePolicy) {
+	const canOverridePersistence = ['enabled', 'disabled'].includes(info.persistencePolicy);
+	console.log(`Can override persistence: ${canOverridePersistence}`);
 }
 ```
 
@@ -378,8 +411,10 @@ interface ExportedInboxData {
 	emailAddress: string;
 	inboxHash: string;
 	expiresAt: string; // ISO 8601 timestamp
-	serverSigPk: string; // ML-DSA-65 public key (base64url)
-	secretKey: string; // ML-KEM-768 secret key (base64url)
+	encrypted: boolean; // Whether this inbox uses encryption
+	emailAuth: boolean; // Whether email authentication checks are enabled
+	serverSigPk?: string; // ML-DSA-65 public key (base64url, encrypted inboxes only)
+	secretKey?: string; // ML-KEM-768 secret key (base64url, encrypted inboxes only)
 	exportedAt: string; // ISO 8601 timestamp
 }
 ```

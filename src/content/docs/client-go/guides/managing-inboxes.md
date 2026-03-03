@@ -87,6 +87,7 @@ fmt.Println("Allowed domains:", info.AllowedDomains)
 fmt.Println("Max TTL:", info.MaxTTL)
 fmt.Println("Default TTL:", info.DefaultTTL)
 fmt.Println("Encryption policy:", info.EncryptionPolicy)
+fmt.Println("Persistence policy:", info.PersistencePolicy)
 
 // Check encryption settings
 if info.EncryptionPolicy.CanOverride() {
@@ -94,6 +95,14 @@ if info.EncryptionPolicy.CanOverride() {
 }
 if info.EncryptionPolicy.DefaultEncrypted() {
 	fmt.Println("Inboxes are encrypted by default")
+}
+
+// Check persistence settings
+if info.PersistencePolicy.CanOverride() {
+	fmt.Println("Per-inbox persistence override is allowed")
+}
+if info.PersistencePolicy.DefaultPersistent() {
+	fmt.Println("Inboxes are persistent by default")
 }
 ```
 
@@ -185,6 +194,29 @@ if info.EncryptionPolicy.CanOverride() {
 // Default: use server's default encryption setting
 inbox, err := client.CreateInbox(ctx)
 fmt.Printf("Encrypted: %v\n", inbox.Encrypted())
+```
+
+### Persistence Options
+
+Request persistent or ephemeral inboxes (when server policy allows):
+
+```go
+// Check server persistence policy first
+info := client.ServerInfo()
+fmt.Printf("Persistence policy: %s\n", info.PersistencePolicy)
+
+if info.PersistencePolicy.CanOverride() {
+	// Request a persistent inbox
+	inbox, err := client.CreateInbox(ctx, vaultsandbox.WithPersistence(vaultsandbox.PersistenceModePersistent))
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Persistent: %v\n", inbox.Persistent()) // true
+}
+
+// Default: use server's default persistence setting
+inbox, err := client.CreateInbox(ctx)
+fmt.Printf("Persistent: %v\n", inbox.Persistent())
 ```
 
 ## Listing Emails

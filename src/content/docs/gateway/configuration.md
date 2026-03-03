@@ -57,6 +57,9 @@ All environment variables at a glance. See sections below for details.
 | `VSB_CLUSTER_NAME`                   | `default`         | Cluster name                       |
 | `VSB_NODE_ID`                        | (auto)            | Node identifier                    |
 | `VSB_CLUSTER_PEERS`                  | —                 | Peer URLs                          |
+| **Persistence**                      |                   |                                    |
+| `VSB_PERSISTENCE_POLICY`             | `disabled`        | Inbox persistence policy           |
+| `VSB_PERSISTENT_GLOBAL_WEBHOOKS`     | `false`           | Persist global webhooks            |
 | **Encryption**                       |                   |                                    |
 | `VSB_ENCRYPTION_ENABLED`             | (mode)            | Encryption policy for inboxes      |
 | **Email Authentication**             |                   |                                    |
@@ -345,9 +348,24 @@ VSB_LOCAL_API_KEY=your-secure-random-key-minimum-32-chars
 
 ### VSB_DATA_PATH
 
-**Description**: Directory for storing persistent data (API keys, certificates).
+**Description**: Base directory for all persistent storage including API keys, certificates, persisted inboxes, and global webhooks.
 
 **Default**: `/app/data`
+
+**Storage Layout**:
+
+```
+/app/data/
+├── .api-key                    # Auto-generated API key
+├── certificates/               # Let's Encrypt certificates
+├── inboxes/                    # Persisted inbox metadata
+│   └── {inboxHash}/
+│       ├── inbox.json
+│       └── webhooks/
+│           └── whk_*.json
+└── global-webhooks/            # Persisted global webhooks
+    └── whk_*.json
+```
 
 ### Inbox & Cleanup (Local Mode)
 
@@ -388,6 +406,8 @@ VSB_LOCAL_ALLOW_CLEAR_ALL_INBOXES=false
   "defaultTtl": 3600,
   "sseConsole": false,
   "allowClearAllInboxes": true,
+  "persistencePolicy": "disabled",
+  "persistentGlobalWebhooks": false,
   "allowedDomains": ["example.com"]
 }
 ```
@@ -604,6 +624,97 @@ VSB_ENCRYPTION_ENABLED=never
 
 :::tip[When to use plain mode]
 Use `disabled` or `never` for development/debugging when you need to inspect raw email data without decryption, or when running in environments where quantum-safe encryption is not required.
+:::
+
+## Persistence
+
+Control whether inbox metadata and webhook configurations survive server restarts. Emails are always ephemeral and never written to disk.
+
+### VSB_PERSISTENCE_POLICY
+
+**Description**: Server-level persistence policy that determines how inbox persistence is handled.
+
+**Default**: `disabled`
+
+**Values**:
+
+| Policy     | Default Behavior | Per-Inbox Override                       |
+| :--------- | :--------------- | :--------------------------------------- |
+| `enabled`  | Persistent       | Yes - inboxes can request `ephemeral`    |
+| `disabled` | Ephemeral        | Yes - inboxes can request `persistent`   |
+| `always`   | Persistent       | **No** - all inboxes forced persistent   |
+| `never`    | Ephemeral        | **No** - persistence fully disabled      |
+
+**Example**:
+
+```bash
+# Persistence off by default, inboxes can opt in
+VSB_PERSISTENCE_POLICY=disabled
+
+# Persistence on by default, inboxes can opt out
+VSB_PERSISTENCE_POLICY=enabled
+
+# All inboxes persistent, no per-inbox override
+VSB_PERSISTENCE_POLICY=always
+
+# No persistence at all
+VSB_PERSISTENCE_POLICY=never
+```
+
+**What gets persisted**:
+
+- **Inbox metadata**: Email address, hash, encryption status, public key, email auth settings, spam analysis settings, chaos configuration, creation/expiration timestamps
+- **Webhook configurations**: URL, events, enabled status, HMAC secrets, templates, filters, timestamps
+- **Not persisted**: Emails (always ephemeral), webhook delivery stats, pending retries
+
+**TTL behavior with persistence**:
+
+- Persistent inboxes can have `null` TTL (never expires)
+- Ephemeral inboxes must have a numeric TTL (min 60 seconds, max 7 days)
+- On startup, expired persistent inboxes are automatically detected and removed
+
+**API Impact**:
+
+- `POST /api/inboxes` accepts optional `persistence` parameter (`"persistent"` or `"ephemeral"`) when policy allows overrides
+- Response includes `persistent` boolean indicating actual persistence state
+- `GET /api/server-info` returns `persistencePolicy` field
+
+### VSB_PERSISTENT_GLOBAL_WEBHOOKS
+
+**Description**: Enable persistence for global webhooks. When `true`, all global webhooks survive server restarts. Inbox webhooks are persisted based on their parent inbox's persistence state.
+
+**Default**: `false`
+
+**Example**:
+
+```bash
+VSB_PERSISTENT_GLOBAL_WEBHOOKS=true
+```
+
+**API Impact**:
+
+- `GET /api/server-info` returns `persistentGlobalWebhooks` boolean
+
+:::tip[Startup Restoration]
+On startup, the persistence service:
+1. Loads all persisted inbox metadata from disk
+2. Removes any expired inboxes
+3. Restores valid inboxes with their webhooks
+4. Restores global webhooks (if enabled)
+5. Resets webhook delivery stats (counters start at zero)
+
+Persistence uses atomic writes (temp file + rename) to prevent data corruption if the process crashes mid-write.
+:::
+
+:::note[Volume Mount]
+When running with Docker, ensure the data directory is on a persistent volume:
+
+```yaml
+volumes:
+  - gateway-data:/app/data
+```
+
+Without a persistent volume, all data including persisted inboxes is lost when the container is removed.
 :::
 
 ## Email Authentication

@@ -16,6 +16,7 @@ The Gateway is a receive-only SMTP server designed for QA and testing environmen
 - **REST API**: Programmatic access to emails with auto-generated API keys
 - **Webhooks**: Real-time HTTP notifications for email events with cryptographic signatures
 - **Configurable Retention**: Default 7-day TTL, adjustable via environment variables
+- **Inbox Persistence**: Optional persistence of inbox metadata and webhook configurations across server restarts (emails remain ephemeral)
 
 ## Architecture
 

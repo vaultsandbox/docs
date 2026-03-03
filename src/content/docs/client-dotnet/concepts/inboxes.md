@@ -13,7 +13,8 @@ An inbox is a temporary, encrypted email destination that:
 - Uses **client-side encryption** (ML-KEM-768 keypair)
 - **Expires automatically** after a configurable time-to-live (TTL)
 - Is **isolated** from other inboxes
-- Stores emails **in memory** on the gateway
+- Stores emails **in memory** on the gateway (emails are always ephemeral)
+- Can be **persistent** or **ephemeral** (persistence applies to inbox metadata and webhooks only, not to emails)
 
 ## Creating Inboxes
 
@@ -71,6 +72,25 @@ if (canOverride)
     });
 }
 ```
+
+### With Persistence Override
+
+```csharp
+// Check server policy first
+var serverInfo = await client.GetServerInfoAsync();
+var canOverride = serverInfo.CanOverridePersistence;
+
+if (canOverride)
+{
+    // Create a persistent inbox (survives gateway restarts)
+    var persistentInbox = await client.CreateInboxAsync(new CreateInboxOptions
+    {
+        Persistence = InboxPersistence.Persistent
+    });
+}
+```
+
+Persistence applies to the inbox metadata and webhooks only. Emails are always stored in memory and are not persisted across gateway restarts.
 
 ### With Spam Analysis
 
@@ -170,6 +190,26 @@ if (inbox.Encrypted)
 else
 {
     Console.WriteLine("Emails are stored in plain text");
+}
+```
+
+### Persistent
+
+**Type**: `bool`
+
+Whether this inbox is persistent. Persistent inboxes survive gateway restarts — their metadata and webhooks are stored on disk. Emails are always in-memory regardless of this setting.
+
+```csharp
+Console.WriteLine(inbox.Persistent);
+// false
+
+if (inbox.Persistent)
+{
+    Console.WriteLine("Inbox metadata and webhooks persist across restarts");
+}
+else
+{
+    Console.WriteLine("Inbox is ephemeral (in-memory only)");
 }
 ```
 
@@ -612,7 +652,7 @@ try
         EmailAddress = "test@mail.example.com"
     });
 }
-catch (InboxAlreadyExistsException)
+catch (ApiException ex) when (ex.StatusCode == 409)
 {
     // Address already in use, generate random instead
     var inbox = await client.CreateInboxAsync();

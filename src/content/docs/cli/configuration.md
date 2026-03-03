@@ -158,6 +158,10 @@ The CLI stores data in `~/.config/vsb/`:
 The `keystore.json` file contains private keys for decrypting emails. Treat it as sensitive data - do not share or commit it to version control.
 :::
 
+### Persistence
+
+Inboxes can be created with `--persistence=persistent` or `--persistence=ephemeral`. Persistence applies to **inbox metadata and webhook configurations only** - emails are always fetched from the server and are not persisted locally regardless of this setting.
+
 ## Next Steps
 
 - [TUI Dashboard](/cli/tui/) - Launch the interactive dashboard
